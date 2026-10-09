@@ -11,6 +11,6 @@ source "${here}/lab.env"
 require_lab_cluster
 lab_teardown_ns "$LAB_NS"
 rm -f "$LAB_ANSWER_FILE"
-rm -f "${here}/.state/code"
+rm -f "${here}/.state/code" "${here}/.state/broken-uid"
 lab_restore_kubectx "${here}/.state/kubectx"
 info "Lab removed."

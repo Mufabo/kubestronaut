@@ -49,6 +49,17 @@ make_lab() {
   local nn=$1 slug=$2 mode=$3 parts=${4:-} d
   d="${sb}/chapters/${nn}-${slug}/lab"
   mkdir -p "$d"
+  # The chapter text: one task per lab (or part); mode "extratask" has two.
+  {
+    printf '# Chapter %s\n\n## Hands-on lab\n\n' "$nn"
+    if [[ -n "$parts" ]]; then
+      local p; for p in $parts; do printf '### Part %s: fixture\n\n#### Task 1: Answer\n\nCreate it.\n\n' "$p"; done
+    else
+      printf '### Task 1: Answer\n\nCreate ConfigMap answer.\n\n'
+      [[ "$mode" == extratask ]] && printf '### Task 2: Extra\n\nThis task has no check.\n\n'
+    fi
+    printf '## Exam tips\n\n### Task 9: not a lab task\n'
+  } > "${d}/../${nn}-${slug}.md"
   {
     echo "LAB_TIER=9"
     if [[ -n "$parts" ]]; then
@@ -72,6 +83,7 @@ ns_var="LAB_NS_${LAB_PART:-}"; ns="${!ns_var:-${LAB_NS:-}}"'
   printf '#!/usr/bin/env bash\n%s\nlab_teardown_ns "$ns"\nlab_restore_kubectx "${here}/.state/kubectx"\n' "$pre" > "${d}/teardown.sh"
   case "$mode" in
     vacuous)  printf '#!/usr/bin/env bash\nexit 0\n' > "${d}/verify.sh" ;;
+    extracheck) printf '#!/usr/bin/env bash\nset -uo pipefail\n%s\nanswered() { kubectl -n "$ns" get configmap answer -o jsonpath="{.metadata.uid}"; }\ncheck 1 "answer exists" "create configmap answer" answered\ncheck 2 "answer still exists" "no task asks for this" answered\nfinish_checks\n' "${pre/set -euo pipefail/}" > "${d}/verify.sh" ;;
     mutating) printf '#!/usr/bin/env bash\nset -uo pipefail\n%s\nkubectl -n "$ns" create configmap oops --from-literal=x=y >/dev/null 2>&1 || true\nanswered() { kubectl -n "$ns" get configmap answer -o jsonpath="{.metadata.uid}"; }\ncheck 1 "answer exists" "create it" answered\nfinish_checks\n' "${pre/set -euo pipefail/}" > "${d}/verify.sh" ;;
     *)        printf '#!/usr/bin/env bash\nset -uo pipefail\n%s\nanswered() { kubectl -n "$ns" get configmap answer -o jsonpath="{.metadata.uid}"; }\ncheck 1 "answer exists" "create configmap answer" answered\nfinish_checks\n' "${pre/set -euo pipefail/}" > "${d}/verify.sh" ;;
   esac
@@ -96,6 +108,8 @@ make_lab 91 vacuous vacuous
 make_lab 92 mutating mutating
 make_lab 93 killer killer
 make_lab 94 single good
+make_lab 95 extratask extratask
+make_lab 96 extracheck extracheck
 
 # ---- safety ---------------------------------------------------------------------
 fresh_state kind-production kbook
@@ -121,6 +135,26 @@ expect "a verify.sh that changes state is caught" nonzero "must be read-only" --
 if state_has "'kbook-sentinel' not in st['namespaces'] and 'kbook-sentinel' not in st['clusterroles']"; then pass "sentinels are cleaned up after a failing run"; else flunk "sentinels are cleaned up after a failing run"; fi
 fresh_state kind-kbook kbook
 expect "a lab that destroys unrelated state is caught" nonzero "unrelated cluster state" -- bash tools/test-lab.sh 93
+fresh_state kind-kbook kbook
+expect "a chapter text with a task that has no check is caught" nonzero "make check failed on task 2" -- bash tools/test-lab.sh 95
+fresh_state kind-kbook kbook
+expect "a check that no task in the text asks for is caught" nonzero "more checks than the chapter text has tasks" -- bash tools/test-lab.sh 96
+
+# ---- step by step (KodeKloud style) ------------------------------------------------
+fresh_state kind-kbook kbook
+in_sb bash tools/run-lab.sh 94 setup >/dev/null 2>&1
+expect "starting a lab shows task 1 from the chapter text" 0 "Task 1 of 1" -- bash tools/step.sh 94 start
+expect "the task text is printed" 0 "Create ConfigMap answer." -- bash tools/step.sh 94 question
+expect "checking an unsolved task says not yet, with the hint" nonzero "create configmap answer" -- bash tools/step.sh 94 check
+in_sb bash tools/run-lab.sh 94 solve >/dev/null 2>&1
+expect "checking a solved task says correct" 0 "Correct!" -- bash tools/step.sh 94 check
+expect "after the last task the lab is complete" 0 "Lab complete" -- bash tools/step.sh 94 question
+if [[ "$(in_sb bash tools/step.sh 94 count)" == 1 ]]; then pass "headings outside the lab section are not tasks"; else flunk "headings outside the lab section are not tasks"; fi
+expect "each part reads its own tasks" 0 "Task 1 of 1" -- bash tools/step.sh 90 start q
+expect "an unknown part is a usage error for the runner too" nonzero "unknown part" -- bash tools/step.sh 90 start zzz
+expect "a check id that does not exist is an error, not a pass" nonzero "no check matched" -- env LAB_ONLY_TASK=7 bash tools/run-lab.sh 94 verify
+in_sb bash tools/step.sh 94 clear
+if [[ ! -f "${sb}/chapters/94-single/lab/.state/step" ]]; then pass "clearing forgets the progress"; else flunk "clearing forgets the progress"; fi
 
 # ---- part handling -----------------------------------------------------------------
 fresh_state kind-kbook kbook

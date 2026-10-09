@@ -9,7 +9,7 @@ wreck it and be back at the starting line in under a minute.
 |---|---|
 | `setup.sh` | Idempotent. Starts by tearing down previous state, then builds the exact starting state. Ends only when the lab is ready to use (wait for what must be running). |
 | `reset.sh` | Tears down and calls `setup.sh`. Never leaves half a lab behind. |
-| `verify.sh` | **Read-only, and CI proves it** (a before/after snapshot of the lab namespace(s) must match). One `check` per task. Prints PASS/FAIL and a hint on FAIL. Exits non-zero if any task fails. |
+| `verify.sh` | **Read-only, and CI proves it** (a before/after snapshot of the lab namespace(s) must match). One `check` per task, with ids `1..n` in the order the tasks appear in the chapter text. Prints PASS/FAIL and a hint on FAIL. Exits non-zero if any task fails. With `LAB_ONLY_TASK=<id>` it runs only that check (the step runner uses this). |
 | `solve.sh` | Applies the reference solution non-interactively. Used by CI; also handy for readers who are truly stuck. It runs once, right after `setup.sh`, and **need not be idempotent** (running it twice may fail, which is fine). |
 | `teardown.sh` | *Optional but expected.* Ends the lab: removes what it created (namespace, answer files, contexts) and restores the reader's kubectl context and namespace. Run with `make teardown CH=n`. Required for any lab that creates contexts or writes files outside the cluster. |
 | `solutions.md` | Human-readable solutions with the reasoning. |
@@ -86,6 +86,31 @@ lab_delete_contexts ch03-a ch03-b              # contexts the lab created
 - Save with `lab_save_kubectx` at most once per lab run; it keeps the original on repeat calls, so repeated `use-namespace` calls never overwrite what the reader had.
 - `tools/test-lib.sh` unit-tests these helpers against a throwaway kubeconfig; it needs `kubectl` but no cluster (`make test-lib`).
 
+## Step by step (KodeKloud style)
+
+Readers work through a lab one task at a time, as in KodeKloud's labs:
+`make lab` shows task 1, `make check` checks only the current task and, when
+it is correct, shows the next one; otherwise it prints the hint. `make
+question` repeats the current task, `make skip` moves on, `make reset` returns
+to task 1, and `make verify` still checks everything at once.
+
+`tools/step.sh` reads the tasks from the chapter text, so there is one source
+for them:
+
+- In the `## Hands-on lab` section, every `### Task <id>: <title>` heading is
+  a task; for a lab with parts, every `#### Task <id>: <title>` heading under
+  `### Part <part>: ...`. The block under the heading, up to the next heading,
+  is what the reader sees. Put lab-wide notes **above** the first task, never
+  after the last one, or the runner shows them as part of that task.
+- The Nth task heading is checked by `check N` in `verify.sh`. The ids in the
+  headings (`A1`, `B1.3`) are only labels; order is what counts.
+- Progress lives in `lab/.state/step` (or `step-<part>`); `make teardown`
+  clears it.
+
+CI walks the runner through every task after `solve.sh` (each `make check`
+must pass, in order, and the lab must end complete) and proves there is no
+check beyond the last task, so text and checks always line up one to one.
+
 ## Skeletons
 
 `setup.sh`:
@@ -127,7 +152,7 @@ finish_checks
 1. `verify.sh` fails on the untouched lab, and after `reset`.
 2. `setup.sh` is idempotent (run twice in a row).
 3. `verify.sh` is read-only: a normalized snapshot of the lab namespace(s) is identical before and after every verify run.
-4. `verify.sh` passes after `solve.sh`.
+4. `verify.sh` passes after `solve.sh`, and so does `make check` for every task of the chapter text in order, ending with the lab complete; `verify.sh` has no check beyond the last task.
 5. Unrelated cluster state survives: a sentinel namespace, ConfigMap, and ClusterRole created before the run must still exist with the same UIDs after every part.
 
 `make test-harness` tests these guarantees themselves against a fake `kubectl` (it deliberately feeds the loop broken labs and unsafe clusters and checks that they are caught). Run it whenever `tools/` changes. `make test-lib` covers the kubeconfig helpers and `make test-render` the question validator.

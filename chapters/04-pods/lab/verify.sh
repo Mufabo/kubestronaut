@@ -21,7 +21,9 @@ t1() {
 t2() {
   only_one_container broken &&
   [[ "$(jp broken '{.status.phase}')" == "Running" ]] &&
-  [[ "$(jp broken '{.spec.containers[0].image}')" == "nginx:1.27" ]]
+  [[ "$(jp broken '{.spec.containers[0].image}')" == "nginx:1.27" ]] &&
+  # "without deleting and recreating it": the Pod must keep its setup-time UID
+  [[ -f "${here}/.state/broken-uid" && "$(jp broken '{.metadata.uid}')" == "$(cat "${here}/.state/broken-uid")" ]]
 }
 t3() {
   [[ -f "$LAB_ANSWER_FILE" ]] &&
@@ -44,7 +46,7 @@ t5() {
 
 check 1 "pod 'web' runs nginx:1.27 with label app=web and containerPort 80" \
   "compare 'kubectl get pod web -o yaml' with the task text" t1
-check 2 "pod 'broken' is Running with image nginx:1.27" \
+check 2 "pod 'broken' is Running with image nginx:1.27, and is the same Pod (not recreated)" \
   "'kubectl describe pod broken' shows why it cannot start; look at the Events" t2
 check 3 "the activation code from pod 'logger' is saved in ${LAB_ANSWER_FILE}" \
   "the file should contain only the value after the '='" t3

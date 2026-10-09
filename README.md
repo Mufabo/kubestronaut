@@ -11,12 +11,17 @@ Prerequisites: Docker (or another kind-compatible container runtime), `kind`,
 
 ```bash
 make cluster          # create the kind lab cluster (once); also marks it as a lab cluster
-make lab CH=4         # start chapter 4's lab (does not touch your kubectl settings)
-make verify CH=4      # check your work
+make lab CH=4         # start chapter 4's lab and show task 1 (does not touch your kubectl settings)
+make check CH=4       # check the current task; if it is right, show the next one
+make question CH=4    # show the current task again
+make verify CH=4      # check every task at once
 make reset CH=4       # back to the starting state, any time
 make solve CH=4       # reference solution (spoilers!)
 make use-namespace CH=4   # optional: make kubectl default to the lab namespace
 make teardown CH=4    # remove the lab and restore your kubectl settings
 ```
+
+Labs work like KodeKloud's: one task at a time, a check after each, and
+progress that is saved between sessions.
 
 Run `make help` for everything else. Author-facing docs are in `docs/`.

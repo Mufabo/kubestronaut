@@ -7,7 +7,8 @@
 #   2. setup is idempotent (running it twice in a row works)
 #   3. verify.sh is READ-ONLY (a snapshot of the lab namespace(s) is identical
 #      before and after every verify run)
-#   4. the reference solution PASSES verification
+#   4. the reference solution PASSES verification, and the step-by-step runner
+#      (make check) accepts every task of the chapter text in order
 #   5. reset returns the lab to a failing starting state
 # and, across the whole run, that the lab never touches unrelated cluster state
 # (sentinel namespace, ConfigMap, and ClusterRole created before the run must
@@ -75,6 +76,26 @@ run_verify() {
   fi
 }
 
+# walk_steps   (after solve) the step-by-step runner must accept every task of
+# the chapter text in order, which proves the text's tasks and verify's checks
+# line up one to one, and then report the lab complete.
+walk_steps() {
+  local step="${here}/step.sh" count i out
+  count="$(bash "$step" "$ch" count "$part")" || fail "the step runner found no tasks in the chapter text"
+  bash "$step" "$ch" start "$part" >/dev/null || fail "step runner: start failed"
+  for ((i = 1; i <= count; i++)); do
+    out="$(bash "$step" "$ch" check "$part" 2>&1)" ||
+      fail "make check failed on task ${i} of ${count} after the reference solution: $(tail -n 3 <<<"$out")"
+  done
+  out="$(bash "$step" "$ch" check "$part" 2>&1)"
+  [[ "$out" == *"Lab complete"* ]] || fail "after ${count} tasks the step runner did not report the lab complete"
+  # One more task in the text than in verify.sh would make check fail with
+  # "no check matched"; one fewer would leave a check no step ever runs.
+  out="$(LAB_ONLY_TASK=$((count + 1)) bash "${here}/run-lab.sh" "$ch" verify "$part" 2>&1)" &&
+    fail "verify.sh has more checks than the chapter text has tasks (check $((count + 1)) exists)"
+  bash "$step" "$ch" clear "$part"
+}
+
 parts="$(bash "${here}/lab-parts.sh" "$ch")" || exit 1
 if [[ -n "$only" ]]; then
   list=("$only")
@@ -97,6 +118,8 @@ for part in "${list[@]}"; do
   echo "### solve";                      run "$ch" solve "$part" || fail "solve failed"
   echo "### verify after solve (must pass, must not change anything)"
   run_verify pass "verify failed after the reference solution"
+  echo "### step by step (make check passes every task in order and ends complete)"
+  walk_steps
   echo "### reset";                      run "$ch" reset "$part" || fail "reset failed"
   echo "### verify after reset (must fail)"
   run_verify fail "verify passed after reset"

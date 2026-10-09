@@ -6,7 +6,7 @@ CH ?=
 PART ?=
 SHELL := /usr/bin/env bash
 
-.PHONY: help cluster cluster-recreate cluster-delete lab use-namespace reset verify solve teardown test test-lib test-harness test-render test-shell test-examples test-tier1 questions questions-check lint
+.PHONY: help cluster cluster-recreate cluster-delete lab question check skip use-namespace reset verify solve teardown test test-lib test-harness test-render test-shell test-examples test-tier1 questions questions-check lint
 
 help: ## Show this help
 	@grep -hE '^[a-zA-Z_-]+:.*## ' Makefile | awk -F':.*## ' '{printf "  %-16s %s\n", $$1, $$2}'
@@ -22,16 +22,27 @@ cluster-recreate: ## Delete and rebuild the Tier 1 cluster (use after changing v
 cluster-delete: ## Delete the Tier 1 kind cluster
 	kind delete cluster --name "$(CLUSTER_NAME)"
 
-lab: ## Set up the lab for CH (also resets it if it already exists)
+lab: ## Set up the lab for CH (also resets it) and show its first task
 	@bash tools/run-lab.sh "$(CH)" setup "$(PART)"
+	@bash tools/step.sh "$(CH)" start "$(PART)"
+
+question: ## Show the current task of CH's lab again
+	@bash tools/step.sh "$(CH)" question "$(PART)"
+
+check: ## Check the current task of CH's lab; if it is correct, show the next one
+	@bash tools/step.sh "$(CH)" check "$(PART)"
+
+skip: ## Move on to the next task of CH's lab without checking
+	@bash tools/step.sh "$(CH)" skip "$(PART)"
 
 use-namespace: ## Opt in: make kubectl default to CH's lab namespace (make teardown restores it)
 	@bash tools/run-lab.sh "$(CH)" use-namespace "$(PART)"
 
-reset: ## Reset the lab for CH to its starting state
+reset: ## Reset the lab for CH to its starting state and go back to task 1
 	@bash tools/run-lab.sh "$(CH)" reset "$(PART)"
+	@bash tools/step.sh "$(CH)" start "$(PART)"
 
-verify: ## Check your work for CH
+verify: ## Check every task of CH at once
 	@bash tools/run-lab.sh "$(CH)" verify "$(PART)"
 
 solve: ## Apply the reference solution for CH (spoilers!)
@@ -39,6 +50,7 @@ solve: ## Apply the reference solution for CH (spoilers!)
 
 teardown: ## End the lab for CH: remove what it created and restore your kubectl context
 	@bash tools/run-lab.sh "$(CH)" teardown "$(PART)"
+	@bash tools/step.sh "$(CH)" clear "$(PART)"
 
 test: ## Run the full setup/verify/solve/reset loop for CH, all parts (or PART=x)
 	@bash tools/test-lab.sh "$(CH)" "$(PART)"

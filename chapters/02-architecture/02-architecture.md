@@ -342,46 +342,60 @@ Those four files *are* the control plane. This step depends on kind and Docker; 
 
 ## Hands-on lab
 
+The lab works like a KodeKloud lab: one task at a time, a check after each,
+and progress that is saved between sessions.
+
 ```bash
-make lab CH=2        # start (or restart) the lab
-make verify CH=2     # check your work
-make reset CH=2      # back to the starting state
+make lab CH=2        # set up the lab and show task 1
+make check CH=2      # check the current task; if it is right, show the next
+make question CH=2   # show the current task again
+make reset CH=2      # back to the starting state and task 1
 make teardown CH=2   # remove the lab and delete the answer files
 ```
 
-The lab is **read-only exploration**: nothing you do here changes the cluster. Answers go into small files under `/tmp`. Each task's expected answer is computed from your live cluster, so it will match yours even if node names differ.
+The lab is **read-only exploration**: nothing you do here changes the cluster.
+Answers go into small files under `/tmp`. Each expected answer is computed
+from your live cluster, so it matches yours even if node names differ. Stuck?
+The check prints a hint. Solutions are in [`lab/solutions.md`](lab/solutions.md).
 
-### Task 1: Find the control plane node (⏱ 2 min, ★☆☆)
+### Task 1: Find the control plane node
 
-Save the **name of the control plane node** into `/tmp/ch02-cp-node.txt`.
+Which node runs the control plane? Save its name to a file.
 
-*Success looks like:* the file holds the node name and nothing else.
+- File: `/tmp/ch02-cp-node.txt`
+- Content: the node name only
 
-### Task 2: Find etcd (⏱ 2 min, ★☆☆)
+### Task 2: Find etcd
 
-Save the **name of the Pod that runs etcd** into `/tmp/ch02-etcd-pod.txt`.
+Which Pod runs etcd? Save its name to a file.
 
-*Success looks like:* the file holds the exact Pod name.
+- File: `/tmp/ch02-etcd-pod.txt`
+- Content: the exact Pod name
 
-### Task 3: Identify the static Pods (⏱ 5 min, ★★☆)
+### Task 3: Identify the static Pods
 
-Save the names of **all static Pods in the `kube-system` namespace** into `/tmp/ch02-static-pods.txt`, one per line. Which components are static Pods and which are not?
+Save the names of **all static Pods** in the Namespace `kube-system`, and
+nothing else.
 
-*Success looks like:* the file lists exactly the static Pods' names.
+- File: `/tmp/ch02-static-pods.txt`
+- Format: one name per line
 
-### Task 4: Where did the scheduler put it? (⏱ 2 min, ★☆☆)
+Think about which components are static Pods, and which are not.
 
-The Pod `where-am-i` in namespace `ch02-arch` was placed by the scheduler. Save the **name of the node it runs on** into `/tmp/ch02-pod-node.txt`.
+### Task 4: Where did the scheduler put it?
 
-*Success looks like:* the file holds the node name.
+The scheduler placed the Pod `where-am-i`. Save the name of the node it runs on.
 
-### Task 5: Find the API for Deployments (⏱ 3 min, ★★☆)
+- Pod: `where-am-i` in Namespace `ch02-arch`
+- File: `/tmp/ch02-pod-node.txt`
 
-Find which API group and version serves **Deployments**. Save it in the form `group/version` into `/tmp/ch02-deployment-api.txt`.
+### Task 5: Find the API for Deployments
 
-*Success looks like:* the file contains the group/version string you would write in a manifest's `apiVersion`.
+Which API group and version serve **Deployments**? Save the answer exactly as
+you would write it in a manifest's `apiVersion`.
 
-Stuck? Hints appear in the `verify` output. Solutions are in [`lab/solutions.md`](lab/solutions.md).
+- File: `/tmp/ch02-deployment-api.txt`
+- Format: `group/version`
 
 ## Exam tips
 

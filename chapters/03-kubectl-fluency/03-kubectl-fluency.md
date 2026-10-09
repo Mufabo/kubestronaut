@@ -707,7 +707,10 @@ The exam allows the official documentation, so learn where things are before the
 
 ## Hands-on lab
 
-The lab has **six parts**. They are independent: each has its own namespaces, setup, check, solution, and reset. Start any part with `PART=<part>`; with no `PART`, part `a` runs.
+The lab works like a KodeKloud lab: one task at a time, a check after each,
+and progress that is saved between sessions. It has **six parts**. They are
+independent: each has its own namespaces, tasks, solution, and reset. Pick a
+part with `PART=<part>`; with no `PART`, part `a` runs.
 
 | Part | What it practises | Namespace(s) |
 |---|---|---|
@@ -719,9 +722,12 @@ The lab has **six parts**. They are independent: each has its own namespaces, se
 | `final` | A timed mini-exam mixing everything | `ch03-f1`, `ch03-f2` |
 
 ```bash
-make lab CH=3 PART=a            # start (or restart from scratch) a part
-make verify CH=3 PART=a         # check your work
-make reset CH=3 PART=a          # back to the starting state
+make lab CH=3 PART=a            # set up a part and show its first task
+make check CH=3 PART=a          # check the current task; if it is right, show the next
+make question CH=3 PART=a       # show the current task again
+make skip CH=3 PART=a           # move on without checking (for the optional task)
+make reset CH=3 PART=a          # back to the starting state and task 1
+make verify CH=3 PART=a         # check every task of the part at once
 make solve CH=3 PART=a          # reference solution (spoilers!)
 make use-namespace CH=3 PART=a  # optional: default kubectl to that part's namespace
 make teardown CH=3 PART=a       # remove the part and restore your kubectl settings
@@ -729,97 +735,233 @@ make teardown CH=3 PART=a       # remove the part and restore your kubectl setti
 
 `b2` and `b2p` practise the same skill. **`b2p` uses only Pods**, which you already know. **`b2` also creates a ConfigMap, a Secret, a ServiceAccount, and a Service**, which later chapters (07 and 11) explain properly; here you only *create* them. Do `b2p` first; do `b2` if you are comfortable, or both for extra practice.
 
-Debugging a check that fails and you do not know why: `LAB_DEBUG=1 make verify CH=3 PART=a` prints a shell trace for each failing check.
-
-Answers that are files go under `/tmp` on your machine; each part says where. `make reset` and `make teardown` remove them.
+Answers that are files go under `/tmp` on your machine; each task says where. `make reset` and `make teardown` remove them. Debugging a check that fails and you do not know why: `LAB_DEBUG=1 make check CH=3 PART=a` prints a shell trace. Solutions are in [`lab/solutions.md`](lab/solutions.md).
 
 ### Part a: shared Pods
 
-The lab created seven Pods in namespace `ch03-kubectl`. Look at them first (`kubectl -n ch03-kubectl get pods --show-labels`). **Consider only those seven Pods when you answer; ignore any Pod you create yourself,** so the order you do the tasks in does not matter.
+The lab created seven Pods in the Namespace `ch03-kubectl`. Look at them first (`kubectl -n ch03-kubectl get pods --show-labels`). **Consider only those seven Pods when you answer; ignore any Pod you create yourself,** so the order you do the tasks in does not matter.
 
-**Task A1 (⏱ 2 min, ★☆☆).** Save the names of the Pods labelled `env=prod` **and** `tier=web` to `/tmp/ch03-a1.txt`, one name per line.
+#### Task A1: Label selectors
 
-**Task A2 (⏱ 3 min, ★★☆).** Save one line per Pod to `/tmp/ch03-a2.txt`: the Pod's name, then its image, separated by spaces.
+Save the names of the Pods labelled `env=prod` **and** `tier=web`.
 
-**Task A3 (⏱ 3 min, ★★☆).** Save the names of the Pods whose `env` label is **not** `prod` to `/tmp/ch03-a3.txt`. That includes any Pod that has no `env` label at all.
+- File: `/tmp/ch03-a1.txt`
+- Format: one name per line
 
-**Task A4 (⏱ 2 min, ★★☆).** Give every Pod with the label `tier=db` the annotation `reviewed=true`. No other Pod may have it.
+#### Task A2: Names and images
 
-**Task A5 (⏱ 4 min, ★★☆).** Generate a manifest for a Pod named `api` with a single container running `nginx:1.27` and the label `app=api`, **without creating it**, saving the YAML to `/tmp/ch03-api.yaml`. Then create the Pod from that file.
+Save one line per Pod: the Pod's name, then its image, separated by a space.
 
-**Task A6 (⏱ 2 min, ★☆☆).** Use the cluster's own documentation to find the *type* of the field `terminationGracePeriodSeconds` of a Pod's spec. Save the single word (for example `string`) to `/tmp/ch03-a6.txt`.
+- File: `/tmp/ch03-a2.txt`
+- Format: `NAME IMAGE`, one Pod per line
 
-**Task A7 (optional, ⏱ 5 min, ★★★).** Using `jq` on `-o json` output, or `yq` on `-o yaml` output, save the sorted, unique list of container images used by the Pods to `/tmp/ch03-a7.txt`, one per line. This task never makes the lab fail, so skip it if you do not have the tools.
+#### Task A3: Set-based selectors
+
+Save the names of the Pods whose `env` label is **not** `prod`. That includes any Pod that has no `env` label at all.
+
+- File: `/tmp/ch03-a3.txt`
+- Format: one name per line
+
+#### Task A4: Annotate by selector
+
+Annotate every Pod that has the label `tier=db`.
+
+- Annotation: `reviewed=true`
+- Pods: every Pod with `tier=db`, and no other Pod
+
+#### Task A5: Generate, then create
+
+Generate a manifest **without creating the Pod**, save it, then create the Pod from that file.
+
+- Name: `api`
+- Image: `nginx:1.27` (a single container)
+- Label: `app=api`
+- Manifest file: `/tmp/ch03-api.yaml`
+
+#### Task A6: Ask the API
+
+Use the cluster's own documentation to find the *type* of the field `terminationGracePeriodSeconds` in a Pod's spec.
+
+- File: `/tmp/ch03-a6.txt`
+- Content: the single word (for example `string`)
+
+#### Task A7: jq or yq (optional)
+
+Using `jq` on `-o json` output, or `yq` on `-o yaml` output, save the sorted, unique list of container images the Pods use.
+
+- File: `/tmp/ch03-a7.txt`
+- Format: one image per line
+
+This task is optional: skip it with `make skip CH=3 PART=a` if you do not have the tools.
 
 ### Part b1: contexts
 
-Two namespaces exist: `ch03-b1-a` and `ch03-b1-b`. Each contains a ConfigMap named `where` whose `value` is a random string.
+Two Namespaces exist, `ch03-b1-a` and `ch03-b1-b`. Each contains a ConfigMap named `where` whose `value` is a random string. The two ConfigMaps have the same name; the context decides which one you read. `make teardown CH=3 PART=b1` removes your contexts and restores the context and namespace you had.
 
-**Task B1.1 (⏱ 3 min, ★★☆).** Create a context named `ch03-a` that uses the **same cluster and user** as the context you are using now (see `kubectl config view`) and has `ch03-b1-a` as its default namespace.
+#### Task B1.1: Create a context
 
-**Task B1.2 (⏱ 2 min, ★★☆).** Create a context `ch03-b` the same way, with default namespace `ch03-b1-b`.
+Create a context that uses the **same cluster and user** as the context you are using now (see `kubectl config view`).
 
-**Task B1.3 (⏱ 3 min, ★★☆).** Read the `value` of ConfigMap `where` **through the context `ch03-a`** and save it to `/tmp/ch03-b1-a.txt`.
+- Context name: `ch03-a`
+- Default namespace: `ch03-b1-a`
 
-**Task B1.4 (⏱ 2 min, ★★☆).** Do the same through `ch03-b`, saving to `/tmp/ch03-b1-b.txt`.
+#### Task B1.2: Create another context
 
-The two ConfigMaps have the same name; the context decides which one you read. You may switch contexts or use `--context`; both work. `make teardown CH=3 PART=b1` removes the contexts and restores the context and namespace you had.
+Create a second context the same way.
+
+- Context name: `ch03-b`
+- Default namespace: `ch03-b1-b`
+
+#### Task B1.3: Read through a context
+
+Read the `value` of the ConfigMap `where` **through the context `ch03-a`** and save it.
+
+- File: `/tmp/ch03-b1-a.txt`
+
+You may switch contexts or use `--context`; both work.
+
+#### Task B1.4: Read through the other context
+
+Do the same through the context `ch03-b`.
+
+- File: `/tmp/ch03-b1-b.txt`
 
 ### Part b2p: imperative creation, Pods only
 
-Namespace `ch03-b2p` has two Pods, `web` and `junk`.
+The Namespace `ch03-b2p` has two Pods, `web` and `junk`.
 
-**Task P1 (⏱ 2 min, ★☆☆).** In one command, create a Pod `probe` (one container, `busybox:1.36`, label `role=probe`) that runs `sleep 3600`.
+#### Task P1: Run a Pod in one command
 
-**Task P2 (⏱ 2 min, ★★☆).** Create a Pod `hello` that prints `hello from ch03` once and is **not** restarted.
+In one command, create a Pod that runs `sleep 3600`.
 
-**Task P3 (⏱ 2 min, ★☆☆).** Give Pod `web` the label `tier=front` and the annotation `contact=ops`.
+- Name: `probe`
+- Image: `busybox:1.36` (a single container)
+- Label: `role=probe`
+- Command: `sleep 3600`
 
-**Task P4 (⏱ 3 min, ★★☆).** Change Pod `web`'s image to `nginx:1.27` **without recreating it** (the check compares the Pod's unique ID).
+#### Task P2: A Pod that runs once
 
-**Task P5 (⏱ 2 min, ★★☆).** Create a Pod `envpod` (one container, `busybox:1.36`, sleeping) with the environment variable `APP_MODE=test`.
+Create a Pod that prints a message once and is **not** restarted.
 
-**Task P6 (⏱ 1 min, ★☆☆).** Delete the Pod `junk` quickly, leaving `web` alone.
+- Name: `hello`
+- Output: `hello from ch03`
+
+#### Task P3: Label and annotate
+
+Add a label and an annotation to the Pod `web`.
+
+- Label: `tier=front`
+- Annotation: `contact=ops`
+
+#### Task P4: Change the image in place
+
+Change the image of the Pod `web` **without recreating it** (the check compares the Pod's unique ID).
+
+- New image: `nginx:1.27`
+
+#### Task P5: Environment variables
+
+Create a Pod that sleeps and has an environment variable.
+
+- Name: `envpod`
+- Image: `busybox:1.36` (a single container)
+- Environment variable: `APP_MODE=test`
+
+#### Task P6: Delete fast
+
+Delete the Pod `junk` quickly. Leave `web` alone.
 
 ### Part b2: imperative creation, config objects
 
-Namespace `ch03-b2` has a running Pod `web` (label `app=web`).
+The Namespace `ch03-b2` has a running Pod `web` (label `app=web`).
 
-**Task C1 (⏱ 2 min, ★☆☆).** Create ConfigMap `app-config` with `APP_MODE=prod` and `LOG_LEVEL=info`.
+#### Task C1: ConfigMap
 
-**Task C2 (⏱ 2 min, ★☆☆).** Create a generic Secret `db-pass` with `password=hunter2`.
+- Name: `app-config`
+- Data: `APP_MODE=prod`, `LOG_LEVEL=info`
 
-**Task C3 (⏱ 1 min, ★☆☆).** Create ServiceAccount `robot`.
+#### Task C2: Secret
 
-**Task C4 (⏱ 2 min, ★★☆).** Create Pod `hello` (one container) that prints `hello from ch03` once and is not restarted.
+- Type: generic
+- Name: `db-pass`
+- Data: `password=hunter2`
 
-**Task C5 (⏱ 2 min, ★★☆).** Expose Pod `web` as a Service named `web` on port 80.
+#### Task C3: ServiceAccount
+
+- Name: `robot`
+
+#### Task C4: A Pod that runs once
+
+Create a Pod that prints a message once and is not restarted.
+
+- Name: `hello` (a single container)
+- Output: `hello from ch03`
+
+#### Task C5: Service
+
+Expose the Pod `web` as a Service.
+
+- Service name: `web`
+- Port: `80`
 
 ### Part b3: permissions
 
-Namespace `ch03-b3` has a ServiceAccount `viewer` bound to the built-in `view` role in that namespace only. Answer these four questions **about that ServiceAccount**, in this order, one word per line (`yes` or `no`), in `/tmp/ch03-b3.txt`:
+The Namespace `ch03-b3` has a ServiceAccount `viewer` bound to the built-in `view` role in that Namespace only.
+
+#### Task B3: Permissions
+
+Answer these four questions **about that ServiceAccount**, in this order, one word per line (`yes` or `no`):
 
 1. Can it delete Pods in `ch03-b3`?
 2. Can it list Secrets in `ch03-b3`?
 3. Can it get Pods in `ch03-b3`?
-4. Can it list Pods in the namespace `kube-system`?
+4. Can it list Pods in the Namespace `kube-system`?
+
+- File: `/tmp/ch03-b3.txt`
 
 Use `kubectl auth can-i`; do not guess. The answer is the cluster's, not yours.
 
 ### Part final: timed mini-exam
 
-The clock starts when `make lab CH=3 PART=final` finishes. Your target is **20 minutes**; `make verify` reports your elapsed time but never fails you for being slow. Pods only, and no `jq` or `yq`.
+The clock starts when `make lab CH=3 PART=final` finishes. Your target is **20 minutes**; the checks report your elapsed time but never fail you for being slow. Pods only, and no `jq` or `yq`. The Namespaces are `ch03-f1` (Pods `r1`, `r2`, `b1`) and `ch03-f2` (Pods `x1`, `x2`, `x3`).
 
-Namespaces: `ch03-f1` (Pods `r1`, `r2`, `b1`) and `ch03-f2` (Pods `x1`, `x2`, `x3`).
+#### Task F1: Run a labelled Pod
 
-1. In `ch03-f1`, create Pod `sleeper` (one container, `busybox:1.36`, runs `sleep 3600`) with the label `team=blue`.
-2. In `ch03-f1`, save the names of the Pods labelled `team=red` to `/tmp/ch03-final-red.txt`.
-3. In `ch03-f2`, change the label `stage=old` to `stage=new` on every Pod that has it. The Pod with `stage=keep` must not change.
-4. In `ch03-f2`, change the image of Pod `x1` to `nginx:1.27` without recreating it. (Look up the container's name first.)
-5. In `ch03-f2`, generate (with `--dry-run=client -o yaml`) a manifest for Pod `gen` (one container, `busybox:1.36`, environment variable `FOO=bar`, runs `sleep 3600`) into `/tmp/ch03-final-gen.yaml`, then create the Pod from the file.
-6. In `ch03-f1`, save the name of the one Pod whose image is `nginx:1.26` to `/tmp/ch03-final-img.txt`.
+- Namespace: `ch03-f1`
+- Name: `sleeper`
+- Image: `busybox:1.36` (a single container), running `sleep 3600`
+- Label: `team=blue`
 
-When you are done: `make verify CH=3 PART=final`. Stuck? Hints are in the `verify` output; solutions are in [`lab/solutions.md`](lab/solutions.md).
+#### Task F2: Select by label
+
+Save the names of the Pods in `ch03-f1` labelled `team=red`.
+
+- File: `/tmp/ch03-final-red.txt`
+
+#### Task F3: Relabel
+
+In `ch03-f2`, change the label `stage=old` to `stage=new` on every Pod that has it. The Pod with `stage=keep` must not change.
+
+#### Task F4: Change an image in place
+
+In `ch03-f2`, change the image of the Pod `x1` without recreating it. Look up the container's name first.
+
+- New image: `nginx:1.27`
+
+#### Task F5: Generate, then create
+
+Generate a manifest with `--dry-run=client -o yaml`, save it, then create the Pod from the file in `ch03-f2`.
+
+- Name: `gen`
+- Image: `busybox:1.36` (a single container), running `sleep 3600`
+- Environment variable: `FOO=bar`
+- Manifest file: `/tmp/ch03-final-gen.yaml`
+
+#### Task F6: Find by image
+
+Save the name of the one Pod in `ch03-f1` whose image is `nginx:1.26`.
+
+- File: `/tmp/ch03-final-img.txt`
 
 ## Exam tips
 

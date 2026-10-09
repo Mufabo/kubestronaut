@@ -168,6 +168,11 @@ lab_delete_contexts() {
 CHECKS_PASSED=0
 CHECKS_FAILED=0
 
+# Step-by-step mode (tools/step.sh, `make check`): with LAB_ONLY_TASK=<id>,
+# verify runs only that task's check, the way KodeKloud's Check button checks
+# only the current question.
+only_this_task() { [[ -z "${LAB_ONLY_TASK:-}" || "$1" == "$LAB_ONLY_TASK" ]]; }
+
 # check_optional <task-id> <description> <hint> <command...>
 # Same as `check`, but a stretch task: it never makes the lab fail. Done tasks
 # print PASS, not-yet-done ones print TODO with the hint.
@@ -175,6 +180,7 @@ CHECKS_OPTIONAL_DONE=0
 CHECKS_OPTIONAL_TODO=0
 check_optional() {
   local id=$1 desc=$2 hint=$3 rc=0; shift 3
+  only_this_task "$id" || return 0
   ( "$@" ) >/dev/null 2>&1 || rc=$?
   if ((rc == 0)); then
     printf '%s\n' "${C_GRN}PASS${C_RST}  Task ${id} (optional): ${desc}"
@@ -194,6 +200,7 @@ check_optional() {
 # of each failing check.
 check() {
   local id=$1 desc=$2 hint=$3 out="" rc=0; shift 3
+  only_this_task "$id" || return 0
   if [[ "${LAB_DEBUG:-0}" == "1" ]]; then
     out="$( ( set -x; "$@" ) 2>&1 )" || rc=$?
   else
@@ -215,6 +222,11 @@ check() {
 
 finish_checks() {
   local total=$((CHECKS_PASSED + CHECKS_FAILED)) extra=""
+  if ((total + CHECKS_OPTIONAL_DONE + CHECKS_OPTIONAL_TODO == 0)); then
+    # A typo in a task id must never look like a pass.
+    printf '%s\n' "${C_RED}error:${C_RST} no check matched${LAB_ONLY_TASK:+ task ${LAB_ONLY_TASK}}" >&2
+    return 2
+  fi
   if ((CHECKS_OPTIONAL_DONE + CHECKS_OPTIONAL_TODO > 0)); then
     extra=" Optional tasks done: ${CHECKS_OPTIONAL_DONE} of $((CHECKS_OPTIONAL_DONE + CHECKS_OPTIONAL_TODO))."
   fi
