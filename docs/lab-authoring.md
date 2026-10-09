@@ -34,9 +34,9 @@ LAB_TIER=1          # 1 = kind, 2 = multi-VM kubeadm
 3. **Cluster-scoped objects need cleanup.** If a lab creates a ClusterRole, PV, StorageClass, CRD, or node label/taint, `setup.sh` must remove the leftovers of a previous run and the chapter text must say so.
 4. **No sleeping.** Use `wait_for` with a timeout and a description. Never `sleep 30` and hope.
 5. **Pin everything.** Images with explicit tags (no `latest`), tool versions from `versions.env`.
-6. **Local state lives in `lab/.state/`** (git-ignored). **Never wipe the whole directory**: it also holds the saved kubectl context (`.state/kubectx`), so remove only your own files (`rm -f .state/code`). Files the reader writes must go to a documented, fixed path (for example `/tmp/chNN-*.txt`); `setup.sh` and `teardown.sh` remove them.
+6. **Local state lives in `lab/.state/`** (git-ignored). **Never wipe the whole directory**: it also holds the saved kubectl context (`.state/kubectx`), so remove only your own files (`rm -f .state/code`). Files the reader writes must go to a documented, fixed path (for example `/tmp/chNN-*.txt`); `setup.sh` and `teardown.sh` remove them. Exam-style labs and mock exams use answer folders instead, `/tmp/kbook/<lab>/<question>/`: `setup.sh` calls `lab_course_reset "$COURSE" 2 5 ...` to recreate them empty, `teardown.sh` calls `lab_course_remove "$COURSE"`, and both refuse any path that is not exactly one level below `/tmp/kbook`.
 7. **Checks test outcomes, not commands.** Verify the resulting cluster state, so any valid approach (imperative, YAML, `edit`, `patch`) passes.
-8. **Checks must be non-vacuous.** CI proves `verify.sh` fails on the untouched lab and passes after `solve.sh`. If a check passes before the reader does anything, it is a bug.
+8. **Checks must be non-vacuous.** CI proves that **every** task fails on its own on the untouched lab and after `reset`, and that `verify.sh` passes after `solve.sh`. If a check passes before the reader does anything, it is a bug. One check per task: a task is either done or not; put every condition the task states into its one check function.
 9. **Helpful hints.** A hint points at what to look at, not the answer.
 10. **Randomize where copying would cheat.** If a task asks the reader to find a value, generate it at setup time and record it in `lab/.state/`.
 11. **No `grep -q` at the end of a pipeline when `pipefail` is set.** `grep -q` exits at the first match, the upstream command can then die of SIGPIPE, and the pipeline intermittently reports failure. Capture the output first (`out="$(cmd)"`), then `grep -q ... <<<"$out"`, or compare with `[[ "$out" == *text* ]]`. This is a real race, not a style point.
@@ -85,6 +85,39 @@ lab_delete_contexts ch03-a ch03-b              # contexts the lab created
 - `lab_create_ns` does **not** touch the kubeconfig. Only `make use-namespace` (tools/use-namespace.sh) changes the default namespace, and it saves the original first so `make teardown` can restore it.
 - Save with `lab_save_kubectx` at most once per lab run; it keeps the original on repeat calls, so repeated `use-namespace` calls never overwrite what the reader had.
 - `tools/test-lib.sh` unit-tests these helpers against a throwaway kubeconfig; it needs `kubectl` but no cluster (`make test-lib`).
+
+## Two lab styles
+
+Chapter labs are **step by step** (KodeKloud style, below): one task at a time,
+`check` per task, KodeKloud-style specification lists. They are for learning.
+
+The last lab of a Part (Chapter 03's `final` part) and every mock exam are
+**exam style** (killer.sh): all questions at once, answered in any order,
+scored together by `verify.sh`. They are for rehearsing the exam. In the text,
+questions are `Question N | Title` headings, each followed by a plain
+`Task weight: N%` line, a `Use context: kubectl config use-context ...` line,
+and terse text that names every Namespace and answer file in full. In
+`verify.sh`, use `check_weighted <id> <weight> <description> <hint> <command>`
+instead of `check`; weights must add up to 100 (`finish_checks` refuses
+otherwise) and it prints the weighted score. A question still counts only when
+all of it is right. Never mix `check` and `check_weighted` in one `verify.sh`.
+
+## Mock exams
+
+A mock exam lives in `mock-exams/<name>/` with the same layout as a chapter
+(`<name>.md` holds the questions as `## Question N | Title` headings, `lab/`
+the scripts, `manifests/` the seeds), so every tool works on it by name:
+`make mock EXAM=<name>` runs `setup.sh`, `make mock-score` runs `verify.sh`,
+`make mock-test` runs the CI loop. In addition to the chapter rules:
+
+- `lab.env` sets `EXAM_MINUTES` and `EXAM_PASS_PERCENT`; `verify.sh` passes the
+  pass mark to `finish_checks` as `KBOOK_PASS_PERCENT` and calls
+  `report_elapsed` for the time used.
+- Use several Namespaces and at least two contexts of your own (prefixed with
+  the exam name, listed in `LAB_EXTRA_CONTEXTS`), so readers practise switching
+  context per question. List every Namespace in `LAB_SNAPSHOT_NS`.
+- Cover only chapters that exist. Aim to be harder and more hurried than the
+  real exam, as killer.sh is, and randomize every value a reader must find.
 
 ## Step by step (KodeKloud style)
 
@@ -147,12 +180,12 @@ finish_checks
 
 ## What CI proves for every lab
 
-`make test CH=n` (all parts, or `PART=x`) fails unless all of these hold:
+`make test CH=n` (all parts, or `PART=x`) and `make mock-test EXAM=name` fail unless all of these hold:
 
-1. `verify.sh` fails on the untouched lab, and after `reset`.
+1. `verify.sh` fails on the untouched lab, and after `reset`; so does every task on its own (`LAB_ONLY_TASK=<id>`).
 2. `setup.sh` is idempotent (run twice in a row).
 3. `verify.sh` is read-only: a normalized snapshot of the lab namespace(s) is identical before and after every verify run.
-4. `verify.sh` passes after `solve.sh`, and so does `make check` for every task of the chapter text in order, ending with the lab complete; `verify.sh` has no check beyond the last task.
+4. `verify.sh` passes after `solve.sh`. The tasks in the text and the checks match one to one (no check beyond the last task), and for step-by-step labs `make check` passes every task in order, ending with the lab complete.
 5. Unrelated cluster state survives: a sentinel namespace, ConfigMap, and ClusterRole created before the run must still exist with the same UIDs after every part.
 
 `make test-harness` tests these guarantees themselves against a fake `kubectl` (it deliberately feeds the loop broken labs and unsafe clusters and checks that they are caught). Run it whenever `tools/` changes. `make test-lib` covers the kubeconfig helpers and `make test-render` the question validator.

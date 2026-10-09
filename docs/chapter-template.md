@@ -74,6 +74,25 @@ Note: fix the Pod in place. Do **not** delete and recreate it.
 - Task N is `check N` in `verify.sh`. In a lab with parts, tasks are `####`
   headings under `### Part <part>: ...`.
 
+The last lab (or part) of each Part of the book is **exam style** instead, as
+a bridge to the mock exams; Chapter 03's `final` part is the reference. All
+questions are shown at once and scored together with `make verify`:
+
+```markdown
+#### Question 3 | Relabel
+
+Task weight: 20%
+
+Use context: `kubectl config use-context kind-kbook`
+
+In Namespace `ch03-f2`, change the label `stage=old` to `stage=new` on every
+Pod that has it. The Pod with `stage=keep` must not change.
+```
+
+Keep `Task weight` a plain line (no emphasis; markdownlint MD036), name every
+Namespace and answer file in full, and make the weights add up to 100. See
+`lab-authoring.md`, "Two lab styles".
+
 ## Question rules
 
 - 10 to 15 per chapter; at least 3 must be performance tasks for chapters serving CKA, CKAD, or CKS

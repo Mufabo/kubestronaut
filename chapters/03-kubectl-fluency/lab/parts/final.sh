@@ -1,18 +1,20 @@
 # shellcheck shell=bash
 # shellcheck disable=SC2034,SC2154,SC2329  # variables come from the sourcing script; check functions are passed by name
-# Part final: timed mini-exam, Pods only, no jq/yq. Sourced by common.sh.
+# Part final: timed mini-exam in exam style (killer.sh), Pods only, no jq/yq.
+# Weighted questions, all scored at once. Sourced by common.sh.
 F1=ch03-f1
 F2=ch03-f2
-RED=/tmp/ch03-final-red.txt     # Task 2
-GEN=/tmp/ch03-final-gen.yaml    # Task 5
-IMG=/tmp/ch03-final-img.txt     # Task 6
+COURSE=/tmp/kbook/ch03-final    # exam-style answer folders
+RED=${COURSE}/2/pods            # Question 2
+GEN=${COURSE}/5/gen.yaml        # Question 5
+IMG=${COURSE}/6/pod             # Question 6
 TARGET_MINUTES=20
 
 part_setup() {
   require_lab_cluster
   lab_teardown_ns "$F1"
   lab_teardown_ns "$F2"
-  rm -f "$RED" "$GEN" "$IMG"
+  lab_course_reset "$COURSE" 2 5 6
   mkdir -p "$STATE"
   lab_create_ns "$F1"
   lab_create_ns "$F2"
@@ -64,12 +66,12 @@ part_verify() {
     rows="$(kubectl -n "$F1" get pods -o jsonpath='{range .items[*]}{.metadata.name}|{.spec.containers[0].image}{"\n"}{end}')" &&
     [[ -f "$IMG" && "$(file_token "$IMG")" == "$(awk -F'|' '$2=="nginx:1.26"{print $1}' <<<"$rows" | tr -d '[:space:]')" && -n "$(file_token "$IMG")" ]]
   }
-  check 1 "(${F1}) Pod sleeper: busybox:1.36, sleeps, label team=blue, one container, Running" "kubectl run ... --labels=... --command -- sleep 3600" t1
-  check 2 "(${F1}) the Pods labelled team=red are listed in ${RED}" "a label selector with -o name" t2
-  check 3 "(${F2}) Pods that were stage=old are now stage=new; x3 is unchanged" "kubectl label with a selector needs --overwrite to change an existing value" t3
-  check 4 "(${F2}) Pod x1 runs nginx:1.27 and was NOT recreated" "kubectl set image; the container name is not the Pod name, look it up" t4
-  check 5 "(${F2}) Pod gen (busybox:1.36, env FOO=bar, one container) was generated into ${GEN} and applied" "--dry-run=client -o yaml, --env, then apply" t5
-  check 6 "(${F1}) the Pod that runs nginx:1.26 is named in ${IMG}" "custom-columns or JSONPath over all Pods" t6
+  check_weighted 1 15 "(${F1}) Pod sleeper: busybox:1.36, sleeps, label team=blue, one container, Running" "kubectl run ... --labels=... --command -- sleep 3600" t1
+  check_weighted 2 15 "(${F1}) the Pods labelled team=red are listed in ${RED}" "a label selector with -o name" t2
+  check_weighted 3 20 "(${F2}) Pods that were stage=old are now stage=new; x3 is unchanged" "kubectl label with a selector needs --overwrite to change an existing value" t3
+  check_weighted 4 15 "(${F2}) Pod x1 runs nginx:1.27 and was NOT recreated" "kubectl set image; the container name is not the Pod name, look it up" t4
+  check_weighted 5 20 "(${F2}) Pod gen (busybox:1.36, env FOO=bar, one container) was generated into ${GEN} and applied" "--dry-run=client -o yaml, --env, then apply" t5
+  check_weighted 6 15 "(${F1}) the Pod that runs nginx:1.26 is named in ${IMG}" "custom-columns or JSONPath over all Pods" t6
   if [[ -f "${STATE}/final-start" ]]; then
     local now elapsed
     now="$(date +%s)"; elapsed=$((now - $(cat "${STATE}/final-start")))
@@ -97,7 +99,8 @@ part_teardown() {
   require_lab_cluster
   lab_teardown_ns "$F1"
   lab_teardown_ns "$F2"
-  rm -f "$RED" "$GEN" "$IMG" "${STATE}/final-start" "${STATE}/final-x1-uid"
+  lab_course_remove "$COURSE"
+  rm -f "${STATE}/final-start" "${STATE}/final-x1-uid"
   lab_restore_kubectx "${STATE}/kubectx"
   info "Final removed."
 }

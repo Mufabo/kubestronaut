@@ -1,15 +1,17 @@
 #!/usr/bin/env bash
-# CI loop for one chapter: every part it declares, or just one.
-#   test-lab.sh <chapter-number> [part]
+# CI loop for one lab (a chapter or a mock exam): every part it declares, or one.
+#   test-lab.sh <chapter-number|exam-name> [part]
 #
 # For each part it proves that:
-#   1. the untouched lab FAILS verification (checks are real, not vacuous)
+#   1. the untouched lab FAILS verification, and so does EVERY task on its own
+#      (no task can be passed by doing nothing)
 #   2. setup is idempotent (running it twice in a row works)
 #   3. verify.sh is READ-ONLY (a snapshot of the lab namespace(s) is identical
 #      before and after every verify run)
-#   4. the reference solution PASSES verification, and the step-by-step runner
-#      (make check) accepts every task of the chapter text in order
-#   5. reset returns the lab to a failing starting state
+#   4. the reference solution PASSES verification; the tasks in the text match
+#      the checks one to one; and for step-by-step labs, make check accepts
+#      every task in order
+#   5. reset returns the lab to a failing starting state, task by task
 # and, across the whole run, that the lab never touches unrelated cluster state
 # (sentinel namespace, ConfigMap, and ClusterRole created before the run must
 # survive with the same UIDs).
@@ -76,24 +78,47 @@ run_verify() {
   fi
 }
 
-# walk_steps   (after solve) the step-by-step runner must accept every task of
-# the chapter text in order, which proves the text's tasks and verify's checks
-# line up one to one, and then report the lab complete.
-walk_steps() {
-  local step="${here}/step.sh" count i out
-  count="$(bash "$step" "$ch" count "$part")" || fail "the step runner found no tasks in the chapter text"
-  bash "$step" "$ch" start "$part" >/dev/null || fail "step runner: start failed"
-  for ((i = 1; i <= count; i++)); do
-    out="$(bash "$step" "$ch" check "$part" 2>&1)" ||
-      fail "make check failed on task ${i} of ${count} after the reference solution: $(tail -n 3 <<<"$out")"
+# each_task_fails   on an untouched (or reset) lab, every task must fail on its
+# own, so no task can be passed by doing nothing. Optional tasks are exempt.
+each_task_fails() {
+  local i out rc
+  for ((i = 1; ; i++)); do
+    rc=0
+    out="$(LAB_ONLY_TASK=$i bash "${here}/run-lab.sh" "$ch" verify "$part" 2>&1)" || rc=$?
+    ((rc == 2)) && break                       # no check $i: past the last task
+    [[ "$out" == *TODO* ]] && continue         # optional tasks never fail
+    ((rc != 0)) || fail "task ${i} passes on the untouched lab; its check is vacuous"
   done
-  out="$(bash "$step" "$ch" check "$part" 2>&1)"
-  [[ "$out" == *"Lab complete"* ]] || fail "after ${count} tasks the step runner did not report the lab complete"
-  # One more task in the text than in verify.sh would make check fail with
-  # "no check matched"; one fewer would leave a check no step ever runs.
+  ((i > 1)) || fail "verify.sh has no check 1"
+}
+
+# walk_steps   (after solve) the step-by-step runner must accept every task of
+# the chapter text in order and then report the lab complete. Exam-style labs
+# (Question headings) are scored all at once instead, so for them only the
+# one-to-one match of text and checks is proven.
+walk_steps() {
+  local step="${here}/step.sh" count mode i out
+  count="$(bash "$step" "$ch" count "$part")" || fail "the step runner found no tasks or questions in the text"
+  mode="$(bash "$step" "$ch" mode "$part")"
+  if [[ "$mode" == task ]]; then
+    bash "$step" "$ch" start "$part" >/dev/null || fail "step runner: start failed"
+    for ((i = 1; i <= count; i++)); do
+      out="$(bash "$step" "$ch" check "$part" 2>&1)" ||
+        fail "make check failed on task ${i} of ${count} after the reference solution: $(tail -n 3 <<<"$out")"
+    done
+    out="$(bash "$step" "$ch" check "$part" 2>&1)"
+    [[ "$out" == *"Lab complete"* ]] || fail "after ${count} tasks the step runner did not report the lab complete"
+    bash "$step" "$ch" clear "$part"
+  else
+    for ((i = 1; i <= count; i++)); do
+      LAB_ONLY_TASK=$i bash "${here}/run-lab.sh" "$ch" verify "$part" >/dev/null 2>&1 ||
+        fail "question ${i} of ${count} in the text has no passing check after the reference solution"
+    done
+  fi
+  # A check beyond the last task in the text would never be shown to readers.
   out="$(LAB_ONLY_TASK=$((count + 1)) bash "${here}/run-lab.sh" "$ch" verify "$part" 2>&1)" &&
-    fail "verify.sh has more checks than the chapter text has tasks (check $((count + 1)) exists)"
-  bash "$step" "$ch" clear "$part"
+    fail "verify.sh has more checks than the text has tasks (check $((count + 1)) exists)"
+  return 0
 }
 
 parts="$(bash "${here}/lab-parts.sh" "$ch")" || exit 1
@@ -106,7 +131,7 @@ else
 fi
 
 for part in "${list[@]}"; do
-  echo "=== chapter ${ch}${part:+ part ${part}} ==="
+  echo "=== ${ch}${part:+ part ${part}} ==="
   namespaces="$(bash "${here}/lab-namespaces.sh" snapshot "$ch" "$part")" || exit 1
   if [[ -z "$namespaces" ]]; then
     echo "note: this lab declares no namespace (LAB_NS / LAB_SNAPSHOT_NS); the verify read-only check is skipped" >&2
@@ -115,16 +140,19 @@ for part in "${list[@]}"; do
   echo "### setup again (idempotency)";  run "$ch" setup "$part" || fail "second setup failed"
   echo "### verify on starting state (must fail, must not change anything)"
   run_verify fail "verify passed on the untouched lab"
+  echo "### every task fails on its own on the starting state"
+  each_task_fails
   echo "### solve";                      run "$ch" solve "$part" || fail "solve failed"
   echo "### verify after solve (must pass, must not change anything)"
   run_verify pass "verify failed after the reference solution"
-  echo "### step by step (make check passes every task in order and ends complete)"
+  echo "### text and checks line up (step labs: make check passes every task in order)"
   walk_steps
   echo "### reset";                      run "$ch" reset "$part" || fail "reset failed"
-  echo "### verify after reset (must fail)"
+  echo "### verify after reset (must fail, every task on its own)"
   run_verify fail "verify passed after reset"
+  each_task_fails
   [[ "$(sentinel_uids)" == "$sentinel_before" ]] ||
     fail "the lab changed or deleted unrelated cluster state (sentinel resources differ)"
 done
 part=""
-echo "LAB TEST OK (chapter ${ch})"
+echo "LAB TEST OK (${ch})"

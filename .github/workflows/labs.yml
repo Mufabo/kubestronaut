@@ -43,3 +43,4 @@ jobs:
       - name: Unit-test shared helpers
         run: make test-lib
       - run: make test-tier1
+      - run: make test-mocks

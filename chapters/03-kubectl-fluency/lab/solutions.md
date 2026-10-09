@@ -183,7 +183,7 @@ The built-in `view` role allows reading most objects in a namespace but **not Se
 # 1
 kubectl -n ch03-f1 run sleeper --image=busybox:1.36 --labels=team=blue --command -- sleep 3600
 # 2
-kubectl -n ch03-f1 get pods -l team=red -o name > /tmp/ch03-final-red.txt
+kubectl -n ch03-f1 get pods -l team=red -o name > /tmp/kbook/ch03-final/2/pods
 # 3  (--overwrite is required to change an existing value)
 kubectl -n ch03-f2 label pods -l stage=old stage=new --overwrite
 # 4  (look up the container name first)
@@ -191,12 +191,12 @@ kubectl -n ch03-f2 get pod x1 -o jsonpath='{.spec.containers[*].name}'     # web
 kubectl -n ch03-f2 set image pod/x1 web=nginx:1.27
 # 5
 kubectl -n ch03-f2 run gen --image=busybox:1.36 --env=FOO=bar \
-  --dry-run=client -o yaml --command -- sleep 3600 > /tmp/ch03-final-gen.yaml
-kubectl -n ch03-f2 apply -f /tmp/ch03-final-gen.yaml
+  --dry-run=client -o yaml --command -- sleep 3600 > /tmp/kbook/ch03-final/5/gen.yaml
+kubectl -n ch03-f2 apply -f /tmp/kbook/ch03-final/5/gen.yaml
 # 6
 kubectl -n ch03-f1 get pods \
   -o custom-columns=NAME:.metadata.name,IMAGE:.spec.containers[0].image --no-headers \
-  | awk '$2=="nginx:1.26"{print $1}' > /tmp/ch03-final-img.txt
+  | awk '$2=="nginx:1.26"{print $1}' > /tmp/kbook/ch03-final/6/pod
 ```
 
 In step 3 the selector `-l stage=old` is evaluated once, before any change, so relabelling the matching Pods does not affect which Pods are chosen.

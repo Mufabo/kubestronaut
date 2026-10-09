@@ -923,45 +923,73 @@ Use `kubectl auth can-i`; do not guess. The answer is the cluster's, not yours.
 
 ### Part final: timed mini-exam
 
-The clock starts when `make lab CH=3 PART=final` finishes. Your target is **20 minutes**; the checks report your elapsed time but never fail you for being slow. Pods only, and no `jq` or `yq`. The Namespaces are `ch03-f1` (Pods `r1`, `r2`, `b1`) and `ch03-f2` (Pods `x1`, `x2`, `x3`).
+This part is a dress rehearsal for the exam, in the style of the killer.sh
+simulator, so it works differently from the other parts. There are no
+step-by-step checks: you get all six questions at once, answer them in any
+order, and score yourself with `make verify CH=3 PART=final` when you are
+done. Each question has a task weight and counts only when everything it asks
+for is right; the lab is complete at 100%.
 
-#### Task F1: Run a labelled Pod
+The clock starts when `make lab CH=3 PART=final` finishes. Your target is **20
+minutes**; `make verify` reports the time you used but never fails you for
+being slow. Pods only, and no `jq` or `yq`. Answer files go under
+`/tmp/kbook/ch03-final/<question>/`; the folders already exist.
 
-- Namespace: `ch03-f1`
-- Name: `sleeper`
-- Image: `busybox:1.36` (a single container), running `sleep 3600`
-- Label: `team=blue`
+#### Question 1 | Run a labelled Pod
 
-#### Task F2: Select by label
+Task weight: 15%
 
-Save the names of the Pods in `ch03-f1` labelled `team=red`.
+Use context: `kubectl config use-context kind-kbook`
 
-- File: `/tmp/ch03-final-red.txt`
+Create a Pod named `sleeper` in Namespace `ch03-f1` with a single container of
+image `busybox:1.36` that runs `sleep 3600`, and the label `team=blue`.
 
-#### Task F3: Relabel
+#### Question 2 | Select by label
 
-In `ch03-f2`, change the label `stage=old` to `stage=new` on every Pod that has it. The Pod with `stage=keep` must not change.
+Task weight: 15%
 
-#### Task F4: Change an image in place
+Use context: `kubectl config use-context kind-kbook`
 
-In `ch03-f2`, change the image of the Pod `x1` without recreating it. Look up the container's name first.
+Write the names of the Pods in Namespace `ch03-f1` labelled `team=red` into
+`/tmp/kbook/ch03-final/2/pods`.
 
-- New image: `nginx:1.27`
+#### Question 3 | Relabel
 
-#### Task F5: Generate, then create
+Task weight: 20%
 
-Generate a manifest with `--dry-run=client -o yaml`, save it, then create the Pod from the file in `ch03-f2`.
+Use context: `kubectl config use-context kind-kbook`
 
-- Name: `gen`
-- Image: `busybox:1.36` (a single container), running `sleep 3600`
-- Environment variable: `FOO=bar`
-- Manifest file: `/tmp/ch03-final-gen.yaml`
+In Namespace `ch03-f2`, change the label `stage=old` to `stage=new` on every
+Pod that has it. The Pod with `stage=keep` must not change.
 
-#### Task F6: Find by image
+#### Question 4 | Change an image in place
 
-Save the name of the one Pod in `ch03-f1` whose image is `nginx:1.26`.
+Task weight: 15%
 
-- File: `/tmp/ch03-final-img.txt`
+Use context: `kubectl config use-context kind-kbook`
+
+Change the image of the Pod `x1` in Namespace `ch03-f2` to `nginx:1.27`
+without recreating it. Look up the container's name first.
+
+#### Question 5 | Generate, then create
+
+Task weight: 20%
+
+Use context: `kubectl config use-context kind-kbook`
+
+Generate (with `--dry-run=client -o yaml`) a manifest for a Pod named `gen`
+with a single container of image `busybox:1.36` that runs `sleep 3600` and has
+the environment variable `FOO=bar`, into `/tmp/kbook/ch03-final/5/gen.yaml`.
+Then create the Pod in Namespace `ch03-f2` from that file.
+
+#### Question 6 | Find by image
+
+Task weight: 15%
+
+Use context: `kubectl config use-context kind-kbook`
+
+Write the name of the one Pod in Namespace `ch03-f1` whose image is
+`nginx:1.26` into `/tmp/kbook/ch03-final/6/pod`.
 
 ## Exam tips
 

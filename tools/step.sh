@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Step-by-step lab runner, in the style of KodeKloud's labs: one task at a time,
 # a Check that tests only the current task, and progress that carries over.
-#   step.sh <chapter-number> <start|question|check|skip|clear|count> [part]
+#   step.sh <chapter-number|exam-name> <start|question|check|skip|clear|count|mode> [part]
 #
 #   start     go back to task 1 and print it (make lab / make reset call this)
 #   question  print the current task again
@@ -10,6 +10,7 @@
 #   skip      move on without checking (useful for optional tasks)
 #   clear     forget the progress (make teardown calls this)
 #   count     print the number of tasks
+#   mode      print "task" (step by step) or "question" (exam style)
 #
 # The tasks are read from the chapter text itself: the "### Task ..." headings
 # in its "## Hands-on lab" section, or, for a lab with parts, the
@@ -17,13 +18,17 @@
 # check N in verify.sh; CI walks every lab through all of its steps to prove
 # the two line up.
 #
+# A lab whose headings are "Question N | ..." instead of "Task ..." is exam
+# style (killer.sh): no step-by-step checks, all questions scored at once by
+# verify. Mock exams (mock-exams/<name>/<name>.md) are always exam style.
+#
 # Exit codes: 0 = done / correct, 1 = not yet correct, 2 = usage or lab error.
 set -euo pipefail
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=/dev/null
 source "${here}/lib.sh"
 ch="${1:?chapter number}"
-action="${2:?start|question|check|skip|clear|count}"
+action="${2:?start|question|check|skip|clear|count|mode}"
 part="${3:-${LAB_PART:-}}"
 
 usage_error() { printf '%s\n' "error: $*" >&2; exit 2; }
@@ -43,27 +48,55 @@ fi
 text="${dir}/$(basename "$dir").md"
 [[ -f "$text" ]] || usage_error "chapter text not found: ${text}"
 state="${dir}/lab/.state/step${part:+-${part}}"
-make_args="CH=$((10#$ch))${part:+ PART=${part}}"
+if [[ "$ch" =~ ^[0-9]+$ ]]; then
+  make_args="CH=$((10#$ch))${part:+ PART=${part}}"; score_cmd="make verify ${make_args}"; mock=0
+else
+  make_args="EXAM=${ch}"; score_cmd="make mock-score ${make_args}"; mock=1
+fi
 
-# tasks <n>   print task n (heading and body); with n=0, print the task count
+# tasks <n>   print task n (heading and body); with n=0, print "<count> <kind>"
+# where kind is task (step by step), question (exam style), mixed, or none.
+# A mock exam's whole file holds "## Question" headings; a chapter's lab
+# section holds "### Task" or "### Question" headings ("####" under a part).
 tasks() {
-  awk -v want="$1" -v part="$part" '
+  awk -v want="$1" -v part="$part" -v mock="$mock" '
+    function heading(line, level) {
+      if (index(line, level "Task ") == 1)     { tk++; return 1 }
+      if (index(line, level "Question ") == 1) { qs++; return 1 }
+      return 0
+    }
+    mock == 1 {
+      if (heading($0, "## ")) { n++; intask = (n == want); if (intask) print; next }
+      if ($0 ~ /^#+ /) { intask = 0; next }
+      if (intask) print
+      next
+    }
     /^## /                { inlab = ($0 == "## Hands-on lab"); inpart = 0; intask = 0; next }
     !inlab                { next }
     part != "" && /^### / { inpart = (index($0, "### Part " part ":") == 1); intask = 0; next }
     part != "" && !inpart { next }
     {
       level = (part == "") ? "### " : "#### "
-      if (index($0, level "Task ") == 1) { n++; intask = (n == want); if (intask) print; next }
+      if (heading($0, level)) { n++; intask = (n == want); if (intask) print; next }
       if ($0 ~ /^#+ /) { intask = 0; next }
       if (intask) print
     }
-    END { if (want == 0) print n + 0 }
+    END {
+      if (want == 0) print n + 0, (tk && qs) ? "mixed" : tk ? "task" : qs ? "question" : "none"
+    }
   ' "$text"
 }
 
-count="$(tasks 0)"
-((count > 0)) || usage_error "no tasks found in the lab section of ${text}"
+read -r count kind < <(tasks 0)
+((count > 0)) || usage_error "no tasks found in ${text}"
+[[ "$kind" != mixed ]] || usage_error "${text} mixes Task and Question headings in one lab"
+
+# Exam style (killer.sh): all questions at once, scored together with verify.
+exam_banner() {
+  printf '%s\n' "${C_DIM}── Exam style: ${count} questions ───────────────────────${C_RST}"
+  printf '%s\n' "Answer them in any order, as in the exam. The questions are in"
+  printf '%s\n' "${text#"${BOOK_ROOT}"/}${part:+ (Part ${part})}. Score yourself with: ${score_cmd}"
+}
 
 current() {
   local n=1
@@ -91,7 +124,18 @@ show() {
 }
 
 case "$action" in
-  count)    echo "$count" ;;
+  count) echo "$count"; exit 0 ;;
+  mode)  echo "$kind"; exit 0 ;;
+esac
+if [[ "$kind" == question ]]; then
+  case "$action" in
+    start|question) exam_banner; exit 0 ;;
+    clear)          rm -f "$state"; exit 0 ;;
+    check|skip)     exam_banner >&2; usage_error "this lab is exam style: no per-question checks" ;;
+    *)              usage_error "unknown action '${action}'" ;;
+  esac
+fi
+case "$action" in
   start)    save 1; show 1 ;;
   question) show "$(current)" ;;
   clear)    rm -f "$state" ;;

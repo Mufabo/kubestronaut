@@ -1,0 +1,13 @@
+# Namespace p1-europa, question 3: a Pod whose command has a typo.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ledger
+  labels: {app: ledger, team: finance}
+  annotations: {owner: finance-ops}
+spec:
+  containers:
+    - name: ledger
+      image: busybox:1.36
+      command: ["sleeep", "3600"]
+      resources: {requests: {cpu: 5m, memory: 8Mi}, limits: {cpu: 50m, memory: 32Mi}}

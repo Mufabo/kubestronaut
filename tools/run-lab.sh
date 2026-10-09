@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Run one of a chapter's lab scripts.
-#   run-lab.sh <chapter-number> <setup|reset|verify|solve|teardown|use-namespace> [part]
+# Run one of a lab's scripts. A lab is a chapter (by number) or a mock exam
+# (by name, from mock-exams/).
+#   run-lab.sh <chapter-number|exam-name> <setup|reset|verify|solve|teardown|use-namespace> [part]
 #
 # Labs may be split into parts (LAB_PARTS="a b1 b2" in lab/lab.env). The part
 # comes from the third argument or $LAB_PART; if omitted, the first part is
@@ -10,7 +11,7 @@
 # from the lab script itself.
 set -euo pipefail
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ch="${1:?chapter number}"
+ch="${1:?chapter number (CH=n) or mock exam name (EXAM=name)}"
 action="${2:?setup|reset|verify|solve|teardown}"
 part="${3:-${LAB_PART:-}}"
 

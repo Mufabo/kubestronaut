@@ -1,4 +1,5 @@
 chapters/*/lab/.state/
+mock-exams/*/lab/.state/
 *.swp
 .DS_Store
 __pycache__/

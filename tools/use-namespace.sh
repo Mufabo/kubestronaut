@@ -13,4 +13,5 @@ ns="$(bash "${here}/lab-namespaces.sh" default "$ch" "${LAB_PART:-}")"
 require_lab_cluster
 lab_save_kubectx "${dir}/lab/.state/kubectx"
 kubectl config set-context --current --namespace="$ns" >/dev/null
-info "kubectl now defaults to namespace '${ns}'. Undo with: make teardown CH=${ch}"
+if [[ "$ch" =~ ^[0-9]+$ ]]; then undo="make teardown CH=${ch}"; else undo="make mock-teardown EXAM=${ch}"; fi
+info "kubectl now defaults to namespace '${ns}'. Undo with: ${undo}"

@@ -1,0 +1,13 @@
+# Namespace p1-io, question 6: a Pod that already finished with a random exit code.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: importer
+  labels: {app: importer}
+spec:
+  restartPolicy: Never
+  containers:
+    - name: importer
+      image: busybox:1.36
+      command: ["sh", "-c", "echo importing batch; exit __CODE__"]
+      resources: {requests: {cpu: 5m, memory: 8Mi}, limits: {cpu: 50m, memory: 32Mi}}

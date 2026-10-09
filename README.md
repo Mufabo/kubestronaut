@@ -22,6 +22,19 @@ make teardown CH=4    # remove the lab and restore your kubectl settings
 ```
 
 Labs work like KodeKloud's: one task at a time, a check after each, and
-progress that is saved between sessions.
+progress that is saved between sessions. The last lab of each Part, and the
+mock exams, work like the killer.sh exam simulator instead: weighted
+questions, a context per question, all scored at once.
+
+## Mock exams
+
+Timed, scored simulators with several contexts and a pass mark. See
+[`mock-exams/`](mock-exams/README.md).
+
+```bash
+make mock EXAM=part1          # the clock starts when it is ready
+make mock-score EXAM=part1
+make mock-teardown EXAM=part1
+```
 
 Run `make help` for everything else. Author-facing docs are in `docs/`.

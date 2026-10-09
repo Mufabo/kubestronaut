@@ -4,7 +4,7 @@ A hands-on textbook covering everything needed for the five certifications that 
 
 - **Audience:** readers who already know Linux, basic web development, and containers.
 - **Format:** one Markdown file per chapter, plus setup files for each chapter's lab environment.
-- **Labs:** KodeKloud/Killercoda-style, repeatable and resettable with one command, self-checking.
+- **Labs:** KodeKloud-style for learning (one task at a time, a check after each); killer.sh-style for the last lab of each Part and the mock exams (weighted questions, a context per question, scored together against a pass mark). All repeatable and resettable with one command.
 - **Assessment:** end-of-chapter questions in every chapter, plus a mock exam per certification.
 
 > **Before locking the outline:** verify each certification's current curriculum (domains, weights, Kubernetes version) on the CNCF/Linux Foundation curriculum repos. Update `docs/coverage-matrix.md` (see §6) whenever they change.
@@ -55,7 +55,8 @@ kubestronaut-book/
 │           ├── verify.sh        # per-task PASS/FAIL
 │           ├── solve.sh         # automated reference solution (CI)
 │           └── solutions.md     # human-readable, kept separate to avoid spoilers
-├── mock-exams/
+├── mock-exams/                  # same layout as a chapter; make mock EXAM=<name>
+│   ├── part1/                   # Part I simulator (checkpoint, done)
 │   ├── kcna/  kcsa/  ckad/  cka/  cks/
 └── appendices/
 ```
@@ -180,7 +181,8 @@ Legend: **A** = KCNA, **S** = KCSA, **D** = CKAD, **C** = CKA, **X** = CKS. Tier
 | 37 | Terminal speed: aliases, `vim`, `tmux`, `jq`/`yq`, imperative commands | D C X | 1 |
 | 38 | Navigating the allowed documentation | D C X | none |
 | 39 | Exam logistics and study plans per certification | all | none |
-| M1-M5 | Mock exams: KCNA, KCSA (question banks); CKAD, CKA, CKS (timed performance-based) | all | 1/2 |
+| P1 | Part I simulator: a killer.sh-style checkpoint over Chapters 02 to 04 (done, `mock-exams/part1`) | D C | 1 |
+| M1-M5 | Mock exams: KCNA, KCSA (question banks); CKAD, CKA, CKS (timed performance-based, killer.sh style) | all | 1/2 |
 
 ### Appendices
 

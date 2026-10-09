@@ -55,8 +55,13 @@ make_lab() {
     if [[ -n "$parts" ]]; then
       local p; for p in $parts; do printf '### Part %s: fixture\n\n#### Task 1: Answer\n\nCreate it.\n\n' "$p"; done
     else
-      printf '### Task 1: Answer\n\nCreate ConfigMap answer.\n\n'
+      if [[ "$mode" == examq ]]; then
+        printf '### Question 1 | Answer\n\nTask weight: 100%%\n\nCreate ConfigMap answer.\n\n'
+      else
+        printf '### Task 1: Answer\n\nCreate ConfigMap answer.\n\n'
+      fi
       [[ "$mode" == extratask ]] && printf '### Task 2: Extra\n\nThis task has no check.\n\n'
+      [[ "$mode" == lazytask ]] && printf '### Task 2: Free\n\nNothing to do.\n\n'
     fi
     printf '## Exam tips\n\n### Task 9: not a lab task\n'
   } > "${d}/../${nn}-${slug}.md"
@@ -83,6 +88,8 @@ ns_var="LAB_NS_${LAB_PART:-}"; ns="${!ns_var:-${LAB_NS:-}}"'
   printf '#!/usr/bin/env bash\n%s\nlab_teardown_ns "$ns"\nlab_restore_kubectx "${here}/.state/kubectx"\n' "$pre" > "${d}/teardown.sh"
   case "$mode" in
     vacuous)  printf '#!/usr/bin/env bash\nexit 0\n' > "${d}/verify.sh" ;;
+    lazytask) printf '#!/usr/bin/env bash\nset -uo pipefail\n%s\nanswered() { kubectl -n "$ns" get configmap answer -o jsonpath="{.metadata.uid}"; }\ncheck 1 "answer exists" "create configmap answer" answered\ncheck 2 "always true" "nothing to do" true\nfinish_checks\n' "${pre/set -euo pipefail/}" > "${d}/verify.sh" ;;
+    examq) printf '#!/usr/bin/env bash\nset -uo pipefail\n%s\nanswered() { kubectl -n "$ns" get configmap answer -o jsonpath="{.metadata.uid}"; }\ncheck_weighted 1 100 "answer exists" "create configmap answer" answered\nfinish_checks\n' "${pre/set -euo pipefail/}" > "${d}/verify.sh" ;;
     extracheck) printf '#!/usr/bin/env bash\nset -uo pipefail\n%s\nanswered() { kubectl -n "$ns" get configmap answer -o jsonpath="{.metadata.uid}"; }\ncheck 1 "answer exists" "create configmap answer" answered\ncheck 2 "answer still exists" "no task asks for this" answered\nfinish_checks\n' "${pre/set -euo pipefail/}" > "${d}/verify.sh" ;;
     mutating) printf '#!/usr/bin/env bash\nset -uo pipefail\n%s\nkubectl -n "$ns" create configmap oops --from-literal=x=y >/dev/null 2>&1 || true\nanswered() { kubectl -n "$ns" get configmap answer -o jsonpath="{.metadata.uid}"; }\ncheck 1 "answer exists" "create it" answered\nfinish_checks\n' "${pre/set -euo pipefail/}" > "${d}/verify.sh" ;;
     *)        printf '#!/usr/bin/env bash\nset -uo pipefail\n%s\nanswered() { kubectl -n "$ns" get configmap answer -o jsonpath="{.metadata.uid}"; }\ncheck 1 "answer exists" "create configmap answer" answered\nfinish_checks\n' "${pre/set -euo pipefail/}" > "${d}/verify.sh" ;;
@@ -110,6 +117,8 @@ make_lab 93 killer killer
 make_lab 94 single good
 make_lab 95 extratask extratask
 make_lab 96 extracheck extracheck
+make_lab 97 lazytask lazytask
+make_lab 98 examq examq
 
 # ---- safety ---------------------------------------------------------------------
 fresh_state kind-production kbook
@@ -138,7 +147,40 @@ expect "a lab that destroys unrelated state is caught" nonzero "unrelated cluste
 fresh_state kind-kbook kbook
 expect "a chapter text with a task that has no check is caught" nonzero "make check failed on task 2" -- bash tools/test-lab.sh 95
 fresh_state kind-kbook kbook
-expect "a check that no task in the text asks for is caught" nonzero "more checks than the chapter text has tasks" -- bash tools/test-lab.sh 96
+expect "a check that no task in the text asks for is caught" nonzero "more checks than the text has tasks" -- bash tools/test-lab.sh 96
+fresh_state kind-kbook kbook
+expect "a single task that passes on the untouched lab is caught" nonzero "task 2 passes on the untouched lab" -- bash tools/test-lab.sh 97
+fresh_state kind-kbook kbook
+expect "an exam-style lab passes the loop" 0 "LAB TEST OK" -- bash tools/test-lab.sh 98
+
+# ---- scoring: one check per task; weights for exam style ---------------------------
+expect "weighted questions print a score" nonzero "Score: 60% (1 of 2 questions)" -- \
+  bash -c 'source tools/lib.sh; check_weighted 1 60 A h true; check_weighted 2 40 B h false; finish_checks'
+expect "a pass mark lets a mock exam pass without every question" 0 "PASSED (pass mark 60%)" -- \
+  env KBOOK_PASS_PERCENT=60 bash -c 'source tools/lib.sh; check_weighted 1 60 A h true; check_weighted 2 40 B h false; finish_checks'
+expect "below the pass mark a mock exam fails" nonzero "NOT PASSED" -- \
+  env KBOOK_PASS_PERCENT=66 bash -c 'source tools/lib.sh; check_weighted 1 60 A h true; check_weighted 2 40 B h false; finish_checks'
+expect "weights that do not add up to 100 are an error" nonzero "add up to 90%" -- \
+  bash -c 'source tools/lib.sh; check_weighted 1 90 A h true; finish_checks'
+expect "mixing check and check_weighted is an error" nonzero "mixes check and check_weighted" -- \
+  bash -c 'source tools/lib.sh; check 1 A h true; check_weighted 2 100 B h true; finish_checks'
+expect "one weighted question can be checked on its own" 0 "PASS  Question 1" -- \
+  env KBOOK_PASS_PERCENT=66 LAB_ONLY_TASK=1 bash -c 'source tools/lib.sh; check_weighted 1 60 A h true; check_weighted 2 40 B h false; finish_checks'
+expect "answer folders outside /tmp/kbook are refused" nonzero "refusing" -- \
+  bash -c 'source tools/lib.sh; lab_course_reset /tmp 1'
+expect "answer folders must be one level below /tmp/kbook" nonzero "refusing" -- \
+  bash -c 'source tools/lib.sh; lab_course_remove /tmp/kbook'
+
+# ---- exam style and mock exams ------------------------------------------------------
+fresh_state kind-kbook kbook
+in_sb bash tools/run-lab.sh 98 setup >/dev/null 2>&1
+expect "an exam-style lab shows the exam banner, not a task" 0 "Exam style: 1 questions" -- bash tools/step.sh 98 start
+expect "an exam-style lab has no per-question check" nonzero "no per-question checks" -- bash tools/step.sh 98 check
+mkdir -p "${sb}/mock-exams/zz-mock/lab"
+printf '# Mock\n\n## Question 1 | One\n\nTask weight: 100%%\n' > "${sb}/mock-exams/zz-mock/zz-mock.md"
+expect "a mock exam is found by its name" 0 "mock-exams/zz-mock" -- bash tools/lab-path.sh zz-mock
+expect "a mock exam's questions are read from its file" 0 "question" -- bash tools/step.sh zz-mock mode
+expect "an unknown mock exam name is an error" nonzero "neither a chapter number nor a mock exam" -- bash tools/lab-path.sh nope
 
 # ---- step by step (KodeKloud style) ------------------------------------------------
 fresh_state kind-kbook kbook

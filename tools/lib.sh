@@ -4,7 +4,7 @@
 #   source "$(dirname "${BASH_SOURCE[0]}")/../../../tools/lib.sh"
 #
 # Provides: logging, safety checks, waiting, namespace helpers, and the
-# check/finish_checks framework used by every verify.sh.
+# check/check_weighted/finish_checks framework used by every verify.sh.
 
 set -o pipefail
 
@@ -164,9 +164,46 @@ lab_delete_contexts() {
   done
 }
 
+# ---- answer folders (exam style) ---------------------------------------------
+# Exam-style labs and mock exams put answer files under
+# /tmp/kbook/<lab>/<question>/, the way killer.sh and the exams use
+# /opt/course/<n>/. Setup recreates the question folders empty, so readers never
+# have to mkdir; teardown removes the whole lab folder.
+KBOOK_COURSE_ROOT=/tmp/kbook
+
+# course_dir_ok <dir>   true if <dir> is exactly one level below KBOOK_COURSE_ROOT
+course_dir_ok() { [[ "$1" =~ ^${KBOOK_COURSE_ROOT}/[A-Za-z0-9._-]+$ && "$1" != */. && "$1" != */.. ]]; }
+
+# lab_course_reset <dir> <question>...
+lab_course_reset() {
+  local dir=$1 q; shift
+  course_dir_ok "$dir" || die "refusing to reset '${dir}': answer folders must be ${KBOOK_COURSE_ROOT}/<name>"
+  rm -rf "$dir"
+  for q in "$@"; do mkdir -p "${dir}/${q}"; done
+}
+
+# lab_course_remove <dir>
+lab_course_remove() {
+  course_dir_ok "$1" || die "refusing to remove '${1}': answer folders must be ${KBOOK_COURSE_ROOT}/<name>"
+  rm -rf "$1"
+}
+
 # ---- check framework (used by verify.sh) ------------------------------------
+# One check per task: a task is either done or not.
+#   check <id> <description> <hint> <command...>          (step-by-step labs)
+#   check_weighted <id> <weight> <description> <hint> <command...>
+#                                                          (exam-style labs, mock exams)
+#   check_optional <id> <description> <hint> <command...> (stretch task, never fails)
+# A verify.sh uses either check or check_weighted, not both. Weights must add
+# up to 100; finish_checks then prints the weighted score.
 CHECKS_PASSED=0
 CHECKS_FAILED=0
+CHECKS_OPTIONAL_DONE=0
+CHECKS_OPTIONAL_TODO=0
+CHECKS_PLAIN=0
+CHECKS_WEIGHTED=0
+WEIGHT_TOTAL=0
+WEIGHT_EARNED=0
 
 # Step-by-step mode (tools/step.sh, `make check`): with LAB_ONLY_TASK=<id>,
 # verify runs only that task's check, the way KodeKloud's Check button checks
@@ -174,10 +211,8 @@ CHECKS_FAILED=0
 only_this_task() { [[ -z "${LAB_ONLY_TASK:-}" || "$1" == "$LAB_ONLY_TASK" ]]; }
 
 # check_optional <task-id> <description> <hint> <command...>
-# Same as `check`, but a stretch task: it never makes the lab fail. Done tasks
-# print PASS, not-yet-done ones print TODO with the hint.
-CHECKS_OPTIONAL_DONE=0
-CHECKS_OPTIONAL_TODO=0
+# A stretch task: it never makes the lab fail. Done tasks print PASS,
+# not-yet-done ones print TODO with the hint.
 check_optional() {
   local id=$1 desc=$2 hint=$3 rc=0; shift 3
   only_this_task "$id" || return 0
@@ -192,34 +227,63 @@ check_optional() {
   fi
 }
 
-# check <task-id> <description> <hint> <command...>
-# The command runs in a subshell; success (exit 0) means PASS.
-# It should be a function that chains conditions with && (set -e does not
-# apply inside a tested command).
-# Authors: run with LAB_DEBUG=1 to see a shell trace (and any kubectl error)
-# of each failing check.
-check() {
-  local id=$1 desc=$2 hint=$3 out="" rc=0; shift 3
-  only_this_task "$id" || return 0
+# _run_check <label> <description> <hint> <command...>   returns the result
+# The command runs in a subshell; success (exit 0) means PASS. It should be a
+# function that chains conditions with && (set -e does not apply inside a
+# tested command). LAB_DEBUG=1 prints a shell trace (and any kubectl error) of
+# each failing check.
+_run_check() {
+  local label=$1 desc=$2 hint=$3 out="" rc=0; shift 3
   if [[ "${LAB_DEBUG:-0}" == "1" ]]; then
     out="$( ( set -x; "$@" ) 2>&1 )" || rc=$?
   else
     ( "$@" ) >/dev/null 2>&1 || rc=$?
   fi
   if ((rc == 0)); then
-    printf '%s\n' "${C_GRN}PASS${C_RST}  Task ${id}: ${desc}"
+    printf '%s\n' "${C_GRN}PASS${C_RST}  ${label}: ${desc}"
     CHECKS_PASSED=$((CHECKS_PASSED + 1))
-  else
-    printf '%s\n' "${C_RED}FAIL${C_RST}  Task ${id}: ${desc}"
-    printf '%s\n' "        hint: ${hint}"
-    if [[ "${LAB_DEBUG:-0}" == "1" && -n "$out" ]]; then
-      printf '%s\n' "        debug trace:"
-      printf '%s\n' "$out" | sed 's/^/          /'
-    fi
-    CHECKS_FAILED=$((CHECKS_FAILED + 1))
+    return 0
+  fi
+  printf '%s\n' "${C_RED}FAIL${C_RST}  ${label}: ${desc}"
+  printf '%s\n' "        hint: ${hint}"
+  if [[ "${LAB_DEBUG:-0}" == "1" && -n "$out" ]]; then
+    printf '%s\n' "        debug trace:"
+    printf '%s\n' "$out" | sed 's/^/          /'
+  fi
+  CHECKS_FAILED=$((CHECKS_FAILED + 1))
+  return 1
+}
+
+# check <task-id> <description> <hint> <command...>
+check() {
+  local id=$1; shift
+  only_this_task "$id" || return 0
+  CHECKS_PLAIN=$((CHECKS_PLAIN + 1))
+  _run_check "Task ${id}" "$@" || true
+}
+
+# check_weighted <question-id> <weight-percent> <description> <hint> <command...>
+check_weighted() {
+  local id=$1 weight=$2; shift 2
+  only_this_task "$id" || return 0
+  CHECKS_WEIGHTED=$((CHECKS_WEIGHTED + 1))
+  WEIGHT_TOTAL=$((WEIGHT_TOTAL + weight))
+  if _run_check "Question ${id} (${weight}%)" "$@"; then
+    WEIGHT_EARNED=$((WEIGHT_EARNED + weight))
   fi
 }
 
+# report_elapsed <start-file> <target-minutes>   time since setup finished
+report_elapsed() {
+  [[ -f "$1" ]] || return 0
+  local elapsed=$(($(date +%s) - $(cat "$1")))
+  printf 'Time used: %dm %02ds of %d minutes (reported, never enforced)\n' \
+    $((elapsed / 60)) $((elapsed % 60)) "$2"
+}
+
+# finish_checks   prints the summary; exit status 0 = lab passed.
+# With weights and KBOOK_PASS_PERCENT set (mock exams), the lab passes when the
+# weighted score reaches the pass mark; otherwise every task must pass.
 finish_checks() {
   local total=$((CHECKS_PASSED + CHECKS_FAILED)) extra=""
   if ((total + CHECKS_OPTIONAL_DONE + CHECKS_OPTIONAL_TODO == 0)); then
@@ -227,10 +291,27 @@ finish_checks() {
     printf '%s\n' "${C_RED}error:${C_RST} no check matched${LAB_ONLY_TASK:+ task ${LAB_ONLY_TASK}}" >&2
     return 2
   fi
+  if ((CHECKS_PLAIN > 0 && CHECKS_WEIGHTED > 0)); then
+    printf '%s\n' "${C_RED}error:${C_RST} verify mixes check and check_weighted; use one or the other" >&2
+    return 2
+  fi
   if ((CHECKS_OPTIONAL_DONE + CHECKS_OPTIONAL_TODO > 0)); then
     extra=" Optional tasks done: ${CHECKS_OPTIONAL_DONE} of $((CHECKS_OPTIONAL_DONE + CHECKS_OPTIONAL_TODO))."
   fi
   echo
+  if ((CHECKS_WEIGHTED > 0)) && [[ -z "${LAB_ONLY_TASK:-}" ]]; then
+    if ((WEIGHT_TOTAL != 100)); then
+      printf '%s\n' "${C_RED}error:${C_RST} question weights add up to ${WEIGHT_TOTAL}%, not 100%" >&2
+      return 2
+    fi
+    printf 'Score: %d%% (%d of %d questions)\n' "$WEIGHT_EARNED" "$CHECKS_PASSED" "$total"
+    if [[ -n "${KBOOK_PASS_PERCENT:-}" ]]; then
+      if ((WEIGHT_EARNED >= KBOOK_PASS_PERCENT)); then
+        printf '%s\n' "${C_GRN}PASSED${C_RST} (pass mark ${KBOOK_PASS_PERCENT}%)"; return 0
+      fi
+      printf '%s\n' "${C_RED}NOT PASSED${C_RST} (pass mark ${KBOOK_PASS_PERCENT}%)"; return 1
+    fi
+  fi
   if ((CHECKS_FAILED == 0)); then
     printf '%s\n' "${C_GRN}All ${total} tasks passed.${C_RST}${extra}"
     return 0
