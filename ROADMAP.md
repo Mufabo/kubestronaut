@@ -8,7 +8,7 @@ A hands-on textbook covering everything needed for the five certifications that 
 - **Assessment:** end-of-chapter questions in every chapter, plus a mock exam per certification.
 
 > **Before locking the outline:** verify each certification's current curriculum (domains, weights, Kubernetes version) on the CNCF/Linux Foundation curriculum repos. Update `docs/coverage-matrix.md` (see §6) whenever they change.
-> **Already checked:** KCNA now has four domains (44/28/16/12) and CKA has five (25/15/20/10/30), per the official `cncf/curriculum` READMEs. The bullet-level PDFs still need to be transcribed into the coverage matrix.
+> **Already checked (2026-10-09):** all five curricula (KCNA, CKA v1.35, CKAD v1.37, CKS v1.34, KCSA) are transcribed verbatim into `docs/coverage-matrix.md` from the `cncf/curriculum` PDFs. The mapping found three gaps in the chapter plan, now closed: building container images (Chapter 16), API deprecations (Chapter 15), and `securityContext` and capabilities for CKAD readers (Chapter 10, with the hardening view still in 33).
 
 ---
 
@@ -136,13 +136,13 @@ Legend: **A** = KCNA, **S** = KCSA, **D** = CKAD, **C** = CKA, **X** = CKS. Tier
 | 07 | ConfigMaps, Secrets, environment variables, downward API | D C | 1 |
 | 08 | Jobs and CronJobs | D | 1 |
 | 09 | Multi-container pods: init containers, sidecars, patterns | D | 1 |
-| 10 | Probes, requests/limits, QoS classes | D C | 1 |
+| 10 | Probes, requests/limits, QoS classes, `securityContext` and capabilities | D C | 1 |
 | 11 | Services and cluster DNS | A D C | 1 |
 | 12 | Ingress and Gateway API | D C | 1 |
 | 13 | Storage basics: volumes, PV, PVC, StorageClass | D C | 1 |
 | 14 | Helm and Kustomize | D C | 1 |
-| 15 | Developer observability: logs, metrics, debugging applications | A D | 1 |
-| 16 | Application delivery: CI/CD, GitOps (Argo CD, Flux), deployment strategies | A D | 1 |
+| 15 | Developer observability and maintenance: logs, metrics, debugging applications, API deprecations | A D | 1 |
+| 16 | Container images and application delivery: building and changing images, CI/CD, GitOps (Argo CD, Flux), deployment strategies | A D | 1 |
 
 ### Part III: Cluster administration
 
