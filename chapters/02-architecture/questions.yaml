@@ -1,0 +1,152 @@
+- id: ch02-q01
+  type: mcq
+  exams: [KCNA, CKA]
+  question: "Which component is the only one that reads and writes etcd directly?"
+  choices:
+    - "kube-scheduler"
+    - "kubelet"
+    - "kube-apiserver"
+    - "kube-controller-manager"
+  answer: C
+  explanation: "The API server is the hub: all other components read and write cluster state through it. Only the API server talks to etcd."
+
+- id: ch02-q02
+  type: mcq
+  exams: [KCNA, CKA]
+  question: "Which component decides which node a new Pod will run on?"
+  choices:
+    - "kubelet"
+    - "kube-scheduler"
+    - "kube-proxy"
+    - "The container runtime"
+  answer: B
+  explanation: "The scheduler watches for Pods with no node, picks a node, and binds the Pod by setting its node name. It does not start containers."
+
+- id: ch02-q03
+  type: mcq
+  exams: [KCNA, CKA]
+  question: "Which component runs on every node and makes sure the containers in Pods assigned to that node are running?"
+  choices:
+    - "kube-apiserver"
+    - "kube-scheduler"
+    - "etcd"
+    - "kubelet"
+  answer: D
+  explanation: "The kubelet is the node agent. It watches for Pods assigned to its node, asks the runtime to run them, and reports status."
+
+- id: ch02-q04
+  type: mcq
+  exams: [KCNA, CKA]
+  question: "Which of these is NOT a control plane component?"
+  choices:
+    - "kube-scheduler"
+    - "etcd"
+    - "kube-proxy"
+    - "kube-controller-manager"
+  answer: C
+  explanation: "kube-proxy runs on every node and programs the network rules that implement Services. The others belong to the control plane."
+
+- id: ch02-q05
+  type: mcq
+  exams: [KCNA, CKA]
+  question: "What is the job of the kube-controller-manager?"
+  choices:
+    - "Storing cluster state durably"
+    - "Running controllers that reconcile actual state toward desired state"
+    - "Starting containers on nodes"
+    - "Authenticating users"
+  answer: B
+  explanation: "It runs the built-in controllers, each watching objects and acting to make reality match their spec. State storage is etcd, starting containers is the kubelet and runtime, and authentication is the API server."
+
+- id: ch02-q06
+  type: mcq
+  exams: [CKA]
+  question: "In what order does the API server process a write request?"
+  choices:
+    - "Admission, authorization, authentication, storage"
+    - "Authentication, authorization, admission, storage"
+    - "Authorization, authentication, storage, admission"
+    - "Storage, authentication, authorization, admission"
+  answer: B
+  explanation: "The API server first identifies the caller (authentication), then checks permission (authorization), then runs admission (mutating, validation, then validating admission), and only then persists the object to etcd."
+
+- id: ch02-q07
+  type: mcq
+  exams: [CKA]
+  question: "Which statement about static Pods is correct?"
+  choices:
+    - "They are created by the scheduler on request from the API server"
+    - "They are run by the kubelet from manifest files on the node, and appear in the API as mirror Pods"
+    - "They can only run in the default namespace"
+    - "Deleting the mirror Pod with kubectl removes the static Pod permanently"
+  answer: B
+  explanation: "The kubelet watches a manifest directory and runs those Pods itself. The API shows read-only mirror Pods. Deleting a mirror Pod just causes the kubelet to recreate it; you must remove the manifest file."
+
+- id: ch02-q08
+  type: mcq
+  exams: [KCNA, CKA]
+  question: "What does etcd store in a Kubernetes cluster?"
+  choices:
+    - "Container images"
+    - "Application logs"
+    - "All cluster state, such as objects and their specs"
+    - "Only Secrets"
+  answer: C
+  explanation: "etcd is the consistent key-value store holding all Kubernetes API objects. Images live in registries and logs elsewhere."
+
+- id: ch02-q09
+  type: mcq
+  exams: [KCNA, CKAD, CKA]
+  question: "Which apiVersion do you write in a manifest for a Deployment?"
+  choices:
+    - "v1"
+    - "apps/v1"
+    - "batch/v1"
+    - "extensions/v1"
+  answer: B
+  explanation: "Deployments belong to the apps API group, so the apiVersion is apps/v1. Core resources such as Pods use v1, and Jobs use batch/v1."
+
+- id: ch02-q10
+  type: mcq
+  exams: [CKA]
+  question: "A kubeconfig context combines which items?"
+  choices:
+    - "A container image, a Pod, and a Service"
+    - "A cluster, a user, and optionally a default namespace"
+    - "A node, a Pod, and a namespace"
+    - "A certificate authority only"
+  answer: B
+  explanation: "A context names a cluster plus a user, and can set a default namespace. The current-context field says which context kubectl uses."
+
+- id: ch02-q11
+  type: task
+  exams: [CKA, CKAD]
+  prompt: "List every resource type in the `apps` API group that the cluster serves, including its shortname and API version."
+  solution: |
+    ```bash
+    kubectl api-resources --api-group=apps
+    ```
+
+    The output has columns for NAME, SHORTNAMES, APIVERSION, NAMESPACED, and KIND.
+
+- id: ch02-q12
+  type: task
+  exams: [CKA, CKAD]
+  prompt: "A Pod named `p1` is running in the current namespace. Print only the name of the node it runs on."
+  solution: |
+    ```bash
+    kubectl get pod p1 -o jsonpath='{.spec.nodeName}{"\n"}'
+    ```
+
+    `kubectl get pod p1 -o wide` also shows it, in the NODE column, but the JSONPath form prints just the value.
+
+- id: ch02-q13
+  type: task
+  exams: [CKA, CKAD]
+  prompt: "Without searching the web, show the built-in documentation for the `livenessProbe` field of a Pod's containers, for the version of Kubernetes your cluster runs."
+  solution: |
+    ```bash
+    kubectl explain pod.spec.containers.livenessProbe
+    ```
+
+    Add `--recursive` to see every nested field. `explain` reads the schema from your cluster's API server, so it matches its version.

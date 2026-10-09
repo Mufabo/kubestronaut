@@ -1,0 +1,175 @@
+- id: ch03-q01
+  type: mcq
+  exams: [CKA, CKAD]
+  question: "Which command changes the default namespace of the context you are currently using?"
+  choices:
+    - "kubectl config set-context --current --namespace=dev"
+    - "kubectl config use-context dev"
+    - "kubectl set namespace dev"
+    - "kubectl config set-cluster dev"
+  answer: A
+  explanation: "`set-context --current --namespace=...` edits the current context. `use-context` switches to a different context, there is no `kubectl set namespace`, and `set-cluster` edits a cluster entry, not a namespace."
+
+- id: ch03-q02
+  type: mcq
+  exams: [CKA, CKAD]
+  question: "A namespace has Pods labelled env=prod, Pods labelled env=dev, and Pods with no env label. Which Pods does `kubectl get pods -l env!=prod` return?"
+  choices:
+    - "Only the env=dev Pods"
+    - "The env=dev Pods and the Pods with no env label"
+    - "Only the Pods with no env label"
+    - "No Pods; `!=` is not valid in a label selector"
+  answer: B
+  explanation: "`!=` matches every object whose `env` label is not `prod`, which includes objects that have no `env` label at all. `env notin (prod)` behaves the same way. Use `-l 'env,env!=prod'` to require that the label exists."
+
+- id: ch03-q03
+  type: mcq
+  exams: [CKA, CKAD]
+  question: "A Pod named `web` already exists. What happens when you run `kubectl create -f web.yaml` and then `kubectl apply -f web.yaml` for the same Pod?"
+  choices:
+    - "Both succeed and update the Pod"
+    - "`create` fails because the object exists; `apply` succeeds and updates it to match the file"
+    - "`create` updates the Pod; `apply` fails"
+    - "Both fail because the Pod already exists"
+  answer: B
+  explanation: "`create` only creates and returns an AlreadyExists error otherwise. `apply` creates the object if it is missing and updates it to match the file if it exists (as far as the Pod's mutable fields allow)."
+
+- id: ch03-q04
+  type: mcq
+  exams: [CKA, CKAD]
+  question: "What is the difference between `--dry-run=client` and `--dry-run=server`?"
+  choices:
+    - "There is none; they are aliases"
+    - "`client` builds the object locally and sends nothing; `server` sends it to the API server, which validates it and applies defaults and admission rules, but does not store it"
+    - "`client` stores the object; `server` does not"
+    - "`server` can only be used with `kubectl run`"
+  answer: B
+  explanation: "Client mode never contacts the API server for the object, so it cannot catch errors that only the server knows about. Server mode runs the real validation and admission path and stops just before persisting."
+
+- id: ch03-q05
+  type: mcq
+  exams: [CKA, CKAD]
+  question: "`kubectl auth can-i delete pods -n prod` prints `no`. What exit status does the command return?"
+  choices:
+    - "0"
+    - "1"
+    - "2"
+    - "It always returns 0 so that scripts do not stop"
+  answer: B
+  explanation: "`can-i` prints yes or no and returns 0 for yes and 1 for no. In a script with `set -e` or `pipefail`, a `no` stops the script unless you handle it, for example with `|| true`."
+
+- id: ch03-q06
+  type: task
+  exams: [CKA, CKAD]
+  prompt: "In namespace `dev`, print the names of the Pods whose `tier` label is `web` or `cache`, one per line, with no `pod/` prefix."
+  solution: |
+    ```bash
+    kubectl -n dev get pods -l 'tier in (web,cache)' \
+      -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}'
+    ```
+
+    `-o name` also works but prints `pod/NAME`. Strip the prefix with `sed 's#^pod/##'`, or use the JSONPath form above.
+
+- id: ch03-q07
+  type: task
+  exams: [CKA, CKAD]
+  prompt: "List every Pod in the current namespace as two columns, NAME and NODE, sorted by node name."
+  solution: |
+    ```bash
+    kubectl get pods \
+      -o custom-columns=NAME:.metadata.name,NODE:.spec.nodeName \
+      --sort-by=.spec.nodeName
+    ```
+
+    `--sort-by` takes a JSONPath-style field of the objects being listed.
+
+- id: ch03-q08
+  type: task
+  exams: [CKA, CKAD]
+  prompt: "Switch to the context `staging`, then make `payments` the default namespace for that context."
+  solution: |
+    ```bash
+    kubectl config use-context staging
+    kubectl config set-context --current --namespace=payments
+    ```
+
+    Confirm with `kubectl config view --minify | grep namespace`.
+
+- id: ch03-q09
+  type: task
+  exams: [CKA, CKAD]
+  prompt: "Generate, without creating it, a manifest for a Pod named `batch` with one container running `busybox:1.36` that executes `sleep 600`, save it as `batch.yaml`, then create the Pod from the file."
+  solution: |
+    ```bash
+    kubectl run batch --image=busybox:1.36 --dry-run=client -o yaml \
+      --command -- sleep 600 > batch.yaml
+    kubectl apply -f batch.yaml
+    ```
+
+    `--command` makes `sleep 600` the container's command; everything after `--` belongs to the container, so the kubectl flags must come first.
+
+- id: ch03-q10
+  type: task
+  exams: [CKA, CKAD]
+  prompt: "In namespace `dev`, set the label `release=stable` on every Pod labelled `app=api`, replacing the label's value on Pods that already have a different `release` value."
+  solution: |
+    ```bash
+    kubectl -n dev label pods -l app=api release=stable --overwrite
+    ```
+
+    Without `--overwrite`, kubectl refuses to change a label that already has a different value.
+
+- id: ch03-q11
+  type: task
+  exams: [CKA, CKAD]
+  prompt: "Block until Pod `web` is Ready, but give up after 90 seconds."
+  solution: |
+    ```bash
+    kubectl wait --for=condition=Ready pod/web --timeout=90s
+    ```
+
+    The command returns non-zero if the condition is not met in time.
+
+- id: ch03-q12
+  type: task
+  exams: [CKA]
+  prompt: "List the resource types that are cluster-scoped, that is, not namespaced."
+  solution: |
+    ```bash
+    kubectl api-resources --namespaced=false
+    ```
+
+    Examples in the output include Nodes, Namespaces, PersistentVolumes, and ClusterRoles.
+
+- id: ch03-q13
+  type: task
+  exams: [CKA, CKAD]
+  prompt: "Print only the value of the annotation `owner` of Pod `web`."
+  solution: |
+    ```bash
+    kubectl get pod web -o jsonpath='{.metadata.annotations.owner}{"\n"}'
+    ```
+
+    For an annotation key that contains dots or slashes, escape the dots: `{.metadata.annotations.example\.com/owner}`.
+
+- id: ch03-q14
+  type: task
+  exams: [CKA]
+  prompt: "Check whether the ServiceAccount `build` in namespace `ci` is allowed to create Deployments in namespace `ci`."
+  solution: |
+    ```bash
+    kubectl auth can-i create deployments -n ci --as=system:serviceaccount:ci:build
+    ```
+
+    A ServiceAccount's user name has the form `system:serviceaccount:NAMESPACE:NAME`. The command prints `yes` or `no`.
+
+- id: ch03-q15
+  type: task
+  exams: [CKA, CKAD]
+  prompt: "Optional (uses `yq`, which the exam hosts have; `jq` is not guaranteed there). The file `pod.yaml` contains a Pod. Change the image of its first container to `redis:7` in place, without opening an editor."
+  solution: |
+    ```bash
+    yq -i '.spec.containers[0].image = "redis:7"' pod.yaml
+    ```
+
+    This is mikefarah/yq v4. Check with `yq '.spec.containers[0].image' pod.yaml`. Without `yq`, `sed -i 's#image: .*#image: redis:7#' pod.yaml` works for a file with a single `image:` line, but it is easy to get wrong in a file with several containers.

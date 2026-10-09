@@ -1,0 +1,142 @@
+- id: ch04-q01
+  type: mcq
+  exams: [KCNA]
+  question: "What is the smallest deployable unit that Kubernetes schedules?"
+  choices:
+    - "A container"
+    - "A Pod"
+    - "A Deployment"
+    - "A node"
+  answer: B
+  explanation: "Kubernetes schedules Pods. A Pod wraps one or more containers that always run on the same node. Deployments manage Pods; they are not what the scheduler places."
+
+- id: ch04-q02
+  type: mcq
+  exams: [KCNA, CKAD]
+  question: "Two containers run in the same Pod. Which statement is true?"
+  choices:
+    - "They have separate IP addresses and reach each other through a Service"
+    - "They share one IP address and can reach each other on localhost"
+    - "They share a single root filesystem"
+    - "They must use the same resource requests and limits"
+  answer: B
+  explanation: "Containers in a Pod share the network namespace: one IP, one port space, and localhost between them. Filesystems are separate unless a volume is shared, and resources are set per container."
+
+- id: ch04-q03
+  type: mcq
+  exams: [CKAD, CKA]
+  question: "A Pod shows STATUS `ImagePullBackOff`. What is the best first step?"
+  choices:
+    - "Run `kubectl logs` on the Pod"
+    - "Restart the node"
+    - "Run `kubectl describe pod` and read the Events"
+    - "Delete the namespace"
+  answer: C
+  explanation: "The container never started, so there are no logs. The Events section of `describe` says why the pull failed (bad tag, unknown image, missing credentials)."
+
+- id: ch04-q04
+  type: mcq
+  exams: [KCNA, CKAD]
+  question: "What is the default `restartPolicy` of a Pod?"
+  choices:
+    - "Never"
+    - "OnFailure"
+    - "Always"
+    - "It has no default and must be set"
+  answer: C
+  explanation: "The default is `Always`: the kubelet restarts containers whenever they exit, even with exit code 0. That is why one-shot Pods must set `Never` or `OnFailure`."
+
+- id: ch04-q05
+  type: mcq
+  exams: [CKAD, CKA]
+  question: "A Pod with `restartPolicy: Never` has a single container that exits with code 0. What phase is the Pod in?"
+  choices:
+    - "Running"
+    - "Pending"
+    - "Failed"
+    - "Succeeded"
+  answer: D
+  explanation: "All containers terminated successfully and will not be restarted, so the phase is `Succeeded`. A non-zero exit would give `Failed`."
+
+- id: ch04-q06
+  type: mcq
+  exams: [CKAD, CKA]
+  question: "Which command prints a Pod manifest for a Pod named `web` running `nginx:1.27` without creating anything?"
+  choices:
+    - "`kubectl run web --image=nginx:1.27 --dry-run=client -o yaml`"
+    - "`kubectl get pod web -o yaml`"
+    - "`kubectl create pod web --image=nginx:1.27`"
+    - "`kubectl explain pod web`"
+  answer: A
+  explanation: "`--dry-run=client` builds the object locally and `-o yaml` prints it. `get` needs an existing Pod, `kubectl create pod` is not a valid subcommand, and `explain` documents API fields, not a specific object."
+
+- id: ch04-q07
+  type: mcq
+  exams: [CKA]
+  question: "A Pod stays `Pending` and its Events show the scheduler could not find a node with enough free CPU. Which field of the Pod is the scheduler comparing against node capacity?"
+  choices:
+    - "`resources.limits`"
+    - "`resources.requests`"
+    - "`restartPolicy`"
+    - "`containerPort`"
+  answer: B
+  explanation: "The scheduler reserves capacity based on requests. Limits are enforced at runtime on the node and do not affect placement."
+
+- id: ch04-q08
+  type: mcq
+  exams: [CKAD]
+  question: "Which part of a running Pod can you change in place, without deleting the Pod?"
+  choices:
+    - "The container image"
+    - "The Pod's name"
+    - "The list of container ports"
+    - "The `restartPolicy`"
+  answer: A
+  explanation: "The container image is one of the few mutable Pod fields; the kubelet restarts the container with the new image. Name and most other spec fields are immutable, so the Pod has to be recreated."
+
+- id: ch04-q09
+  type: mcq
+  exams: [CKAD, CKA]
+  question: "A container in a Pod exceeds its memory limit. What happens?"
+  choices:
+    - "It is throttled until usage drops"
+    - "The Pod is rescheduled to a larger node"
+    - "The container is killed with reason OOMKilled"
+    - "Nothing; limits are advisory"
+  answer: C
+  explanation: "Memory is not compressible. A container over its memory limit is OOM-killed (and restarted according to the restartPolicy). CPU over limit is throttled instead."
+
+- id: ch04-q10
+  type: task
+  exams: [CKAD]
+  prompt: "The namespace `dev` already exists. In one command, create a Pod named `cache` running `redis:7` in that namespace with the label `tier=backend`."
+  solution: |
+    ```bash
+    kubectl -n dev run cache --image=redis:7 --labels=tier=backend
+    ```
+
+    Verify with `kubectl -n dev get pod cache --show-labels`.
+
+- id: ch04-q11
+  type: task
+  exams: [CKAD, CKA]
+  prompt: "A Pod named `api` is in `CrashLoopBackOff`. Show the log output of its previously crashed container instance."
+  solution: |
+    ```bash
+    kubectl logs api --previous
+    ```
+
+    The current instance may have just restarted and have no useful output; `--previous` reads the last terminated container. Add `-c <name>` for a multi-container Pod.
+
+- id: ch04-q12
+  type: task
+  exams: [CKAD, CKA]
+  prompt: "Write the manifest for a Pod named `batch` that runs `busybox:1.36` with the command `sh -c 'echo done'` and is never restarted. Save it to `batch.yaml` without creating the Pod, then create it from the file."
+  solution: |
+    ```bash
+    kubectl run batch --image=busybox:1.36 --restart=Never \
+      --dry-run=client -o yaml -- sh -c 'echo done' > batch.yaml
+    kubectl apply -f batch.yaml
+    ```
+
+    `--restart=Never` sets `restartPolicy: Never` in the generated YAML. Everything after `--` becomes the container command and args.

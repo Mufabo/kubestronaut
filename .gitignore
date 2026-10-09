@@ -1,0 +1,4 @@
+chapters/*/lab/.state/
+*.swp
+.DS_Store
+__pycache__/

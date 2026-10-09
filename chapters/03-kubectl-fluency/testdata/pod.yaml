@@ -1,0 +1,35 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: "2026-10-06T08:00:00Z"
+  labels:
+    env: prod
+    tier: web
+  name: web-prod-1
+  namespace: ch03-kubectl
+  resourceVersion: "1001"
+  uid: 11111111-1111-1111-1111-111111111111
+spec:
+  containers:
+    - image: nginx:1.27
+      name: app
+      resources:
+        limits:
+          cpu: 100m
+          memory: 64Mi
+        requests:
+          cpu: 5m
+          memory: 8Mi
+  nodeName: kbook-worker
+  restartPolicy: Always
+status:
+  phase: Running
+  podIP: 10.244.1.5
+  containerStatuses:
+    - image: nginx:1.27
+      name: app
+      ready: true
+      restartCount: 0
+      state:
+        running:
+          startedAt: "2026-10-06T08:00:30Z"

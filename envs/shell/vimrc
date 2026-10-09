@@ -1,0 +1,14 @@
+" Minimal vim settings for editing Kubernetes YAML quickly.
+" YAML forbids tabs, so Tab inserts two spaces and indentation is two spaces.
+set nocompatible
+syntax on
+filetype plugin indent on
+set number
+set expandtab
+set tabstop=2
+set shiftwidth=2
+set softtabstop=2
+set autoindent
+set hlsearch incsearch ignorecase smartcase
+" Do not de-indent a line just because it starts with '#'.
+autocmd FileType yaml setlocal indentkeys-=0#

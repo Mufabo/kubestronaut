@@ -1,0 +1,45 @@
+name: labs
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: "0 6 * * 1"   # weekly: catch upstream drift even when nothing changed
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y shellcheck yamllint vim
+      - run: pip install -r tools/requirements.txt
+      - run: npm install -g markdownlint-cli2
+      - run: make lint
+      - run: make questions-check
+      - run: make test-render
+      - run: make test-harness
+      - run: make test-shell
+      - name: Install the pinned jq and yq
+        run: |
+          set -a; source versions.env; set +a
+          sudo curl -fsSLo /usr/local/bin/jq "https://github.com/jqlang/jq/releases/download/jq-${JQ_VERSION}/jq-linux-amd64"
+          sudo curl -fsSLo /usr/local/bin/yq "https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_amd64"
+          sudo chmod +x /usr/local/bin/jq /usr/local/bin/yq
+      - run: make test-examples
+
+  tier1-labs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Read pinned versions
+        run: cat versions.env | grep -v '^#' | grep . >> "$GITHUB_ENV"
+      - uses: helm/kind-action@v1
+        with:
+          version: ${{ env.KIND_VERSION }}
+          node_image: ${{ env.KIND_NODE_IMAGE }}
+          cluster_name: ${{ env.CLUSTER_NAME }}
+          config: envs/kind/cluster.yaml
+      - name: Check the cluster version and mark it as a lab cluster
+        run: bash tools/cluster.sh
+      - name: Unit-test shared helpers
+        run: make test-lib
+      - run: make test-tier1

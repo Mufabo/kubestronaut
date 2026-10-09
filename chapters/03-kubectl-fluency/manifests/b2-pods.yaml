@@ -1,0 +1,15 @@
+# Part b2: one running Pod to expose
+# Seed Pods for the Chapter 03 lab. Created by lab/setup.sh.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: web
+  labels:
+    app: web
+spec:
+  containers:
+    - name: web
+      image: nginx:1.27
+      resources:
+        requests: {cpu: 5m, memory: 8Mi}
+        limits: {cpu: 100m, memory: 64Mi}

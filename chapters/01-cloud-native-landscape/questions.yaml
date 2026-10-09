@@ -1,0 +1,179 @@
+- id: ch01-q01
+  type: mcq
+  exams: [KCNA]
+  question: "Which internal Google system most directly influenced the design of Kubernetes?"
+  choices:
+    - "Spanner"
+    - "Borg"
+    - "MapReduce"
+    - "Bigtable"
+  answer: B
+  explanation: "Borg, Google's internal cluster manager, and its successor Omega shaped Kubernetes' design. The others are data-processing and storage systems."
+
+- id: ch01-q02
+  type: mcq
+  exams: [KCNA]
+  question: "Which organization hosts Kubernetes and is part of the Linux Foundation?"
+  choices:
+    - "The Apache Software Foundation"
+    - "The Open Container Initiative"
+    - "The Cloud Native Computing Foundation"
+    - "The Eclipse Foundation"
+  answer: C
+  explanation: "Kubernetes was the first project donated to the CNCF. The OCI is a separate body that maintains container specifications, not Kubernetes."
+
+- id: ch01-q03
+  type: mcq
+  exams: [KCNA]
+  question: "Which of the following is NOT a CNCF project maturity level?"
+  choices:
+    - "Sandbox"
+    - "Incubating"
+    - "Graduated"
+    - "Certified"
+  answer: D
+  explanation: "The maturity levels are Sandbox, Incubating, and Graduated. 'Certified' relates to the separate Certified Kubernetes conformance program for distributions and services."
+
+- id: ch01-q04
+  type: mcq
+  exams: [KCNA]
+  question: "Which standard defines how the kubelet communicates with a container runtime?"
+  choices:
+    - "CNI"
+    - "CSI"
+    - "CRI"
+    - "OCI"
+  answer: C
+  explanation: "The Container Runtime Interface (CRI) is the kubelet-to-runtime API. CNI covers networking, CSI covers storage, and OCI defines image and runtime specifications."
+
+- id: ch01-q05
+  type: mcq
+  exams: [KCNA]
+  question: "Why can an image built with Docker run under containerd or CRI-O without modification?"
+  choices:
+    - "Kubernetes converts Docker images at deploy time"
+    - "The runtimes embed the Docker daemon"
+    - "Images follow the OCI image specification"
+    - "Docker images are always stored as VM disks"
+  answer: C
+  explanation: "The OCI image specification standardizes the image format, so any OCI-compliant runtime can run it."
+
+- id: ch01-q06
+  type: mcq
+  exams: [KCNA]
+  question: "Which statement best describes a container compared with a virtual machine?"
+  choices:
+    - "A container includes its own kernel"
+    - "A container shares the host kernel and isolates processes"
+    - "A container requires a hypervisor"
+    - "A container always runs a full guest OS"
+  answer: B
+  explanation: "Containers use kernel features (namespaces, cgroups) to isolate processes that share the host kernel. VMs carry a guest OS and run on a hypervisor."
+
+- id: ch01-q07
+  type: mcq
+  exams: [KCNA]
+  question: "In the twelve-factor methodology, where should configuration that varies between deployments be kept?"
+  choices:
+    - "Hard-coded in the source code"
+    - "In the environment, separate from code"
+    - "Inside the container image at build time"
+    - "In a comment in the Dockerfile"
+  answer: B
+  explanation: "The Config factor says to store config in the environment. In Kubernetes this maps to ConfigMaps, Secrets, and environment variables."
+
+- id: ch01-q08
+  type: mcq
+  exams: [KCNA]
+  question: "What does 'immutable infrastructure' mean in practice?"
+  choices:
+    - "Servers are never restarted"
+    - "You replace components with new versions instead of modifying them in place"
+    - "All configuration files are read-only for administrators"
+    - "Containers cannot hold any data"
+  answer: B
+  explanation: "With immutable infrastructure you build and deploy a new image and discard the old one, rather than patching running systems. That avoids configuration drift."
+
+- id: ch01-q09
+  type: mcq
+  exams: [KCNA]
+  question: "What is the key difference between declarative and imperative management?"
+  choices:
+    - "Declarative describes the desired end state; imperative issues a sequence of commands"
+    - "Declarative requires YAML; imperative requires JSON"
+    - "Declarative is slower but safer than imperative in all cases"
+    - "Imperative systems continuously reconcile; declarative systems run once"
+  answer: A
+  explanation: "Declarative systems take a description of the end state and reconcile toward it. Imperative approaches spell out the steps. The file format is irrelevant."
+
+- id: ch01-q10
+  type: mcq
+  exams: [KCNA]
+  question: "Which CNCF project is primarily used for collecting metrics and alerting?"
+  choices:
+    - "Helm"
+    - "Prometheus"
+    - "etcd"
+    - "CoreDNS"
+  answer: B
+  explanation: "Prometheus scrapes time-series metrics and evaluates alerting rules. Helm packages manifests, etcd stores state, and CoreDNS provides cluster DNS."
+
+- id: ch01-q11
+  type: mcq
+  exams: [KCNA]
+  question: "Which of these is a service mesh project?"
+  choices:
+    - "Helm"
+    - "etcd"
+    - "Istio"
+    - "CoreDNS"
+  answer: C
+  explanation: "Istio (and Linkerd) are service meshes. Envoy is often the proxy underneath, but it is a proxy rather than a mesh by itself."
+
+- id: ch01-q12
+  type: mcq
+  exams: [KCNA]
+  question: "What is a Kubernetes SIG?"
+  choices:
+    - "A cloud provider certification level"
+    - "A special interest group that owns an area of the project, such as networking or storage"
+    - "A security incident report"
+    - "A signed container image"
+  answer: B
+  explanation: "SIGs (Special Interest Groups) own areas of the Kubernetes project, with charters, chairs, and public meetings."
+
+- id: ch01-q13
+  type: mcq
+  exams: [KCNA]
+  question: "What is a KEP?"
+  choices:
+    - "A Kubernetes Enhancement Proposal, the design document for a significant change"
+    - "A kubelet execution policy"
+    - "A key exchange protocol for etcd"
+    - "A Kubernetes exam prerequisite"
+  answer: A
+  explanation: "KEPs describe motivation, design, risks, and graduation criteria for significant changes, and are reviewed publicly before implementation."
+
+- id: ch01-q14
+  type: mcq
+  exams: [KCNA]
+  question: "Which statement about alpha features in Kubernetes is correct?"
+  choices:
+    - "They are enabled by default and covered by the deprecation policy"
+    - "They are disabled by default and may change or be removed without notice"
+    - "They are always production-ready"
+    - "They cannot be enabled by feature gates"
+  answer: B
+  explanation: "Alpha features are off by default and can change or disappear. Stable (GA) features are enabled by default and covered by the deprecation policy."
+
+- id: ch01-q15
+  type: mcq
+  exams: [KCNA]
+  question: "Which is a genuine benefit of splitting an application into microservices?"
+  choices:
+    - "It always reduces operational complexity"
+    - "Each service can be deployed and scaled independently"
+    - "It removes the need for networking"
+    - "It guarantees the system never fails"
+  answer: B
+  explanation: "Independent deployment and scaling is the main benefit. The trade-off is added operational complexity in networking, observability, and versioning."
