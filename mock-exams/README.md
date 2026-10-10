@@ -7,7 +7,7 @@ question counts when everything it asks for is right.
 
 | Exam | Covers | Questions | Time | Pass mark |
 |---|---|---|---|---|
-| [`part1`](part1/part1.md) | Part I (Chapters 02 to 04), CKAD/CKA style | 14 | 90 min | 66% |
+| [`part1`](part1/part1.md) | Part I (Chapters 02 to 06), CKAD/CKA style | 18 | 120 min | 66% |
 
 The full CKAD, CKA, and CKS simulators (and the KCNA and KCSA question banks)
 come with Part V; see `ROADMAP.md`.

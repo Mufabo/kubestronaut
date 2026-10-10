@@ -1,14 +1,15 @@
 # Mock exam: Part I simulator
 
 > **Exams:** CKAD · CKA (performance-based style)
-> **Covers:** Chapters 02 to 04
-> **Time:** 90 minutes · **Questions:** 14 · **Pass mark:** 66%
+> **Covers:** Chapters 02 to 06 (all of Part I)
+> **Time:** 120 minutes · **Questions:** 18 · **Pass mark:** 66%
 > **Lab tier:** 1 (kind)
 
 This is a timed, scored simulator in the style of killer.sh, the simulator the
 Linux Foundation includes with the CKAD, CKA, and CKS. Like killer.sh, it is
 meant to be **harder and more hurried than the real exam**: if you pass it
-comfortably, you know Part I well. It uses only what Chapters 02 to 04 teach.
+comfortably, you know Part I well. It uses only what Chapters 02 to 06 teach,
+and it is the exam-style finale of Part I: do it after Chapter 06.
 
 ## How it works
 
@@ -38,19 +39,19 @@ The rules mirror the real exam environment:
   is the sum. Skipping a hard question to finish the easy ones is a valid
   strategy.
 - **Time.** `make mock-score` shows the time used. It never stops you; you
-  decide whether you finished within 90 minutes.
+  decide whether you finished within 120 minutes.
 
 When you are done, run `make mock-score EXAM=part1`, then read
 [`lab/solutions.md`](lab/solutions.md) for every question you missed.
 
 > **Exam tip:** Flag and skip. If a question is not going well after twice its
-> fair share of time (about 12 minutes here), move on and come back at the end.
+> fair share of time (about 13 minutes here), move on and come back at the end.
 
 ---
 
 ## Question 1 | Contexts
 
-Task weight: 4%
+Task weight: 3%
 
 Use context: any
 
@@ -60,7 +61,7 @@ context `p1-b` into `/tmp/kbook/part1/1/namespace`.
 
 ## Question 2 | Pod with a named container
 
-Task weight: 8%
+Task weight: 6%
 
 Use context: `kubectl config use-context p1-a`
 
@@ -70,7 +71,7 @@ labels `app=courier` and `tier=edge` and declare container port `80`.
 
 ## Question 3 | Fix a crashing Pod
 
-Task weight: 8%
+Task weight: 7%
 
 Use context: `kubectl config use-context p1-b`
 
@@ -80,7 +81,7 @@ Pod, but keep its name, image, labels, and annotations.
 
 ## Question 4 | Logs of a container that crashed
 
-Task weight: 8%
+Task weight: 6%
 
 Use context: `kubectl config use-context p1-a`
 
@@ -91,7 +92,7 @@ crashed into `/tmp/kbook/part1/4/container`.
 
 ## Question 5 | Requests without a CPU limit
 
-Task weight: 7%
+Task weight: 5%
 
 Use context: `kubectl config use-context p1-a`
 
@@ -102,7 +103,7 @@ limit.
 
 ## Question 6 | Exit codes
 
-Task weight: 7%
+Task weight: 5%
 
 Use context: `kubectl config use-context p1-b`
 
@@ -116,7 +117,7 @@ code of its container, as Kubernetes recorded it, into
 
 ## Question 7 | Labels and annotations by selector
 
-Task weight: 7%
+Task weight: 5%
 
 Use context: `kubectl config use-context p1-b`
 
@@ -126,7 +127,7 @@ labelled `env=prod` with `audit=q4-2026`.
 
 ## Question 8 | Change and remove labels
 
-Task weight: 6%
+Task weight: 4%
 
 Use context: `kubectl config use-context p1-b`
 
@@ -136,7 +137,7 @@ the label `temp` from every Pod that has it.
 
 ## Question 9 | Find information fast
 
-Task weight: 7%
+Task weight: 5%
 
 Use context: `kubectl config use-context p1-a`
 
@@ -149,7 +150,7 @@ In Namespace `p1-callisto`:
 
 ## Question 10 | Generate, edit, create
 
-Task weight: 8%
+Task weight: 6%
 
 Use context: `kubectl config use-context p1-a`
 
@@ -161,7 +162,7 @@ to add a second container named `helper` of image `busybox:1.36` that runs
 
 ## Question 11 | Config objects
 
-Task weight: 8%
+Task weight: 6%
 
 Use context: `kubectl config use-context p1-b`
 
@@ -175,7 +176,7 @@ In Namespace `p1-europa`, create:
 
 ## Question 12 | Ask the API
 
-Task weight: 6%
+Task weight: 4%
 
 Use context: `kubectl config use-context p1-a`
 
@@ -189,7 +190,7 @@ Use context: `kubectl config use-context p1-a`
 
 ## Question 13 | Permissions
 
-Task weight: 8%
+Task weight: 6%
 
 Use context: `kubectl config use-context p1-a`
 
@@ -204,7 +205,7 @@ this order, in `/tmp/kbook/part1/13/answers`:
 
 ## Question 14 | How the control plane runs
 
-Task weight: 8%
+Task weight: 6%
 
 Use context: `kubectl config use-context p1-a`
 
@@ -214,3 +215,47 @@ Use context: `kubectl config use-context p1-a`
    into `/tmp/kbook/part1/14/proxy-owner`.
 3. The CoreDNS Pods are managed by a chain of objects. Write the kind of the
    **top** of that chain into `/tmp/kbook/part1/14/dns-owner`.
+
+## Question 15 | A Deployment in a new Namespace
+
+Task weight: 7%
+
+Use context: `kubectl config use-context p1-b`
+
+Create a Namespace `p1-staging` with the label `env=staging`. In it, create a
+Deployment named `relay` with 3 replicas of image `nginx:1.27`. Its single
+container must be named `relay-container`. Wait until all replicas are ready.
+
+## Question 16 | Roll back a broken release
+
+Task weight: 7%
+
+Use context: `kubectl config use-context p1-a`
+
+The latest rollout of the Deployment `atlas` in Namespace `p1-ganymede` is
+stuck. Roll `atlas` back to the last revision that worked, without deleting
+and recreating it. Write the number of the revision that broke it into
+`/tmp/kbook/part1/16/broken-revision`.
+
+## Question 17 | A careful update
+
+Task weight: 6%
+
+Use context: `kubectl config use-context p1-a`
+
+Update the Deployment `orbit` in Namespace `p1-ganymede` to image
+`nginx:1.27`, with a rolling update that never has fewer ready Pods than
+wanted and adds at most one extra Pod at a time. Record the change cause
+`orbit to 1.27`. Do not delete and recreate the Deployment, and wait until the
+rollout is complete.
+
+## Question 18 | Quarantine a Pod
+
+Task weight: 6%
+
+Use context: `kubectl config use-context p1-b`
+
+One Pod of the Deployment `drone` in Namespace `p1-ganymede` carries the
+annotation `quarantine=yes`. Take it out of the Deployment for investigation,
+without deleting it, by changing its label `app=drone` to
+`app=drone-quarantine`. The Deployment must be back to 3 ready Pods.

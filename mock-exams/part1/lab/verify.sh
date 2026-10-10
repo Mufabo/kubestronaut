@@ -191,6 +191,44 @@ q14_dns() {
 }
 
 
+# ---- Q15 to Q18: Deployments, rollouts, namespaces, labels (Chapters 05 and 06) -----
+jd() { kubectl -n "$1" get deployment "$2" -o "jsonpath=$3"; }
+# rolled_out <namespace> <deployment>   latest rollout complete, no old Pods left
+rolled_out() {
+  local s gen obs want total upd avail
+  s="$(jd "$1" "$2" '{.metadata.generation}|{.status.observedGeneration}|{.spec.replicas}|{.status.replicas}|{.status.updatedReplicas}|{.status.availableReplicas}')" || return 1
+  IFS='|' read -r gen obs want total upd avail <<<"$s"
+  [[ -n "$want" && "$gen" == "$obs" && "$want" == "$total" && "$want" == "$upd" && "$want" == "$avail" ]]
+}
+same_uid() { [[ -f "${STATE}/$3" && "$(jd "$1" "$2" '{.metadata.uid}')" == "$(cat "${STATE}/$3")" ]]; }
+
+q15() {
+  [[ "$(kubectl get namespace p1-staging -o jsonpath='{.metadata.labels.env}')" == "staging" ]] &&
+  [[ "$(jd p1-staging relay '{range .spec.template.spec.containers[*]}{.name}={.image} {end}')" == "relay-container=nginx:1.27 " ]] &&
+  [[ "$(jd p1-staging relay '{.spec.replicas}')" == "3" ]] &&
+  rolled_out p1-staging relay
+}
+q16() {
+  same_uid p1-ganymede atlas atlas-uid &&
+  [[ "$(jd p1-ganymede atlas '{.spec.template.spec.containers[*].image}')" == "$(cat "${STATE}/atlas-good-image")" ]] &&
+  rolled_out p1-ganymede atlas &&
+  file_is "$C/16/broken-revision" "$(cat "${STATE}/atlas-broken-revision")"
+}
+q17() {
+  same_uid p1-ganymede orbit orbit-uid &&
+  [[ "$(jd p1-ganymede orbit '{.spec.template.spec.containers[*].image}')" == "nginx:1.27" ]] &&
+  [[ "$(jd p1-ganymede orbit '{.spec.strategy.rollingUpdate.maxUnavailable}|{.spec.strategy.rollingUpdate.maxSurge}')" == "0|1" ]] &&
+  [[ "$(jd p1-ganymede orbit '{.metadata.annotations.kubernetes\.io/change-cause}')" == "orbit to 1.27" ]] &&
+  rolled_out p1-ganymede orbit
+}
+q18() {
+  local uid rows
+  uid="$(cat "${STATE}/drone-quarantine-uid" 2>/dev/null)" && [[ -n "$uid" ]] &&
+  rows="$(kubectl -n p1-ganymede get pods -o jsonpath='{range .items[*]}{.metadata.uid}|{.metadata.labels.app}|{.metadata.ownerReferences[*].kind}|{.status.phase}{"\n"}{end}')" &&
+  [[ "$(awk -F'|' -v u="$uid" '$1==u' <<<"$rows")" == "${uid}|drone-quarantine||Running" ]] &&
+  [[ "$(jd p1-ganymede drone '{.spec.replicas}/{.status.readyReplicas}')" == "3/3" ]]
+}
+
 # ---- one check per question: a question is either done or not ---------------------
 q1()  { q1_contexts && q1_namespace; }
 q2()  { q2_container && q2_labels && q2_port && q2_ready; }
@@ -210,34 +248,42 @@ q13() {
 }
 q14() { q14_image && q14_proxy && q14_dns; }
 
-check_weighted 1 4 "every context is listed in ${C}/1/contexts, and ${C}/1/namespace holds the default namespace of ${CTX_B}" \
+check_weighted 1 3 "every context is listed in ${C}/1/contexts, and ${C}/1/namespace holds the default namespace of ${CTX_B}" \
   "kubectl config get-contexts -o name; each context's namespace is in kubectl config view" q1
-check_weighted 2 8 "(p1-io) Pod courier: one container courier-container (nginx:1.27), labels app=courier and tier=edge, port 80, ready" \
+check_weighted 2 6 "(p1-io) Pod courier: one container courier-container (nginx:1.27), labels app=courier and tier=edge, port 80, ready" \
   "kubectl run cannot name the container: --dry-run=client -o yaml, edit, apply" q2
-check_weighted 3 8 "(p1-europa) Pod ledger runs sleep 3600 and is ready, with its image, labels, and annotation kept" \
+check_weighted 3 7 "(p1-europa) Pod ledger runs sleep 3600 and is ready, with its image, labels, and annotation kept" \
   "the command is immutable: get -o yaml, fix it, kubectl replace --force -f" q3
-check_weighted 4 8 "${C}/4/token holds the token and ${C}/4/container names the container that crashed" \
+check_weighted 4 6 "${C}/4/token holds the token and ${C}/4/container names the container that crashed" \
   "a restarted container's earlier output: kubectl logs --previous, with -c for one container" q4
-check_weighted 5 7 "(p1-titan) Pod cruncher: one busybox:1.36 container, requests 50m/32Mi, limit 64Mi memory and no CPU limit, Running" \
+check_weighted 5 5 "(p1-titan) Pod cruncher: one busybox:1.36 container, requests 50m/32Mi, limit 64Mi memory and no CPU limit, Running" \
   "start from kubectl run --dry-run=client -o yaml and set limits.memory only" q5
-check_weighted 6 7 "(p1-io) Pod migrate ran once and exited 4, and ${C}/6/exit-code holds importer's exit code" \
+check_weighted 6 5 "(p1-io) Pod migrate ran once and exited 4, and ${C}/6/exit-code holds importer's exit code" \
   "--restart=Never, the command after --; .status.containerStatuses[0].state.terminated.exitCode" q6
-check_weighted 7 7 "(p1-callisto) exactly the db/cache Pods have protected=true, and exactly the env=prod Pods have audit=q4-2026" \
+check_weighted 7 5 "(p1-callisto) exactly the db/cache Pods have protected=true, and exactly the env=prod Pods have audit=q4-2026" \
   "set-based selector -l 'tier in (db,cache)'; kubectl annotate accepts -l" q7
-check_weighted 8 6 "(p1-callisto) stage=beta became stage=ga, other stage labels kept, and no Pod has the label temp" \
+check_weighted 8 4 "(p1-callisto) stage=beta became stage=ga, other stage labels kept, and no Pod has the label temp" \
   "--overwrite changes an existing value; a trailing - removes a label" q8
-check_weighted 9 7 "${C}/9/pods lists the Pods with an nginx:1.26 container, and ${C}/9/containers holds the container count" \
+check_weighted 9 5 "${C}/9/pods lists the Pods with an nginx:1.26 container, and ${C}/9/containers holds the container count" \
   "look at every container (.spec.containers[*]), not just the first" q9
-check_weighted 10 8 "${C}/10/gateway.yaml holds the manifest, and Pod gateway (p1-io) runs gateway (nginx:1.27, MODE=edge) and helper (busybox:1.36), both ready" \
+check_weighted 10 6 "${C}/10/gateway.yaml holds the manifest, and Pod gateway (p1-io) runs gateway (nginx:1.27, MODE=edge) and helper (busybox:1.36), both ready" \
   "generate with --dry-run=client -o yaml, add the second container, apply the file; the helper needs sleep 3600" q10
-check_weighted 11 8 "(p1-europa) ConfigMap ledger-config, Secret ledger-db, ServiceAccount ledger-sa, and Service ledger-svc (8080 -> 80) exist as specified" \
+check_weighted 11 6 "(p1-europa) ConfigMap ledger-config, Secret ledger-db, ServiceAccount ledger-sa, and Service ledger-svc (8080 -> 80) exist as specified" \
   "kubectl create configmap / secret generic / serviceaccount, and kubectl expose pod ledger" q11
-check_weighted 12 6 "${C}/12/ holds the CronJob group/version, the type of runAsNonRoot, and whether Namespaces are namespaced" \
+check_weighted 12 4 "${C}/12/ holds the CronJob group/version, the type of runAsNonRoot, and whether Namespaces are namespaced" \
   "kubectl api-resources, kubectl explain, kubectl api-resources --namespaced=false" q12
-check_weighted 13 8 "${C}/13/answers holds the four yes/no answers about ServiceAccount auditor, in order" \
+check_weighted 13 6 "${C}/13/answers holds the four yes/no answers about ServiceAccount auditor, in order" \
   "kubectl auth can-i VERB RESOURCE -n NS --as=${SA}; the file needs exactly four lines" q13
-check_weighted 14 8 "${C}/14/ holds the kube-apiserver image and the kinds that manage kube-proxy and CoreDNS" \
+check_weighted 14 6 "${C}/14/ holds the kube-apiserver image and the kinds that manage kube-proxy and CoreDNS" \
   "kubectl -n kube-system get pod -l ... -o jsonpath; follow metadata.ownerReferences to the top" q14
+check_weighted 15 7 "namespace p1-staging (env=staging) runs Deployment relay: 3 ready replicas, one container relay-container (nginx:1.27)" \
+  "kubectl create deployment names the container after the image: --dry-run=client -o yaml, edit, apply" q15
+check_weighted 16 7 "(p1-ganymede) atlas is rolled back to its last working revision, and ${C}/16/broken-revision names the broken one" \
+  "kubectl rollout history deployment/atlas, then --revision=N to see each template; kubectl rollout undo --to-revision=N" q16
+check_weighted 17 6 "(p1-ganymede) orbit runs nginx:1.27 with maxUnavailable 0, maxSurge 1, and change-cause 'orbit to 1.27'" \
+  "the container is not called nginx; the strategy lives under spec.strategy.rollingUpdate" q17
+check_weighted 18 6 "(p1-ganymede) the quarantined drone Pod has app=drone-quarantine and no owner, and drone is back to 3 ready Pods" \
+  "find the Pod by its annotation; kubectl label --overwrite" q18
 
 echo
 report_elapsed "${STATE}/start" "$EXAM_MINUTES"

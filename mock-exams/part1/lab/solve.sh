@@ -93,7 +93,35 @@ kubectl -n kube-system get pods -l component=kube-apiserver -o jsonpath='{.items
 echo DaemonSet > "$C/14/proxy-owner"
 echo Deployment > "$C/14/dns-owner"
 
+# Q15: kubectl create deployment names the container "nginx", so rename it
+kubectl create namespace p1-staging >/dev/null
+kubectl label namespace p1-staging env=staging >/dev/null
+kubectl -n p1-staging create deployment relay --image=nginx:1.27 --replicas=3 --dry-run=client -o yaml |
+  sed 's/^        name: nginx$/        name: relay-container/' | kubectl -n p1-staging apply -f - >/dev/null
+
+# Q16: the broken revision is the newest one; roll back to the one before it
+broken="$(kubectl -n p1-ganymede rollout history deployment/atlas | awk '$1 ~ /^[0-9]+$/ {r=$1} END {print r}')"
+echo "$broken" > "$C/16/broken-revision"
+kubectl -n p1-ganymede rollout undo deployment/atlas --to-revision=$((broken - 1)) >/dev/null
+
+# Q17
+kubectl -n p1-ganymede set image deployment/orbit web=nginx:1.27 >/dev/null
+kubectl -n p1-ganymede patch deployment orbit -p '{"spec":{"strategy":{"rollingUpdate":{"maxUnavailable":0,"maxSurge":1}}}}' >/dev/null
+kubectl -n p1-ganymede annotate deployment orbit kubernetes.io/change-cause="orbit to 1.27" --overwrite >/dev/null
+
+# Q18
+quarantined="$(kubectl -n p1-ganymede get pods -o jsonpath='{.items[?(@.metadata.annotations.quarantine=="yes")].metadata.name}')"
+kubectl -n p1-ganymede label pod "$quarantined" app=drone-quarantine --overwrite >/dev/null
+
 info "Waiting for the new Pods"
+kubectl -n p1-staging rollout status deployment/relay --timeout=180s >/dev/null
+for d in atlas orbit; do kubectl -n p1-ganymede rollout status "deployment/${d}" --timeout=180s >/dev/null; done
+drone_ready() { [[ "$(kubectl -n p1-ganymede get deployment drone -o jsonpath='{.status.readyReplicas}')" == "3" ]]; }
+wait_for "drone back to 3 ready Pods" 120 drone_ready
+gone() {
+  [[ -z "$(kubectl -n "$1" get pods -o jsonpath='{range .items[?(@.metadata.deletionTimestamp)]}{.metadata.name}{"\n"}{end}')" ]]
+}
+wait_for "old Pods in p1-ganymede to finish terminating" 120 gone p1-ganymede
 started() { [[ "$(kubectl -n p1-io get pod "$1" -o jsonpath='{.status.phase}')" =~ ^(Running|Failed)$ ]]; }
 for p in courier migrate gateway; do
   wait_for "pod ${p} started" 180 started "$p"

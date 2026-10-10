@@ -91,8 +91,9 @@ lab_delete_contexts ch03-a ch03-b              # contexts the lab created
 Chapter labs are **step by step** (KodeKloud style, below): one task at a time,
 `check` per task, KodeKloud-style specification lists. They are for learning.
 
-The last lab of a Part (Chapter 03's `final` part) and every mock exam are
-**exam style** (killer.sh): all questions at once, answered in any order,
+Every mock exam is **exam style** (killer.sh), and each Part of the book
+ends with one (`part1` closes Part I). A chapter may add a short exam-style
+warm-up, such as Chapter 03's `final` part. Exam style means: all questions at once, answered in any order,
 scored together by `verify.sh`. They are for rehearsing the exam. In the text,
 questions are `Question N | Title` headings, each followed by a plain
 `Task weight: N%` line, a `Use context: kubectl config use-context ...` line,

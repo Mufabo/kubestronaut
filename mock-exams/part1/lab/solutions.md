@@ -197,3 +197,67 @@ echo Deployment > /tmp/kbook/part1/14/dns-owner
 kube-apiserver is a static Pod (its owner is the Node, Chapter 02). kube-proxy
 must run once on every node, so a DaemonSet manages it. CoreDNS is an ordinary
 Deployment, which manages a ReplicaSet, which manages the Pods.
+
+## Question 15 | A Deployment in a new Namespace
+
+```bash
+kubectl create namespace p1-staging
+kubectl label namespace p1-staging env=staging
+kubectl -n p1-staging create deployment relay --image=nginx:1.27 --replicas=3 \
+  --dry-run=client -o yaml > relay.yaml
+vim relay.yaml         # under containers:, change "name: nginx" to "name: relay-container"
+kubectl apply -f relay.yaml
+kubectl -n p1-staging rollout status deployment/relay
+```
+
+`kubectl create deployment` names the container after the image, so this is
+the generate, edit, apply pattern again (Chapter 05).
+
+## Question 16 | Roll back a broken release
+
+```bash
+kubectl -n p1-ganymede rollout status deployment/atlas --timeout=5s   # exceeded its progress deadline
+kubectl -n p1-ganymede rollout history deployment/atlas
+kubectl -n p1-ganymede rollout history deployment/atlas --revision=<N>   # look at each image
+```
+
+The newest revision runs a tag that does not exist. Roll back to the revision
+just before it, and note the broken one's number:
+
+```bash
+kubectl -n p1-ganymede rollout undo deployment/atlas --to-revision=<newest - 1>
+echo <newest> > /tmp/kbook/part1/16/broken-revision
+kubectl -n p1-ganymede rollout status deployment/atlas
+```
+
+The history is randomized: sometimes it has three revisions and sometimes the
+list starts at 2 and goes to 4. That happens when a later revision reused an
+earlier template, which moves the old revision's number up (Chapter 05). Read
+the history; do not assume the numbers.
+
+## Question 17 | A careful update
+
+The container is called `web`:
+
+```bash
+kubectl -n p1-ganymede get deployment orbit -o jsonpath='{.spec.template.spec.containers[*].name}{"\n"}'
+kubectl -n p1-ganymede patch deployment orbit -p '{"spec":{"strategy":{"rollingUpdate":{"maxUnavailable":0,"maxSurge":1}}}}'
+kubectl -n p1-ganymede set image deployment/orbit web=nginx:1.27
+kubectl -n p1-ganymede annotate deployment orbit kubernetes.io/change-cause="orbit to 1.27" --overwrite
+kubectl -n p1-ganymede rollout status deployment/orbit
+```
+
+Patching the strategy first means this very update already uses it. Changing
+the strategy alone creates no new revision.
+
+## Question 18 | Quarantine a Pod
+
+```bash
+kubectl -n p1-ganymede get pods -o jsonpath='{.items[?(@.metadata.annotations.quarantine=="yes")].metadata.name}{"\n"}'
+kubectl -n p1-ganymede label pod <that-pod> app=drone-quarantine --overwrite
+kubectl -n p1-ganymede get pods -L app
+kubectl -n p1-ganymede get deployment drone
+```
+
+The ReplicaSet releases the Pod (it removes its ownerReference) and starts a
+replacement (Chapter 06). The quarantined Pod keeps running until you delete it.

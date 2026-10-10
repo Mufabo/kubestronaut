@@ -4,7 +4,7 @@
 
 STATE="${here}/.state"
 MANIFESTS="${here}/../manifests"
-NAMESPACES=(p1-io p1-europa p1-titan p1-callisto)
+NAMESPACES=(p1-io p1-europa p1-titan p1-callisto p1-ganymede p1-staging)
 CTX_A=p1-a
 CTX_B=p1-b
 
@@ -24,10 +24,13 @@ leave_exam_contexts() {
 }
 
 remove_exam() {
-  local ns
   leave_exam_contexts
   lab_delete_contexts "$CTX_A" "$CTX_B"
-  for ns in "${NAMESPACES[@]}"; do lab_teardown_ns "$ns"; done
+  # One delete for all namespaces, so they terminate in parallel.
+  info "Removing namespaces ${NAMESPACES[*]} (if present)"
+  kubectl delete namespace "${NAMESPACES[@]}" --ignore-not-found --wait=true --timeout=180s >/dev/null
   lab_course_remove "$COURSE"
-  rm -f "${STATE}/start" "${STATE}/token" "${STATE}/exit-code" "${STATE}/ledger.yaml"
+  rm -f "${STATE}/start" "${STATE}/token" "${STATE}/exit-code" "${STATE}/ledger.yaml" \
+    "${STATE}/atlas-good-image" "${STATE}/atlas-broken-revision" "${STATE}/atlas-uid" \
+    "${STATE}/orbit-uid" "${STATE}/drone-quarantine-uid"
 }

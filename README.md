@@ -22,8 +22,8 @@ make teardown CH=4    # remove the lab and restore your kubectl settings
 ```
 
 Labs work like KodeKloud's: one task at a time, a check after each, and
-progress that is saved between sessions. The last lab of each Part, and the
-mock exams, work like the killer.sh exam simulator instead: weighted
+progress that is saved between sessions. Each Part of the book ends with a
+mock exam that works like the killer.sh exam simulator instead: weighted
 questions, a context per question, all scored at once.
 
 ## Mock exams

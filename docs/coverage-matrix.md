@@ -44,8 +44,8 @@ The KCNA curriculum lists topics, not tasks, so each row is broad. Chapters
 
 | Domain | Bullet (verbatim) | Chapter | Lab | Questions | Status |
 |---|---|---|---|---|---|
-| Kubernetes Fundamentals | Kubernetes Core Concepts | 02, 04, 05, 06 | 02/T1-T5, 04/T1-T5, 05/T1-T6, 06/T1-T5 | ch02-q01..q05, q08; ch04-q01, q02, q04; ch05-q01..q03; ch06-q01..q05 | drafted |
-| Kubernetes Fundamentals | Administration | 03, 06, 18, 19, 20 | 03/a, 03/b1, 03/b2p; 06/T2 | ch02-q10; ch03-q01, q08; ch06-q09 | partly |
+| Kubernetes Fundamentals | Kubernetes Core Concepts | 02, 04, 05, 06 | 02/T1-T5, 04/T1-T5, 05/T1-T6, 06/T1-T5; P1 Q15, Q18 | ch02-q01..q05, q08; ch04-q01, q02, q04; ch05-q01..q03; ch06-q01..q05 | drafted |
+| Kubernetes Fundamentals | Administration | 03, 06, 18, 19, 20 | 03/a, 03/b1, 03/b2p; 06/T2; P1 Q15 | ch02-q10; ch03-q01, q08; ch06-q09 | partly |
 | Kubernetes Fundamentals | Scheduling | 02, 17 | 02/T4 | ch02-q02, q12 | partly |
 | Kubernetes Fundamentals | Containerization | 01, 04 | 04/T1, 04/T5 | ch01-q04..q06; ch04-q01 | drafted |
 | Container Orchestration | Networking | 11, 21 | | | planned |
@@ -78,10 +78,10 @@ The KCNA curriculum lists topics, not tasks, so each row is broad. Chapters
 | Troubleshooting | Monitor cluster and application resource usage | 10, 15 | | | planned |
 | Troubleshooting | Manage and evaluate container output streams | 04, 15 | 04/T3; P1 Q4 | ch04-q11 | partly |
 | Troubleshooting | Troubleshoot services and networking | 11, 21, 26 | | | planned |
-| Workloads and Scheduling | Understand application deployments and how to perform rolling update and rollbacks | 05 | 05/T1-T6 | ch05-q04..q08, q10..q14 | drafted |
+| Workloads and Scheduling | Understand application deployments and how to perform rolling update and rollbacks | 05 | 05/T1-T6; P1 Q15-Q17 | ch05-q04..q08, q10..q14 | drafted |
 | Workloads and Scheduling | Use ConfigMaps and Secrets to configure applications | 03, 07 | 03/b2 C1, C2; P1 Q11 | | partly (03 creates them; 07 consumes them) |
 | Workloads and Scheduling | Configure workload autoscaling | 25 | | | planned |
-| Workloads and Scheduling | Understand the primitives used to create robust, self-healing, application deployments | 04, 05, 10 | 04/T5; 05/T1, T2, T5 | ch04-q04, q05; ch05-q01..q03, q06, q07 | partly |
+| Workloads and Scheduling | Understand the primitives used to create robust, self-healing, application deployments | 04, 05, 10 | 04/T5; 05/T1, T2, T5; P1 Q18 | ch04-q04, q05; ch05-q01..q03, q06, q07 | partly |
 | Workloads and Scheduling | Configure Pod admission and scheduling (limits, node affinity, etc.) | 04, 06, 10, 17 | 04/T4; 06/T5; P1 Q5 | ch04-q07, q09; ch06-q12 | partly (06 covers nodeSelector; 17 affinity and taints) |
 | Servicing and Networking | Understand connectivity between Pods | 11, 21 | | | planned |
 | Servicing and Networking | Define and enforce Network Policies | 21, 36 | | | planned |
@@ -114,8 +114,8 @@ The KCNA curriculum lists topics, not tasks, so each row is broad. Chapters
 | Application Design and Build | Choose and use the right workload resource (Deployment, DaemonSet, CronJob, etc.) | 05, 08 | 05/T1 | ch05-q09 | partly |
 | Application Design and Build | Understand multi-container Pod design patterns (e.g. sidecar, init and others) | 04, 09 | P1 Q10 | ch04-q02 | partly |
 | Application Design and Build | Utilize persistent and ephemeral volumes | 13 | | | planned |
-| Application Deployment | Use Kubernetes primitives to implement common deployment strategies (e.g. blue/green or canary) | 05, 16 | 05/T5 | ch05-q06, q13 | partly (05 covers rolling update and Recreate; 16 covers blue/green and canary) |
-| Application Deployment | Understand Deployments and how to perform rolling updates | 05 | 05/T1-T6 | ch05-q04..q08, q10..q14 | drafted |
+| Application Deployment | Use Kubernetes primitives to implement common deployment strategies (e.g. blue/green or canary) | 05, 16 | 05/T5; P1 Q17 | ch05-q06, q13 | partly (05 covers rolling update and Recreate; 16 covers blue/green and canary) |
+| Application Deployment | Understand Deployments and how to perform rolling updates | 05 | 05/T1-T6; P1 Q15-Q17 | ch05-q04..q08, q10..q14 | drafted |
 | Application Deployment | Use the Helm package manager to deploy existing packages | 14 | | | planned |
 | Application Deployment | Kustomize | 14 | | | planned |
 | Application Observability and Maintenance | Understand API depreciations | 02, 15 | 02/T5; P1 Q12 | ch02-q09, q11 | partly (02 covers groups and versions; 15 covers deprecations) |
@@ -260,7 +260,7 @@ them. They are mapped here so their coverage stays visible.
 | kubeconfig: create, switch, delete contexts; default namespace | 02, 03 | 03/b1; P1 Q1 | ch02-q10; ch03-q01, q08 | drafted |
 | Discover resources and fields (`api-resources`, `explain`) | 02, 03 | 02/T5; 03/a A6; P1 Q12 | ch02-q11, q13; ch03-q12 | drafted |
 | Selectors (label and field), JSONPath, and custom columns | 03, 06 | 03/a A1-A3; 03/final Q2, Q6; 06/T1, T4; P1 Q9 | ch03-q02, q06, q07, q13; ch06-q04, q08, q10, q13 | drafted |
-| Labels and annotations from the command line | 03, 06 | 03/a A4; 03/b2p P3; 03/final Q3; 06/T2, T3; P1 Q7, Q8 | ch03-q10; ch06-q03, q05, q07, q11 | drafted |
+| Labels and annotations from the command line | 03, 06 | 03/a A4; 03/b2p P3; 03/final Q3; 06/T2, T3; P1 Q7, Q8, Q18 | ch03-q10; ch06-q03, q05, q07, q11 | drafted |
 | Imperative creation and generated manifests (`--dry-run=client -o yaml`) | 03, 04 | 03/a A5; 03/b2p; 03/final Q1, Q5; 04/T1; P1 Q2, Q10 | ch03-q03, q04, q09; ch04-q06, q12 | drafted |
 | `kubectl wait`, `patch`, `set image`, `replace --force` | 03, 04 | 03/b2p P4; 03/final Q4; 04/T2; P1 Q3 | ch03-q11; ch04-q08 | drafted |
 | `jq` and `yq` | 03 | 03/a A7 (optional) | ch03-q15 | drafted |

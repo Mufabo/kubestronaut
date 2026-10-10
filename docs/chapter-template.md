@@ -74,9 +74,10 @@ Note: fix the Pod in place. Do **not** delete and recreate it.
 - Task N is `check N` in `verify.sh`. In a lab with parts, tasks are `####`
   headings under `### Part <part>: ...`.
 
-The last lab (or part) of each Part of the book is **exam style** instead, as
-a bridge to the mock exams; Chapter 03's `final` part is the reference. All
-questions are shown at once and scored together with `make verify`:
+Each Part of the book ends with an exam-style mock exam (`mock-exams/`). A
+chapter may also include a short, timed exam-style lab or part as a warm-up;
+Chapter 03's `final` part is the reference. All questions are shown at once and
+scored together with `make verify`:
 
 ```markdown
 #### Question 3 | Relabel
