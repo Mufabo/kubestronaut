@@ -75,7 +75,20 @@ One page of the commands from Chapter 03. `k` is the alias for `kubectl`
 | Delete at once (labs only) | `k delete pod NAME $now` |
 | Wait | `k wait --for=condition=Ready pod/NAME --timeout=60s`, `--for=delete` |
 
-Need a controller (Chapter 05): `k scale`, `k set env`, `k set resources`, `k rollout`.
+## Deployments and rollouts (Chapter 05)
+
+| Task | Command |
+|---|---|
+| Create | `k create deployment NAME --image=IMG --replicas=N [--port=P]` (container is named after the image) |
+| Scale | `k scale deployment NAME --replicas=N` |
+| Container names | `k get deploy NAME -o jsonpath='{.spec.template.spec.containers[*].name}'` |
+| New image | `k set image deployment/NAME CONTAINER=IMG` |
+| Record why | `k annotate deployment NAME kubernetes.io/change-cause="..." --overwrite` |
+| Follow a rollout | `k rollout status deployment/NAME [--timeout=60s]` |
+| History / one revision | `k rollout history deployment/NAME [--revision=N]` |
+| Roll back | `k rollout undo deployment/NAME [--to-revision=N]` |
+| Batch several changes | `k rollout pause deployment/NAME` ... `k rollout resume deployment/NAME` |
+| ReplicaSets of a Deployment | `k get rs -l app=NAME` (old revisions show 0 desired) |
 
 ## Permissions
 

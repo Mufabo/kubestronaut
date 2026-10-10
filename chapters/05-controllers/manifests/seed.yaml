@@ -1,0 +1,56 @@
+# Deployments the lab starts with. Helper workloads stay small so many labs can
+# share one cluster. The container in each is named "web", not after the image,
+# so readers must look the name up before `kubectl set image`.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api
+  labels: {app: api}
+spec:
+  replicas: 2
+  selector:
+    matchLabels: {app: api}
+  template:
+    metadata:
+      labels: {app: api}
+    spec:
+      containers:
+        - name: web
+          image: nginx:1.26
+          resources: {requests: {cpu: 10m, memory: 16Mi}, limits: {cpu: 100m, memory: 64Mi}}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  labels: {app: frontend}
+spec:
+  replicas: 3
+  selector:
+    matchLabels: {app: frontend}
+  template:
+    metadata:
+      labels: {app: frontend}
+    spec:
+      containers:
+        - name: web
+          image: nginx:1.26
+          resources: {requests: {cpu: 10m, memory: 16Mi}, limits: {cpu: 100m, memory: 64Mi}}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cache
+  labels: {app: cache}
+spec:
+  replicas: 2
+  selector:
+    matchLabels: {app: cache}
+  template:
+    metadata:
+      labels: {app: cache}
+    spec:
+      containers:
+        - name: web
+          image: nginx:1.27
+          resources: {requests: {cpu: 10m, memory: 16Mi}, limits: {cpu: 100m, memory: 64Mi}}
