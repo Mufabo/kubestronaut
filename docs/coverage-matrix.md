@@ -44,8 +44,8 @@ The KCNA curriculum lists topics, not tasks, so each row is broad. Chapters
 
 | Domain | Bullet (verbatim) | Chapter | Lab | Questions | Status |
 |---|---|---|---|---|---|
-| Kubernetes Fundamentals | Kubernetes Core Concepts | 02, 04, 05, 06 | 02/T1-T5, 04/T1-T5, 05/T1-T6 | ch02-q01..q05, q08; ch04-q01, q02, q04; ch05-q01..q03 | partly |
-| Kubernetes Fundamentals | Administration | 03, 18, 19, 20 | 03/a, 03/b1, 03/b2p | ch02-q10; ch03-q01, q08 | partly |
+| Kubernetes Fundamentals | Kubernetes Core Concepts | 02, 04, 05, 06 | 02/T1-T5, 04/T1-T5, 05/T1-T6, 06/T1-T5 | ch02-q01..q05, q08; ch04-q01, q02, q04; ch05-q01..q03; ch06-q01..q05 | drafted |
+| Kubernetes Fundamentals | Administration | 03, 06, 18, 19, 20 | 03/a, 03/b1, 03/b2p; 06/T2 | ch02-q10; ch03-q01, q08; ch06-q09 | partly |
 | Kubernetes Fundamentals | Scheduling | 02, 17 | 02/T4 | ch02-q02, q12 | partly |
 | Kubernetes Fundamentals | Containerization | 01, 04 | 04/T1, 04/T5 | ch01-q04..q06; ch04-q01 | drafted |
 | Container Orchestration | Networking | 11, 21 | | | planned |
@@ -82,7 +82,7 @@ The KCNA curriculum lists topics, not tasks, so each row is broad. Chapters
 | Workloads and Scheduling | Use ConfigMaps and Secrets to configure applications | 03, 07 | 03/b2 C1, C2; P1 Q11 | | partly (03 creates them; 07 consumes them) |
 | Workloads and Scheduling | Configure workload autoscaling | 25 | | | planned |
 | Workloads and Scheduling | Understand the primitives used to create robust, self-healing, application deployments | 04, 05, 10 | 04/T5; 05/T1, T2, T5 | ch04-q04, q05; ch05-q01..q03, q06, q07 | partly |
-| Workloads and Scheduling | Configure Pod admission and scheduling (limits, node affinity, etc.) | 04, 10, 17 | 04/T4; P1 Q5 | ch04-q07, q09 | partly |
+| Workloads and Scheduling | Configure Pod admission and scheduling (limits, node affinity, etc.) | 04, 06, 10, 17 | 04/T4; 06/T5; P1 Q5 | ch04-q07, q09; ch06-q12 | partly (06 covers nodeSelector; 17 affinity and taints) |
 | Servicing and Networking | Understand connectivity between Pods | 11, 21 | | | planned |
 | Servicing and Networking | Define and enforce Network Policies | 21, 36 | | | planned |
 | Servicing and Networking | Use ClusterIP, NodePort, LoadBalancer service types and endpoints | 03, 11 | 03/b2 C5; P1 Q11 | | partly (03 exposes a Pod; 11 teaches Services) |
@@ -120,7 +120,7 @@ The KCNA curriculum lists topics, not tasks, so each row is broad. Chapters
 | Application Deployment | Kustomize | 14 | | | planned |
 | Application Observability and Maintenance | Understand API depreciations | 02, 15 | 02/T5; P1 Q12 | ch02-q09, q11 | partly (02 covers groups and versions; 15 covers deprecations) |
 | Application Observability and Maintenance | Implement probes and health checks | 10 | | ch02-q13 (explain only) | planned |
-| Application Observability and Maintenance | Use built-in CLI tools to monitor Kubernetes applications | 03, 15 | 03/a A1-A4; 03/final Q2, Q6; P1 Q9 | ch03-q06, q07, q11 | partly |
+| Application Observability and Maintenance | Use built-in CLI tools to monitor Kubernetes applications | 03, 06, 15 | 03/a A1-A4; 03/final Q2, Q6; 06/T1, T4; P1 Q9 | ch03-q06, q07, q11; ch06-q08, q10 | partly |
 | Application Observability and Maintenance | Utilize container logs | 04, 15 | 04/T3; P1 Q4 | ch04-q11 | partly |
 | Application Observability and Maintenance | Debugging in Kubernetes | 04, 15, 26 | 04/T2; P1 Q3, Q6 | ch04-q03, q11 | partly |
 | Application Environment, Configuration and Security | Discover and use resources that extend Kubernetes (CRD, Operators) | 03, 24 | 03/a A6; P1 Q12 | ch03-q12 | partly (03 discovers resource types; 24 teaches CRDs) |
@@ -209,7 +209,7 @@ The KCNA curriculum lists topics, not tasks, so each row is broad. Chapters
 | Kubernetes Security Fundamentals | Pod Security Admissions | 31, 33 | | | planned |
 | Kubernetes Security Fundamentals | Authentication | 31 | | | planned |
 | Kubernetes Security Fundamentals | Secrets | 07, 33 | 03/b2 C2 | | partly |
-| Kubernetes Security Fundamentals | Isolation and Segmentation | 06, 33, 36 | | | planned |
+| Kubernetes Security Fundamentals | Isolation and Segmentation | 06, 33, 36 | 06/T2 | ch06-q02 | partly (06 explains what namespaces do not isolate) |
 | Kubernetes Security Fundamentals | Audit Logging | 35 | | | planned |
 | Kubernetes Security Fundamentals | Network Policy | 21, 36 | | | planned |
 | Kubernetes Threat Model | Kubernetes Trust Boundaries and Data Flow | 29 | | | planned |
@@ -259,8 +259,8 @@ them. They are mapped here so their coverage stays visible.
 |---|---|---|---|---|
 | kubeconfig: create, switch, delete contexts; default namespace | 02, 03 | 03/b1; P1 Q1 | ch02-q10; ch03-q01, q08 | drafted |
 | Discover resources and fields (`api-resources`, `explain`) | 02, 03 | 02/T5; 03/a A6; P1 Q12 | ch02-q11, q13; ch03-q12 | drafted |
-| Selectors, JSONPath, and custom columns | 03 | 03/a A1-A3; 03/final Q2, Q6; P1 Q9 | ch03-q02, q06, q07, q13 | drafted |
-| Labels and annotations from the command line | 03 | 03/a A4; 03/b2p P3; 03/final Q3; P1 Q7, Q8 | ch03-q10 | drafted |
+| Selectors (label and field), JSONPath, and custom columns | 03, 06 | 03/a A1-A3; 03/final Q2, Q6; 06/T1, T4; P1 Q9 | ch03-q02, q06, q07, q13; ch06-q04, q08, q10, q13 | drafted |
+| Labels and annotations from the command line | 03, 06 | 03/a A4; 03/b2p P3; 03/final Q3; 06/T2, T3; P1 Q7, Q8 | ch03-q10; ch06-q03, q05, q07, q11 | drafted |
 | Imperative creation and generated manifests (`--dry-run=client -o yaml`) | 03, 04 | 03/a A5; 03/b2p; 03/final Q1, Q5; 04/T1; P1 Q2, Q10 | ch03-q03, q04, q09; ch04-q06, q12 | drafted |
 | `kubectl wait`, `patch`, `set image`, `replace --force` | 03, 04 | 03/b2p P4; 03/final Q4; 04/T2; P1 Q3 | ch03-q11; ch04-q08 | drafted |
 | `jq` and `yq` | 03 | 03/a A7 (optional) | ch03-q15 | drafted |

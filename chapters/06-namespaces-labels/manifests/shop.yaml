@@ -1,0 +1,75 @@
+# Namespace ch06-shop: Pods in every phase (Task 4) and the Deployment queue (Task 3).
+# Helper workloads stay small so many labs can share one cluster.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: storefront
+  labels: {app: storefront, tier: web}
+spec:
+  containers:
+    - name: web
+      image: nginx:1.27
+      resources: {requests: {cpu: 10m, memory: 16Mi}, limits: {cpu: 100m, memory: 64Mi}}
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: import-done
+  labels: {app: importer}
+spec:
+  terminationGracePeriodSeconds: 1   # busybox sleep ignores SIGTERM
+  restartPolicy: Never
+  containers:
+    - name: import
+      image: busybox:1.36
+      command: ["sh", "-c", "echo imported"]
+      resources: {requests: {cpu: 5m, memory: 8Mi}, limits: {cpu: 50m, memory: 32Mi}}
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: import-failed
+  labels: {app: importer}
+spec:
+  terminationGracePeriodSeconds: 1   # busybox sleep ignores SIGTERM
+  restartPolicy: Never
+  containers:
+    - name: import
+      image: busybox:1.36
+      command: ["sh", "-c", "echo cannot reach database; exit 1"]
+      resources: {requests: {cpu: 5m, memory: 8Mi}, limits: {cpu: 50m, memory: 32Mi}}
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: reports
+  labels: {app: reports}
+spec:
+  terminationGracePeriodSeconds: 1   # busybox sleep ignores SIGTERM
+  nodeSelector:
+    ch06.kbook.io/zone: nowhere     # no node has this label, so the Pod stays Pending
+  containers:
+    - name: reports
+      image: busybox:1.36
+      command: ["sleep", "3600"]
+      resources: {requests: {cpu: 5m, memory: 8Mi}, limits: {cpu: 50m, memory: 32Mi}}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: queue
+  labels: {app: queue}
+spec:
+  replicas: 3
+  selector:
+    matchLabels: {app: queue}
+  template:
+    metadata:
+      labels: {app: queue}
+    spec:
+      terminationGracePeriodSeconds: 1   # busybox sleep ignores SIGTERM
+      containers:
+        - name: worker
+          image: busybox:1.36
+          command: ["sleep", "3600"]
+          resources: {requests: {cpu: 5m, memory: 8Mi}, limits: {cpu: 50m, memory: 32Mi}}
