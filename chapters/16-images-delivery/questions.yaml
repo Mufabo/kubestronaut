@@ -1,0 +1,147 @@
+- id: ch16-q01
+  type: mcq
+  exams: [KCNA, CKAD]
+  question: "Which statement about image tags and digests is correct?"
+  choices:
+    - "A digest can be moved to a different image by pushing again"
+    - "A tag is a label that can be moved to another image; a digest identifies the exact content and does not change"
+    - "A tag and a digest are the same thing with different names"
+    - "Only `latest` can be moved; other tags are permanent"
+  answer: B
+  explanation: "A tag is a movable label, and pushing a new image under the same tag moves it. A digest is a hash of the image's content, so an image referenced by digest is always the same bytes. That is why a deployment that must run exactly what was tested pins the digest."
+
+- id: ch16-q02
+  type: mcq
+  exams: [KCNA, CKAD]
+  question: "Which Dockerfile practice most reduces the risk of a build changing without any change in your code?"
+  choices:
+    - "Using `FROM ubuntu:latest` so that the base stays current"
+    - "Pinning the base image to a specific version, such as `nginx:1.27-alpine`"
+    - "Putting `COPY . .` as the first instruction"
+    - "Running the container as root, so that every file is writable"
+  answer: B
+  explanation: "A pinned base image produces the same starting layers each time. `latest` changes whenever the publisher pushes, so the build can change with no change to your files. Running as root is a security risk, not a build-stability practice."
+
+- id: ch16-q03
+  type: mcq
+  exams: [CKAD]
+  question: "You load an image with `kind load docker-image web:1.2` and set `imagePullPolicy: Always`. What happens when the Pod starts?"
+  choices:
+    - "The Pod uses the loaded image, because kind load makes it available everywhere"
+    - "The kubelet tries to pull `web:1.2` from its registry, and fails if no registry serves it"
+    - "The Pod is refused by the API server"
+    - "The kubelet pulls from Docker Hub only, and ignores the loaded image"
+  answer: B
+  explanation: "`Always` makes the kubelet pull on every start, from the registry named in the image. A kind-loaded image is only on the node, not in a registry, so the pull fails. `IfNotPresent` uses the node's copy when it exists, which is what loaded images need."
+
+- id: ch16-q04
+  type: mcq
+  exams: [CKAD]
+  question: "A Pod is stuck in `ImagePullBackOff`. Where is the most specific explanation?"
+  choices:
+    - "In the container's logs, which are empty"
+    - "In the Pod's events, which name the image and the pull error"
+    - "In `kubectl get nodes`"
+    - "In the Dockerfile"
+  answer: B
+  explanation: "The kubelet records the pull failure as an event on the Pod, including the image name and the error. `describe` and `get events` show it. Container logs do not exist yet, because the container never started."
+
+- id: ch16-q05
+  type: mcq
+  exams: [CKAD]
+  question: "Which field of a Pod's spec lets it pull from a private registry with a dockerconfigjson Secret?"
+  choices:
+    - "`spec.containers[].env`"
+    - "`spec.volumes`"
+    - "`spec.imagePullSecrets`"
+    - "`spec.securityContext.runAsUser`"
+  answer: C
+  explanation: "`imagePullSecrets` lists the Secrets the kubelet uses to pull the Pod's images. The other fields are for environment variables, storage and security, and none of them affects image pulls."
+
+- id: ch16-q06
+  type: mcq
+  exams: [CKAD, KCNA]
+  question: "In a GitOps deployment, which component applies the desired state to the cluster?"
+  choices:
+    - "The CI pipeline, with cluster credentials, after every commit"
+    - "A controller inside the cluster, such as Argo CD or Flux, which pulls the desired state from Git"
+    - "The container runtime, which reads Git on each node"
+    - "A developer's laptop, through a manual `kubectl apply`"
+  answer: B
+  explanation: "In GitOps, the desired state lives in Git, and a controller in the cluster pulls and applies it. The cluster does not need credentials from outside, and each change is a reviewable commit. A pipeline that runs kubectl against the cluster is a push deployment, which is a different model."
+
+- id: ch16-q07
+  type: mcq
+  exams: [CKAD]
+  question: "A Deployment has 4 replicas and uses the default RollingUpdate strategy. During an update, how many Pods may be unavailable at once?"
+  choices:
+    - "None, because the default is maxUnavailable 0"
+    - "One, because 25% of 4 is 1 for maxUnavailable"
+    - "Four, because the update replaces every Pod at once"
+    - "Two, half of the replicas"
+  answer: B
+  explanation: "The defaults for `maxSurge` and `maxUnavailable` are both 25%. For 4 replicas, `maxUnavailable` rounds down to 1 and `maxSurge` rounds up to 1. The default is not 0, which is a common misreading."
+
+- id: ch16-q08
+  type: task
+  exams: [CKAD]
+  prompt: "In namespace `prod`, create a Secret named `ghcr-pull` of type `kubernetes.io/dockerconfigjson` for the registry `ghcr.io`, with the username `robot` and the password `token-123`. Show the Secret's type."
+  solution: |
+    ```bash
+    kubectl -n prod create secret docker-registry ghcr-pull --docker-server=ghcr.io --docker-username=robot --docker-password=token-123
+    kubectl -n prod get secret ghcr-pull -o jsonpath='{.type}{"\n"}'
+    ```
+
+    `kubectl create secret docker-registry` creates the dockerconfigjson type, which is
+    the one `imagePullSecrets` expects.
+
+- id: ch16-q09
+  type: task
+  exams: [CKAD]
+  prompt: "In namespace `prod`, create a Pod named `web` that runs the image `ghcr.io/team/web:2.0` and pulls it with the Secret `ghcr-pull`. Show the name of the image pull secret the Pod refers to."
+  solution: |
+    ```bash
+    cat <<'YAML' | kubectl -n prod apply -f -
+    apiVersion: v1
+    kind: Pod
+    metadata:
+      name: web
+    spec:
+      imagePullSecrets:
+        - name: ghcr-pull
+      containers:
+        - name: web
+          image: ghcr.io/team/web:2.0
+    YAML
+    kubectl -n prod get pod web -o jsonpath='{.spec.imagePullSecrets[0].name}{"\n"}'
+    ```
+
+    The Pod may not start if the image does not exist; the check is on its specification.
+    `imagePullSecrets` is a list, which is why the path ends in `[0]`.
+
+- id: ch16-q10
+  type: task
+  exams: [CKAD]
+  prompt: "In namespace `prod`, change the Deployment `api` so that no Pod is removed until its replacement is ready, and at most one extra Pod runs during the update. Show the strategy."
+  solution: |
+    ```bash
+    kubectl -n prod patch deployment api --type=merge -p '{"spec":{"strategy":{"type":"RollingUpdate","rollingUpdate":{"maxUnavailable":0,"maxSurge":1}}}}'
+    kubectl -n prod get deployment api -o jsonpath='{.spec.strategy}{"\n"}'
+    ```
+
+    `maxUnavailable: 0` means no Pod is removed before its replacement is ready, and
+    `maxSurge: 1` allows one extra Pod during the update.
+
+- id: ch16-q11
+  type: task
+  exams: [CKAD]
+  prompt: "In namespace `prod`, change the Deployment `worker` to the `Recreate` strategy, because two versions must never run at once. Wait for the rollout, and show the strategy type."
+  solution: |
+    ```bash
+    kubectl -n prod patch deployment worker --type=merge -p '{"spec":{"strategy":{"type":"Recreate","rollingUpdate":null}}}'
+    kubectl -n prod rollout status deployment/worker
+    kubectl -n prod get deployment worker -o jsonpath='{.spec.strategy.type}{"\n"}'
+    ```
+
+    `rollingUpdate: null` removes the field, because `Recreate` does not take it.
+    Expect a gap in service while the old Pods stop and the new ones start.

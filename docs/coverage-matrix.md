@@ -52,7 +52,7 @@ The KCNA curriculum lists topics, not tasks, so each row is broad. Chapters
 | Container Orchestration | Security | 23, 29, 33 | 03/b3 | ch03-q05 | partly |
 | Container Orchestration | Troubleshooting | 04, 26 | 04/T2; P1 Q3 | ch04-q03, q11 | partly |
 | Container Orchestration | Storage | 13 | | | planned |
-| Cloud Native Application Delivery | Application Delivery | 14, 16 | | | planned |
+| Cloud Native Application Delivery | Application Delivery | 14, 16 | 16/T1–T5 | ch16-q06, q08–q11 | drafted |
 | Cloud Native Application Delivery | Debugging | 04, 15 | 04/T2, 04/T3; P1 Q4 | ch04-q03, q11 | partly |
 | Cloud Native Architecture | Observability | 01, 15, 28 | | ch01-q10 | partly |
 | Cloud Native Architecture | Cloud Native Ecosystem and Principles | 01, 28 | 01 exploration exercise | ch01-q07..q11, q15 | partly |
@@ -110,11 +110,11 @@ The KCNA curriculum lists topics, not tasks, so each row is broad. Chapters
 
 | Domain | Bullet (verbatim) | Chapter | Lab | Questions | Status |
 | --- | --- | --- | --- | --- | --- |
-| Application Design and Build | Define, build and modify container images | 01, 16 | | ch01-q05 | partly (01 explains images; 16 builds them) |
+| Application Design and Build | Define, build and modify container images | 01, 16 | 16/T1 | ch01-q05; ch16-q01–q03 | drafted |
 | Application Design and Build | Choose and use the right workload resource (Deployment, DaemonSet, CronJob, etc.) | 05, 08 | 05/T1; 08/T1–T5 | ch05-q09, ch08-q01–q07 | partly (08 drafted; DaemonSet and StatefulSet not yet) |
 | Application Design and Build | Understand multi-container Pod design patterns (e.g. sidecar, init and others) | 04, 09 | 09/T1–T5; P1 Q10 | ch04-q02, ch09-q01–q11 | drafted |
 | Application Design and Build | Utilize persistent and ephemeral volumes | 13 | 13/T1–T2, T4 | ch13-q01, q06, q09 | drafted |
-| Application Deployment | Use Kubernetes primitives to implement common deployment strategies (e.g. blue/green or canary) | 05, 16 | 05/T5; P1 Q17 | ch05-q06, q13 | partly (05 covers rolling update and Recreate; 16 covers blue/green and canary) |
+| Application Deployment | Use Kubernetes primitives to implement common deployment strategies (e.g. blue/green or canary) | 05, 16 | 05/T5; 16/T3–T4 | ch05-q06, q13; ch16-q07, q10, q11 | partly (16 describes blue/green and canary; no traffic splitter in the lab) |
 | Application Deployment | Understand Deployments and how to perform rolling updates | 05 | 05/T1-T6; P1 Q15-Q17 | ch05-q04..q08, q10..q14 | drafted |
 | Application Deployment | Use the Helm package manager to deploy existing packages | 14 | 14/T1–T3, T5 | ch14-q02–q04, q08–q10 | drafted |
 | Application Deployment | Kustomize | 14 | 14/T4 | ch14-q05, q06, q11 | drafted |
@@ -166,7 +166,7 @@ The KCNA curriculum lists topics, not tasks, so each row is broad. Chapters
 | Minimize Microservice Vulnerabilities | Understand and implement isolation techniques (multi-tenancy, sandboxed containers, etc.) | 33 | | | planned |
 | Minimize Microservice Vulnerabilities | Implement Pod-to-Pod encryption (Cilium, Istio) | 36 | | | planned |
 | Supply Chain Security | Minimize base image footprint | 34 | | | planned |
-| Supply Chain Security | Understand your supply chain (e.g. SBOM, CI/CD, artifact repositories) | 16, 34 | | | planned |
+| Supply Chain Security | Understand your supply chain (e.g. SBOM, CI/CD, artifact repositories) | 16, 34 | | ch16-q06 | partly (16 covers CI/CD and GitOps; 34 planned) |
 | Supply Chain Security | Secure your supply chain (permitted registries, sign and validate artifacts, etc.) | 34 | | | planned |
 | Supply Chain Security | Perform static analysis of user workloads and container images (e.g. Kubesec, KubeLinter) | 34 | | | planned |
 | Monitoring, Logging and Runtime Security | Perform behavioral analytics to detect malicious activities | 35 | | | planned |
