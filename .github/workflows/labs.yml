@@ -43,6 +43,15 @@ jobs:
           config: envs/kind/cluster.yaml
       - name: Check the cluster version and mark it as a lab cluster
         run: bash tools/cluster.sh
+      - name: Install the pinned Helm
+        run: |
+          set -a; source versions.env; set +a
+          curl -fsSLo helm.tar.gz "https://get.helm.sh/helm-${HELM_VERSION}-linux-amd64.tar.gz"
+          curl -fsSLo helm.tar.gz.sha256sum "https://get.helm.sh/helm-${HELM_VERSION}-linux-amd64.tar.gz.sha256sum"
+          echo "$(cut -d' ' -f1 helm.tar.gz.sha256sum)  helm.tar.gz" | sha256sum -c -
+          tar -xzf helm.tar.gz linux-amd64/helm
+          sudo mv linux-amd64/helm /usr/local/bin/helm
+          helm version --short
       - name: Unit-test shared helpers
         run: make test-lib
       - run: make test-tier1

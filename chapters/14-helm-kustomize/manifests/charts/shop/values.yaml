@@ -1,0 +1,9 @@
+# Defaults. Override them with --set or -f FILE.
+replicaCount: 1
+image:
+  repository: nginx
+  tag: "1.26"
+service:
+  type: ClusterIP
+  port: 80
+greeting: hello-default

@@ -1,0 +1,12 @@
+resources:
+  - ../base
+replicas:
+  - name: api
+    count: 3
+images:
+  - name: nginx
+    newTag: "1.27"
+labels:
+  - pairs:
+      env: prod
+    includeSelectors: false

@@ -1,0 +1,146 @@
+- id: ch14-q01
+  type: mcq
+  exams: [KCNA, CKAD]
+  question: "What is the core difference between how Helm and Kustomize customize manifests?"
+  choices:
+    - "Helm edits running objects in place, and Kustomize edits the YAML files on disk"
+    - "Helm renders templates with values into a release, and Kustomize applies patches on top of plain, valid YAML"
+    - "Kustomize requires a Tiller server in the cluster, and Helm does not"
+    - "They are interchangeable; both only differ in the file extension they read"
+  answer: B
+  explanation: "Helm charts are Go templates that become manifests when rendered with values, and each install or upgrade is recorded as a release revision. Kustomize keeps the base as plain YAML and layers patches (overlays) on top, so the base is always valid and readable. Tiller was Helm 2, and Helm 3 has no server-side component."
+
+- id: ch14-q02
+  type: mcq
+  exams: [CKAD, CKA]
+  question: "A release is at revision 4. You run `helm rollback NAME 2`. What is the revision number after the command?"
+  choices:
+    - "2, because the release returns to that revision"
+    - "4, because rollback replaces the current revision"
+    - "5, because rollback creates a new revision that copies revision 2"
+    - "There is no revision; rollback deletes the newer history"
+  answer: C
+  explanation: "A rollback creates a new revision with the manifest of the one you name, and nothing is deleted from the history. The release's current revision is the new one, and the description says `Rollback to 2`."
+
+- id: ch14-q03
+  type: mcq
+  exams: [CKAD, CKA]
+  question: "A release was installed with `--set replicaCount=3`. You run `helm upgrade NAME CHART --set image.tag=1.27`, without `--reuse-values`. What is the replica count after the upgrade?"
+  choices:
+    - "3, because the previous values are always kept"
+    - "The chart's default in values.yaml, because the upgrade uses only the chart defaults plus this command's flags"
+    - "1, because a missing value is always 1"
+    - "0, because the upgrade resets the Deployment"
+  answer: B
+  explanation: "Without `--reuse-values`, an upgrade does not keep the previous revision's user-supplied values. It starts from the chart's `values.yaml`, adds any `-f` files, and then the `--set` flags. Add `--reuse-values` to keep the old values and change only what you name."
+
+- id: ch14-q04
+  type: mcq
+  exams: [CKAD]
+  question: "Which command renders the manifests a chart would produce, without a cluster and without installing anything?"
+  choices:
+    - "`helm install --dry-run=none`"
+    - "`helm template NAME CHART`"
+    - "`helm status NAME`"
+    - "`helm history NAME`"
+  answer: B
+  explanation: "`helm template` renders the chart locally with the values you give it. `helm install --dry-run` also renders, but it contacts the cluster to validate. `helm status` and `helm history` read a release that is already installed."
+
+- id: ch14-q05
+  type: mcq
+  exams: [CKAD, CKA]
+  question: "A Kustomize overlay sets `labels` with `includeSelectors: false`. What changes, and what stays the same?"
+  choices:
+    - "The labels on the objects change, and the Deployment's selector stays the same"
+    - "The selectors change too, which is required for the new labels to match"
+    - "Nothing changes; labels are ignored unless `includeSelectors` is true"
+    - "The Pods change, but the Deployment's own labels stay the same"
+  answer: A
+  explanation: "`includeSelectors: false` adds the labels to the objects' own metadata, and leaves the selectors alone. A Deployment's selector is immutable after creation, so changing it would break an existing Deployment. Use it for labels such as `env`, which the selector does not need."
+
+- id: ch14-q06
+  type: mcq
+  exams: [CKAD, CKA]
+  question: "Which command renders a Kustomize overlay to standard output, so you can read it before applying?"
+  choices:
+    - "`kubectl apply -k DIR --dry-run=client`"
+    - "`kubectl kustomize DIR`"
+    - "`kubectl create -k DIR`"
+    - "`kubectl get -k DIR`"
+  answer: B
+  explanation: "`kubectl kustomize` renders the overlay and prints the result without touching the cluster. `apply -k --dry-run=client` also renders, but it is the apply command, so it is less direct to read. `create` and `get` do not render the overlay to a file for review."
+
+- id: ch14-q07
+  type: mcq
+  exams: [CKAD]
+  question: "Which values file key does a chart's template read to set a Deployment's image tag, in the chart this chapter uses?"
+  choices:
+    - "`appVersion`, from Chart.yaml"
+    - "`image.tag`, from values.yaml"
+    - "`.Release.Revision`"
+    - "`.Chart.Name`"
+  answer: B
+  explanation: "The Deployment template uses `{{ .Values.image.repository }}:{{ .Values.image.tag }}`, so the tag comes from `image.tag`. `appVersion` is metadata that Helm shows in `helm list`, and the template does not use it for the image."
+
+- id: ch14-q08
+  type: task
+  exams: [CKAD, CKA]
+  prompt: "Install the chart at `./shop-chart` as a Helm release named `web` in namespace `prod`, with `replicaCount` set to `3`. Create the namespace first if it does not exist. Show the release's status."
+  solution: |
+    ```bash
+    kubectl create namespace prod --dry-run=client -o yaml | kubectl apply -f -
+    helm install web ./shop-chart -n prod --set replicaCount=3
+    helm status web -n prod
+    ```
+
+    `helm install` does not create a namespace unless you pass `--create-namespace`.
+    The `kubectl ... --dry-run | apply` line is an idempotent way to create it first.
+
+- id: ch14-q09
+  type: task
+  exams: [CKAD, CKA]
+  prompt: "In namespace `prod`, the release `web` runs image tag `1.26`. Upgrade it to tag `1.27`, keeping every other value, and show the image of the Deployment `web` afterwards."
+  solution: |
+    ```bash
+    helm upgrade web ./shop-chart -n prod --reuse-values --set image.tag=1.27
+    kubectl -n prod get deployment web -o jsonpath='{.spec.template.spec.containers[0].image}{"\n"}'
+    ```
+
+    `--reuse-values` keeps the replica count and anything else set on the last
+    revision, and `--set` changes only the tag.
+
+- id: ch14-q10
+  type: task
+  exams: [CKAD, CKA]
+  prompt: "In namespace `prod`, roll back the release `web` to revision 1, and show the revision number of the newest entry in its history."
+  solution: |
+    ```bash
+    helm rollback web 1 -n prod
+    helm history web -n prod --max 1
+    ```
+
+    `helm history --max 1` prints only the newest revision, which is the rollback
+    itself, so the revision number is one more than the last upgrade.
+
+- id: ch14-q11
+  type: task
+  exams: [CKAD, CKA]
+  prompt: "Create a Kustomize overlay in `./overlay` that uses the base in `./base`, sets the replica count of the Deployment `api` to `2`, and adds the label `env: staging` to the objects without changing the selectors. Show the rendered replica count and label."
+  solution: |
+    ```bash
+    cat <<'YAML' > overlay/kustomization.yaml
+    resources:
+      - ../base
+    replicas:
+      - name: api
+        count: 2
+    labels:
+      - pairs:
+          env: staging
+        includeSelectors: false
+    YAML
+    kubectl kustomize overlay | grep -E 'replicas:|env:'
+    ```
+
+    The `replicas` transformer names the Deployment by its base name. `includeSelectors: false`
+    keeps the selector unchanged, which is what a label change on a live Deployment needs.

@@ -94,7 +94,7 @@ The KCNA curriculum lists topics, not tasks, so each row is broad. Chapters
 | Cluster Architecture, Installation and Configuration | Create and manage Kubernetes clusters using kubeadm | 18 | | | planned |
 | Cluster Architecture, Installation and Configuration | Manage the lifecycle of Kubernetes clusters | 19, 20 | | | planned |
 | Cluster Architecture, Installation and Configuration | Implement and configure a highly-available control plane | 18 | | | planned |
-| Cluster Architecture, Installation and Configuration | Use Helm and Kustomize to install cluster components | 14 | | | planned |
+| Cluster Architecture, Installation and Configuration | Use Helm and Kustomize to install cluster components | 14 | 14/T1–T4 | ch14-q01, q06, q11 | partly (cluster components not installed in this chapter) |
 | Cluster Architecture, Installation and Configuration | Understand extension interfaces (CNI, CSI, CRI, etc.) | 01, 24 | | ch01-q04, q05 | partly |
 | Cluster Architecture, Installation and Configuration | Understand CRDs, install and configure operators | 24 | | | planned |
 
@@ -116,8 +116,8 @@ The KCNA curriculum lists topics, not tasks, so each row is broad. Chapters
 | Application Design and Build | Utilize persistent and ephemeral volumes | 13 | 13/T1–T2, T4 | ch13-q01, q06, q09 | drafted |
 | Application Deployment | Use Kubernetes primitives to implement common deployment strategies (e.g. blue/green or canary) | 05, 16 | 05/T5; P1 Q17 | ch05-q06, q13 | partly (05 covers rolling update and Recreate; 16 covers blue/green and canary) |
 | Application Deployment | Understand Deployments and how to perform rolling updates | 05 | 05/T1-T6; P1 Q15-Q17 | ch05-q04..q08, q10..q14 | drafted |
-| Application Deployment | Use the Helm package manager to deploy existing packages | 14 | | | planned |
-| Application Deployment | Kustomize | 14 | | | planned |
+| Application Deployment | Use the Helm package manager to deploy existing packages | 14 | 14/T1–T3, T5 | ch14-q02–q04, q08–q10 | drafted |
+| Application Deployment | Kustomize | 14 | 14/T4 | ch14-q05, q06, q11 | drafted |
 | Application Observability and Maintenance | Understand API depreciations | 02, 15 | 02/T5; P1 Q12 | ch02-q09, q11 | partly (02 covers groups and versions; 15 covers deprecations) |
 | Application Observability and Maintenance | Implement probes and health checks | 10 | 10/T1–T2 | ch02-q13 (explain only), ch10-q01, q02, q08 | drafted |
 | Application Observability and Maintenance | Use built-in CLI tools to monitor Kubernetes applications | 03, 06, 15 | 03/a A1-A4; 03/final Q2, Q6; 06/T1, T4; P1 Q9 | ch03-q06, q07, q11; ch06-q08, q10 | partly |
