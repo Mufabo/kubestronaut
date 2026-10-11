@@ -119,18 +119,18 @@ The KCNA curriculum lists topics, not tasks, so each row is broad. Chapters
 | Application Deployment | Use the Helm package manager to deploy existing packages | 14 | | | planned |
 | Application Deployment | Kustomize | 14 | | | planned |
 | Application Observability and Maintenance | Understand API depreciations | 02, 15 | 02/T5; P1 Q12 | ch02-q09, q11 | partly (02 covers groups and versions; 15 covers deprecations) |
-| Application Observability and Maintenance | Implement probes and health checks | 10 | | ch02-q13 (explain only) | planned |
+| Application Observability and Maintenance | Implement probes and health checks | 10 | 10/T1–T2 | ch02-q13 (explain only), ch10-q01, q02, q08 | drafted |
 | Application Observability and Maintenance | Use built-in CLI tools to monitor Kubernetes applications | 03, 06, 15 | 03/a A1-A4; 03/final Q2, Q6; 06/T1, T4; P1 Q9 | ch03-q06, q07, q11; ch06-q08, q10 | partly |
 | Application Observability and Maintenance | Utilize container logs | 04, 15 | 04/T3; P1 Q4 | ch04-q11 | partly |
 | Application Observability and Maintenance | Debugging in Kubernetes | 04, 15, 26 | 04/T2; P1 Q3, Q6 | ch04-q03, q11 | partly |
 | Application Environment, Configuration and Security | Discover and use resources that extend Kubernetes (CRD, Operators) | 03, 24 | 03/a A6; P1 Q12 | ch03-q12 | partly (03 discovers resource types; 24 teaches CRDs) |
 | Application Environment, Configuration and Security | Understand authentication, authorization and admission control | 03, 23, 31 | 03/b3; P1 Q13 | ch03-q05, q14 | partly |
-| Application Environment, Configuration and Security | Understand requests, limits, quotas | 04, 10 | 04/T4; P1 Q5 | ch04-q07, q09 | partly (quotas in 10) |
-| Application Environment, Configuration and Security | Define resource requirements | 04, 10 | 04/T4; P1 Q5 | ch04-q07, q09 | partly |
+| Application Environment, Configuration and Security | Understand requests, limits, quotas | 04, 10 | 04/T4; 10/T3–T4; P1 Q5 | ch04-q07, q09; ch10-q04, q05 | partly (quotas not yet in 10) |
+| Application Environment, Configuration and Security | Define resource requirements | 04, 10 | 04/T4; 10/T3–T4; P1 Q5 | ch04-q07, q09; ch10-q03, q04, q09, q10 | drafted |
 | Application Environment, Configuration and Security | Understand ConfigMaps | 03, 07 | 03/b2 C1; 07/T1, T3–T5; P1 Q11 | ch07-q02, q03, q06, q08 | drafted |
 | Application Environment, Configuration and Security | Create & consume Secrets | 03, 07 | 03/b2 C2; 07/T2–T5; P1 Q11 | ch07-q01, q05, q09, q11 | drafted |
 | Application Environment, Configuration and Security | Understand ServiceAccounts | 03, 23 | 03/b2 C3; P1 Q11 | | partly |
-| Application Environment, Configuration and Security | Understand Application Security (SecurityContexts, Capabilities, etc.) | 10, 33 | | | planned |
+| Application Environment, Configuration and Security | Understand Application Security (SecurityContexts, Capabilities, etc.) | 10, 33 | 10/T5 | ch10-q06, q07, q11 | partly (10 drafted; 33 planned) |
 | Services and Networking | Demonstrate basic understanding of NetworkPolicies | 21 | | | planned |
 | Services and Networking | Provide and troubleshoot access to applications via services | 03, 11, 26 | 03/b2 C5; P1 Q11 | | partly |
 | Services and Networking | Use Ingress rules to expose applications | 12 | | | planned |
