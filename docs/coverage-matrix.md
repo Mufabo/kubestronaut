@@ -75,8 +75,8 @@ The KCNA curriculum lists topics, not tasks, so each row is broad. Chapters
 | Storage | Manage persistent volumes and persistent volume claims | 13 | 13/T1–T3 | ch13-q02, q08, q11 | drafted |
 | Troubleshooting | Troubleshoot clusters and nodes | 02, 27 | 02/T1, 02/T3 | ch02-q03, q07 | partly |
 | Troubleshooting | Troubleshoot cluster components | 02, 27 | 02/T2, 02/T3; P1 Q14 | ch02-q01..q05, q07 | partly |
-| Troubleshooting | Monitor cluster and application resource usage | 10, 15 | | | planned |
-| Troubleshooting | Manage and evaluate container output streams | 04, 15 | 04/T3; P1 Q4 | ch04-q11 | partly |
+| Troubleshooting | Monitor cluster and application resource usage | 10, 15 | | ch15-q05, q06 (described; no metrics-server in the lab) | partly |
+| Troubleshooting | Manage and evaluate container output streams | 04, 15 | 04/T3; 15/T1; P1 Q4 | ch04-q11, ch15-q01, q02, q04 | partly |
 | Troubleshooting | Troubleshoot services and networking | 11, 21, 26 | 11/T5 | ch11-q02, q11 | partly (11 covers Service endpoints; 21 and 26 planned) |
 | Workloads and Scheduling | Understand application deployments and how to perform rolling update and rollbacks | 05 | 05/T1-T6; P1 Q15-Q17 | ch05-q04..q08, q10..q14 | drafted |
 | Workloads and Scheduling | Use ConfigMaps and Secrets to configure applications | 03, 07 | 03/b2 C1, C2; 07/T1–T5; P1 Q11 | ch07-q01–q03, q08–q11 | drafted |
@@ -118,11 +118,11 @@ The KCNA curriculum lists topics, not tasks, so each row is broad. Chapters
 | Application Deployment | Understand Deployments and how to perform rolling updates | 05 | 05/T1-T6; P1 Q15-Q17 | ch05-q04..q08, q10..q14 | drafted |
 | Application Deployment | Use the Helm package manager to deploy existing packages | 14 | 14/T1–T3, T5 | ch14-q02–q04, q08–q10 | drafted |
 | Application Deployment | Kustomize | 14 | 14/T4 | ch14-q05, q06, q11 | drafted |
-| Application Observability and Maintenance | Understand API depreciations | 02, 15 | 02/T5; P1 Q12 | ch02-q09, q11 | partly (02 covers groups and versions; 15 covers deprecations) |
+| Application Observability and Maintenance | Understand API depreciations | 02, 15 | 02/T5; 15/T5; P1 Q12 | ch02-q09, q11; ch15-q07, q11 | partly (02 covers groups and versions; 15 covers deprecations) |
 | Application Observability and Maintenance | Implement probes and health checks | 10 | 10/T1–T2 | ch02-q13 (explain only), ch10-q01, q02, q08 | drafted |
 | Application Observability and Maintenance | Use built-in CLI tools to monitor Kubernetes applications | 03, 06, 15 | 03/a A1-A4; 03/final Q2, Q6; 06/T1, T4; P1 Q9 | ch03-q06, q07, q11; ch06-q08, q10 | partly |
-| Application Observability and Maintenance | Utilize container logs | 04, 15 | 04/T3; P1 Q4 | ch04-q11 | partly |
-| Application Observability and Maintenance | Debugging in Kubernetes | 04, 15, 26 | 04/T2; P1 Q3, Q6 | ch04-q03, q11 | partly |
+| Application Observability and Maintenance | Utilize container logs | 04, 15 | 04/T3; 15/T1, T3; P1 Q4 | ch04-q11, ch15-q01, q02, q04, q08 | partly |
+| Application Observability and Maintenance | Debugging in Kubernetes | 04, 15, 26 | 04/T2; 15/T1–T2; P1 Q3, Q6 | ch04-q03, q11; ch15-q03, q08, q09 | partly (26 planned) |
 | Application Environment, Configuration and Security | Discover and use resources that extend Kubernetes (CRD, Operators) | 03, 24 | 03/a A6; P1 Q12 | ch03-q12 | partly (03 discovers resource types; 24 teaches CRDs) |
 | Application Environment, Configuration and Security | Understand authentication, authorization and admission control | 03, 23, 31 | 03/b3; P1 Q13 | ch03-q05, q14 | partly |
 | Application Environment, Configuration and Security | Understand requests, limits, quotas | 04, 10 | 04/T4; 10/T3–T4; P1 Q5 | ch04-q07, q09; ch10-q04, q05 | partly (quotas not yet in 10) |
