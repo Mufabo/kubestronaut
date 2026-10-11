@@ -1,0 +1,151 @@
+- id: ch07-q01
+  type: mcq
+  exams: [KCNA, CKAD]
+  question: "A Secret's values appear in `kubectl get secret -o yaml` as text like `czNjcmV0`. What is that encoding?"
+  choices:
+    - "Encryption with a key stored in the cluster, so only the API server can read the value"
+    - "A hash of the value, so the original cannot be recovered"
+    - "Base64 encoding, which anyone who can read the Secret can decode"
+    - "Compression, which the kubelet reverses when it mounts the value"
+  answer: C
+  explanation: "Secret values are base64-encoded so that binary data fits in JSON and YAML. Base64 is reversible without any key, so it protects nothing by itself. Protection comes from RBAC on who can read the Secret and, optionally, from encryption at rest in etcd, which is a separate API server setting."
+
+- id: ch07-q02
+  type: mcq
+  exams: [CKAD, CKA]
+  question: "A Deployment's Pods get `LOG_LEVEL` from a ConfigMap through `envFrom`. You change `LOG_LEVEL` in the ConfigMap. What do the running containers see?"
+  choices:
+    - "The new value immediately, because environment variables are re-read on every access"
+    - "The new value after about a minute, as with mounted files"
+    - "The old value until their containers restart, because environment variables are read once at start"
+    - "The new value only if the Deployment's image tag also changes"
+  answer: C
+  explanation: "Environment variables are copied into the container's environment when it starts and never refreshed. Restarting the Pods, for example with kubectl rollout restart deployment/NAME, gives them the new value. Mounted files, by contrast, are rewritten by the kubelet and see the change without a restart."
+
+- id: ch07-q03
+  type: mcq
+  exams: [CKAD, CKA]
+  question: "A ConfigMap is mounted into a Pod with `subPath: app.conf`. You later update the ConfigMap. What happens to the mounted file?"
+  choices:
+    - "It is updated within about a minute, like any mounted ConfigMap file"
+    - "It is never updated; the file is copied into the container when it starts"
+    - "It is updated only after the Pod is deleted and recreated by its controller"
+    - "The Pod fails with an error until the subPath is removed"
+  answer: B
+  explanation: "A subPath mount binds one file into the container once, at start, and the kubelet does not refresh it. To pick up changes, mount the whole directory instead of a single key, or restart the Pod."
+
+- id: ch07-q04
+  type: mcq
+  exams: [CKAD]
+  question: "Which downward API `fieldPath` gives a container the IP address of its Pod?"
+  choices:
+    - "`spec.podIP`"
+    - "`status.podIP`"
+    - "`metadata.podIP`"
+    - "`status.hostIP`"
+  answer: B
+  explanation: "The Pod's IP is reported in the status, so the field is `status.podIP`. `status.hostIP` is the IP of the node, and the other two paths do not exist in the Pod API."
+
+- id: ch07-q05
+  type: mcq
+  exams: [CKAD, CKA]
+  question: "A Pod's container uses `env` with a `secretKeyRef` to a key that does not exist in the Secret, and the reference is not marked optional. What happens?"
+  choices:
+    - "The container starts with an empty value and a warning event"
+    - "The container does not start, and the Pod status shows CreateContainerConfigError"
+    - "The Pod is evicted by the kubelet within a few minutes"
+    - "The API server rejects the Pod at creation time with a validation error"
+  answer: B
+  explanation: "The API server accepts the Pod, because it cannot check Secret contents when it validates the spec. The kubelet then fails to build the container's configuration and reports CreateContainerConfigError. `kubectl describe pod` names the missing key in the Events. Setting optional: true on the reference lets the container start without the key."
+
+- id: ch07-q06
+  type: mcq
+  exams: [KCNA, CKA]
+  question: "What does `immutable: true` on a ConfigMap change?"
+  choices:
+    - "The ConfigMap cannot be read by Pods in other namespaces"
+    - "The API server refuses changes to its data, so a new ConfigMap with a new name is needed to change it"
+    - "Its values are encrypted at rest"
+    - "Pods that use it are restarted automatically whenever it is read"
+  answer: B
+  explanation: "An immutable ConfigMap or Secret cannot have its data changed. The kubelet also stops watching it, which reduces API load in large clusters. Changing the configuration means creating a new object with a new name and pointing the Pods at it. Immutability is not encryption, and it does not affect who can read the object."
+
+- id: ch07-q07
+  type: mcq
+  exams: [CKAD]
+  question: "A container needs its memory limit as a number of mebibytes, so it can size a cache. Which downward API setting gives that?"
+  choices:
+    - "`fieldRef` with `fieldPath: limits.memory`"
+    - "`resourceFieldRef` with `resource: limits.memory` and `divisor: 1Mi`"
+    - "`resourceFieldRef` with `resource: requests.memory` and no divisor"
+    - "`fieldRef` with `fieldPath: resources.limits.memory` and a unit suffix"
+  answer: B
+  explanation: "Resource values come from `resourceFieldRef`, not `fieldRef`, and the resource name is `limits.memory`. Without a divisor the value is in bytes. `divisor: 1Mi` returns it in mebibytes, so a 64Mi limit is exposed as 64."
+
+- id: ch07-q08
+  type: task
+  exams: [CKAD, CKA]
+  prompt: "In namespace `prod`, create a ConfigMap named `web-settings` with two keys: `THEME` with the value `dark`, and `CACHE_TTL` with the value `300`."
+  solution: |
+    ```bash
+    kubectl -n prod create configmap web-settings --from-literal=THEME=dark --from-literal=CACHE_TTL=300
+    kubectl -n prod get configmap web-settings -o yaml
+    ```
+
+    `--from-literal` sets each key exactly. Values such as `300` stay strings in a ConfigMap, which is what the consumer receives.
+
+- id: ch07-q09
+  type: task
+  exams: [CKAD, CKA]
+  prompt: "In namespace `prod`, create a Secret named `api-token` of type `Opaque` with one key, `token`, whose value is `s3cr3t-token`. Then show that the stored value decodes to the same text."
+  solution: |
+    ```bash
+    kubectl -n prod create secret generic api-token --from-literal=token=s3cr3t-token
+    kubectl -n prod get secret api-token -o jsonpath='{.data.token}' | base64 -d; echo
+    ```
+
+    `generic` gives the `Opaque` type. Writing the value with `echo | kubectl` would add a newline to it; `--from-literal` does not.
+
+- id: ch07-q10
+  type: task
+  exams: [CKAD, CKA]
+  prompt: "In namespace `prod`, the Deployment `api` runs the container `httpd`. Add the ConfigMap `web-settings` as environment variables for that container, and roll out the change. Then show the environment variables the Deployment now sets."
+  solution: |
+    ```bash
+    kubectl -n prod set env deployment/api --from=configmap/web-settings
+    kubectl -n prod rollout status deployment/api
+    kubectl -n prod set env deployment/api --list
+    ```
+
+    In current `kubectl`, `set env --from` writes one `env` entry per key, each with a `configMapKeyRef`. Changing the Pod template makes the Deployment roll out new Pods, which is when the values reach the containers.
+
+- id: ch07-q11
+  type: task
+  exams: [CKAD, CKA]
+  prompt: "In namespace `prod`, create a Pod named `reader` running `busybox:1.36` with the command `sleep 3600`. Mount the Secret `api-token` read-only at `/etc/api`, so that the file `/etc/api/token` holds the token. The Pod must be Running."
+  solution: |
+    ```bash
+    cat <<'YAML' | kubectl -n prod apply -f -
+    apiVersion: v1
+    kind: Pod
+    metadata:
+      name: reader
+    spec:
+      containers:
+        - name: reader
+          image: busybox:1.36
+          command: ["sleep", "3600"]
+          volumeMounts:
+            - name: api
+              mountPath: /etc/api
+              readOnly: true
+      volumes:
+        - name: api
+          secret:
+            secretName: api-token
+    YAML
+    kubectl -n prod wait --for=condition=Ready pod/reader --timeout=120s
+    kubectl -n prod exec reader -- cat /etc/api/token
+    ```
+
+    A Secret volume creates one file per key, so the token is at `/etc/api/token`. The `readOnly: true` on the mount stops the container from writing to it.

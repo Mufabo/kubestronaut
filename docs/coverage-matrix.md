@@ -79,7 +79,7 @@ The KCNA curriculum lists topics, not tasks, so each row is broad. Chapters
 | Troubleshooting | Manage and evaluate container output streams | 04, 15 | 04/T3; P1 Q4 | ch04-q11 | partly |
 | Troubleshooting | Troubleshoot services and networking | 11, 21, 26 | | | planned |
 | Workloads and Scheduling | Understand application deployments and how to perform rolling update and rollbacks | 05 | 05/T1-T6; P1 Q15-Q17 | ch05-q04..q08, q10..q14 | drafted |
-| Workloads and Scheduling | Use ConfigMaps and Secrets to configure applications | 03, 07 | 03/b2 C1, C2; P1 Q11 | | partly (03 creates them; 07 consumes them) |
+| Workloads and Scheduling | Use ConfigMaps and Secrets to configure applications | 03, 07 | 03/b2 C1, C2; 07/T1–T5; P1 Q11 | ch07-q01–q03, q08–q11 | drafted |
 | Workloads and Scheduling | Configure workload autoscaling | 25 | | | planned |
 | Workloads and Scheduling | Understand the primitives used to create robust, self-healing, application deployments | 04, 05, 10 | 04/T5; 05/T1, T2, T5; P1 Q18 | ch04-q04, q05; ch05-q01..q03, q06, q07 | partly |
 | Workloads and Scheduling | Configure Pod admission and scheduling (limits, node affinity, etc.) | 04, 06, 10, 17 | 04/T4; 06/T5; P1 Q5 | ch04-q07, q09; ch06-q12 | partly (06 covers nodeSelector; 17 affinity and taints) |
@@ -127,8 +127,8 @@ The KCNA curriculum lists topics, not tasks, so each row is broad. Chapters
 | Application Environment, Configuration and Security | Understand authentication, authorization and admission control | 03, 23, 31 | 03/b3; P1 Q13 | ch03-q05, q14 | partly |
 | Application Environment, Configuration and Security | Understand requests, limits, quotas | 04, 10 | 04/T4; P1 Q5 | ch04-q07, q09 | partly (quotas in 10) |
 | Application Environment, Configuration and Security | Define resource requirements | 04, 10 | 04/T4; P1 Q5 | ch04-q07, q09 | partly |
-| Application Environment, Configuration and Security | Understand ConfigMaps | 03, 07 | 03/b2 C1; P1 Q11 | | partly |
-| Application Environment, Configuration and Security | Create & consume Secrets | 03, 07 | 03/b2 C2; P1 Q11 | | partly |
+| Application Environment, Configuration and Security | Understand ConfigMaps | 03, 07 | 03/b2 C1; 07/T1, T3–T5; P1 Q11 | ch07-q02, q03, q06, q08 | drafted |
+| Application Environment, Configuration and Security | Create & consume Secrets | 03, 07 | 03/b2 C2; 07/T2–T5; P1 Q11 | ch07-q01, q05, q09, q11 | drafted |
 | Application Environment, Configuration and Security | Understand ServiceAccounts | 03, 23 | 03/b2 C3; P1 Q11 | | partly |
 | Application Environment, Configuration and Security | Understand Application Security (SecurityContexts, Capabilities, etc.) | 10, 33 | | | planned |
 | Services and Networking | Demonstrate basic understanding of NetworkPolicies | 21 | | | planned |
@@ -162,7 +162,7 @@ The KCNA curriculum lists topics, not tasks, so each row is broad. Chapters
 | System Hardening | Minimize external access to the network | 32, 36 | | | planned |
 | System Hardening | Appropriately use kernel hardening tools such as AppArmor, seccomp | 32 | | | planned |
 | Minimize Microservice Vulnerabilities | Use appropriate pod security standards | 33 | | | planned |
-| Minimize Microservice Vulnerabilities | Manage kubernetes secrets | 07, 33 | | | planned |
+| Minimize Microservice Vulnerabilities | Manage kubernetes secrets | 07, 33 | 07/T2 | ch07-q01, q09 | partly (07 drafted; 33 planned) |
 | Minimize Microservice Vulnerabilities | Understand and implement isolation techniques (multi-tenancy, sandboxed containers, etc.) | 33 | | | planned |
 | Minimize Microservice Vulnerabilities | Implement Pod-to-Pod encryption (Cilium, Istio) | 36 | | | planned |
 | Supply Chain Security | Minimize base image footprint | 34 | | | planned |
