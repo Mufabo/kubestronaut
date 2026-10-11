@@ -6,7 +6,7 @@ time and a pass mark, and scores the weighted questions all at once. A
 question counts when everything it asks for is right.
 
 | Exam | Covers | Questions | Time | Pass mark |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | [`part1`](part1/part1.md) | Part I (Chapters 02 to 06), CKAD/CKA style | 18 | 120 min | 66% |
 
 The full CKAD, CKA, and CKS simulators (and the KCNA and KCSA question banks)

@@ -68,7 +68,7 @@ that everything else wraps.
 The Pod **phase** is a coarse summary:
 
 | Phase | Meaning |
-|---|---|
+| --- | --- |
 | `Pending` | Accepted by the API, but not all containers are running yet (unscheduled, or pulling images) |
 | `Running` | Bound to a node and at least one container is running or starting |
 | `Succeeded` | All containers exited with code 0 and will not be restarted |
@@ -252,7 +252,7 @@ The Events show `Failed to pull image ... not found`. The three states you will
 meet most often:
 
 | Status | Usual cause | First move |
-|---|---|---|
+| --- | --- | --- |
 | `Pending` (no node assigned) | Not enough resources, taints, or unbound volumes | `kubectl describe pod`, read the scheduler message in Events |
 | `ImagePullBackOff` / `ErrImagePull` | Wrong image name or tag, private registry without credentials | `kubectl describe pod`, check Events and the image reference |
 | `CrashLoopBackOff` | The process exits repeatedly | `kubectl logs <pod> --previous` |
@@ -337,14 +337,14 @@ Create a Pod that prints `hello` once and then finishes.
 > **Exam tip:** Use imperative commands (`kubectl run`, `kubectl create`) to
 > generate a starting manifest, then edit. Typing YAML from scratch costs minutes
 > you do not have.
-
+>
 > **Exam tip:** `kubectl explain pod.spec.containers.resources --recursive` shows
 > field names and structure offline from the API server, faster than searching
 > documentation.
-
+>
 > **Exam tip:** After any change, confirm the result with `kubectl get` or
 > `describe`. A manifest that applied without error may still not run.
-
+>
 > **Exam tip:** Most Pod spec fields cannot be edited on a live Pod. If
 > `kubectl edit` is rejected, the recovery is `kubectl replace --force -f <file>`
 > (edit the temporary file `kubectl edit` saves), which deletes and recreates the Pod.

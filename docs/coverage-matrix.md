@@ -33,7 +33,7 @@ the book cover everything?".
 ## KCNA
 
 | Domain | Weight |
-|---|---|
+| --- | --- |
 | Kubernetes Fundamentals | 44% |
 | Container Orchestration | 28% |
 | Cloud Native Application Delivery | 16% |
@@ -43,7 +43,7 @@ The KCNA curriculum lists topics, not tasks, so each row is broad. Chapters
 01 to 06 and 28 are the KCNA core; the rest go deeper than the exam needs.
 
 | Domain | Bullet (verbatim) | Chapter | Lab | Questions | Status |
-|---|---|---|---|---|---|
+| --- | --- | --- | --- | --- | --- |
 | Kubernetes Fundamentals | Kubernetes Core Concepts | 02, 04, 05, 06 | 02/T1-T5, 04/T1-T5, 05/T1-T6, 06/T1-T5; P1 Q15, Q18 | ch02-q01..q05, q08; ch04-q01, q02, q04; ch05-q01..q03; ch06-q01..q05 | drafted |
 | Kubernetes Fundamentals | Administration | 03, 06, 18, 19, 20 | 03/a, 03/b1, 03/b2p; 06/T2; P1 Q15 | ch02-q10; ch03-q01, q08; ch06-q09 | partly |
 | Kubernetes Fundamentals | Scheduling | 02, 17 | 02/T4 | ch02-q02, q12 | partly |
@@ -61,7 +61,7 @@ The KCNA curriculum lists topics, not tasks, so each row is broad. Chapters
 ## CKA
 
 | Domain | Weight |
-|---|---|
+| --- | --- |
 | Storage | 10% |
 | Troubleshooting | 30% |
 | Workloads and Scheduling | 15% |
@@ -69,7 +69,7 @@ The KCNA curriculum lists topics, not tasks, so each row is broad. Chapters
 | Cluster Architecture, Installation and Configuration | 25% |
 
 | Domain | Bullet (verbatim) | Chapter | Lab | Questions | Status |
-|---|---|---|---|---|---|
+| --- | --- | --- | --- | --- | --- |
 | Storage | Implement storage classes and dynamic volume provisioning | 13, 22 | | | planned |
 | Storage | Configure volume types, access modes and reclaim policies | 13, 22 | | | planned |
 | Storage | Manage persistent volumes and persistent volume claims | 13 | | | planned |
@@ -101,7 +101,7 @@ The KCNA curriculum lists topics, not tasks, so each row is broad. Chapters
 ## CKAD
 
 | Domain | Weight |
-|---|---|
+| --- | --- |
 | Application Design and Build | 20% |
 | Application Deployment | 20% |
 | Application Observability and Maintenance | 15% |
@@ -109,7 +109,7 @@ The KCNA curriculum lists topics, not tasks, so each row is broad. Chapters
 | Services and Networking | 20% |
 
 | Domain | Bullet (verbatim) | Chapter | Lab | Questions | Status |
-|---|---|---|---|---|---|
+| --- | --- | --- | --- | --- | --- |
 | Application Design and Build | Define, build and modify container images | 01, 16 | | ch01-q05 | partly (01 explains images; 16 builds them) |
 | Application Design and Build | Choose and use the right workload resource (Deployment, DaemonSet, CronJob, etc.) | 05, 08 | 05/T1 | ch05-q09 | partly |
 | Application Design and Build | Understand multi-container Pod design patterns (e.g. sidecar, init and others) | 04, 09 | P1 Q10 | ch04-q02 | partly |
@@ -138,7 +138,7 @@ The KCNA curriculum lists topics, not tasks, so each row is broad. Chapters
 ## CKS
 
 | Domain | Weight |
-|---|---|
+| --- | --- |
 | Cluster Setup | 15% |
 | Cluster Hardening | 15% |
 | System Hardening | 10% |
@@ -147,7 +147,7 @@ The KCNA curriculum lists topics, not tasks, so each row is broad. Chapters
 | Monitoring, Logging and Runtime Security | 20% |
 
 | Domain | Bullet (verbatim) | Chapter | Lab | Questions | Status |
-|---|---|---|---|---|---|
+| --- | --- | --- | --- | --- | --- |
 | Cluster Setup | Use Network security policies to restrict cluster level access | 21, 36 | | | planned |
 | Cluster Setup | Use CIS benchmark to review the security configuration of Kubernetes components (etcd, kubelet, kubedns, kubeapi) | 30 | | | planned |
 | Cluster Setup | Properly set up Ingress objects with TLS | 12, 30 | | | planned |
@@ -178,7 +178,7 @@ The KCNA curriculum lists topics, not tasks, so each row is broad. Chapters
 ## KCSA
 
 | Domain | Weight |
-|---|---|
+| --- | --- |
 | Overview of Cloud Native Security | 14% |
 | Kubernetes Cluster Component Security | 22% |
 | Kubernetes Security Fundamentals | 22% |
@@ -187,7 +187,7 @@ The KCNA curriculum lists topics, not tasks, so each row is broad. Chapters
 | Compliance and Security Frameworks | 10% |
 
 | Domain | Bullet (verbatim) | Chapter | Lab | Questions | Status |
-|---|---|---|---|---|---|
+| --- | --- | --- | --- | --- | --- |
 | Overview of Cloud Native Security | The 4Cs of Cloud Native Security | 29 | | | planned |
 | Overview of Cloud Native Security | Cloud Provider and Infrastructure Security | 29, 30 | | | planned |
 | Overview of Cloud Native Security | Controls and Frameworks | 29 | | | planned |
@@ -256,7 +256,7 @@ The curricula do not list these, but every performance-based exam depends on
 them. They are mapped here so their coverage stays visible.
 
 | Skill | Chapter | Lab | Questions | Status |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | kubeconfig: create, switch, delete contexts; default namespace | 02, 03 | 03/b1; P1 Q1 | ch02-q10; ch03-q01, q08 | drafted |
 | Discover resources and fields (`api-resources`, `explain`) | 02, 03 | 02/T5; 03/a A6; P1 Q12 | ch02-q11, q13; ch03-q12 | drafted |
 | Selectors (label and field), JSONPath, and custom columns | 03, 06 | 03/a A1-A3; 03/final Q2, Q6; 06/T1, T4; P1 Q9 | ch03-q02, q06, q07, q13; ch06-q04, q08, q10, q13 | drafted |
@@ -274,7 +274,7 @@ infrastructure change to `versions.env` can never silently change what the
 book claims to teach.
 
 | Exam | Curriculum file | Date checked | Source |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | KCNA | `KCNA_Curriculum.pdf` (4 domains: 44/28/16/12) | 2026-10-09 | cncf/curriculum, master |
 | CKA | `CKA_Curriculum_v1.35.pdf` (5 domains: 25/15/20/10/30) | 2026-10-09 | cncf/curriculum, master |
 | CKAD | `CKAD_Curriculum_v1.37.pdf` (5 domains: 20/20/15/25/20); a v1.35 file also exists | 2026-10-09 | cncf/curriculum, master |

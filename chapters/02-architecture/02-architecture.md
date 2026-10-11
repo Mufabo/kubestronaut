@@ -60,7 +60,7 @@ Notice the shape: a **hub and spoke** around the API server. Components do not c
 ### Control plane components
 
 | Component | Role |
-|---|---|
+| --- | --- |
 | **kube-apiserver** | The front door. Exposes the Kubernetes API over HTTPS, authenticates and authorizes requests, validates and stores objects. The only component that talks to etcd. Stateless: you can run several behind a load balancer. |
 | **etcd** | A consistent, distributed key-value store (Raft consensus) that holds all cluster state. The source of truth. Back it up. |
 | **kube-scheduler** | Watches for Pods with no node assigned, picks the best node for each, and records the choice. It does not start containers. |
@@ -72,7 +72,7 @@ A production control plane is typically **highly available**: three (or another 
 ### Node components
 
 | Component | Role |
-|---|---|
+| --- | --- |
 | **kubelet** | The agent on every node. Watches for Pods assigned to its node, tells the container runtime to run them, runs probes, and reports status back. It runs as a system service on the node, **not** as a Pod. |
 | **Container runtime** | Actually runs containers (containerd or CRI-O), driven by the kubelet through the CRI. |
 | **kube-proxy** | Programs the node's network rules (iptables, IPVS, or nftables) so that traffic to a Service reaches its Pods. |
@@ -139,7 +139,7 @@ sequenceDiagram
 **API groups, versions, and kinds.** Resources are organized into groups and versioned:
 
 | Group | Examples | `apiVersion` in a manifest |
-|---|---|---|
+| --- | --- | --- |
 | core (no name) | Pod, Service, ConfigMap, Namespace, Node | `v1` |
 | `apps` | Deployment, ReplicaSet, StatefulSet, DaemonSet | `apps/v1` |
 | `batch` | Job, CronJob | `batch/v1` |
@@ -400,11 +400,11 @@ you would write it in a manifest's `apiVersion`.
 ## Exam tips
 
 > **Exam tip:** Know which components are **control plane** (apiserver, etcd, scheduler, controller-manager, cloud-controller-manager) and which are **node** components (kubelet, kube-proxy, runtime). Questions frequently ask you to sort them, and `kube-proxy` is a favorite trap: it runs on every node, not on the control plane only.
-
+>
 > **Exam tip:** On CKA tasks about a broken control plane, the first step is usually to check the static Pod manifests in `/etc/kubernetes/manifests` and the kubelet's logs, because the API server itself may be down and `kubectl` unusable.
-
+>
 > **Exam tip:** `kubectl api-resources` and `kubectl explain` work offline from the cluster. Use them to find the correct `apiVersion` and field names quickly instead of searching documentation.
-
+>
 > **Exam tip:** Only the API server talks to etcd. If an answer choice has the scheduler or kubelet reading etcd directly, it is wrong.
 
 ## Common mistakes

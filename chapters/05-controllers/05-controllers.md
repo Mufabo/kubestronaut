@@ -127,7 +127,7 @@ Only changes to `spec.template` create a new revision. Scaling changes
 The default `strategy` is `RollingUpdate`. Two settings control its pace:
 
 | Setting | Meaning | Default |
-|---|---|---|
+| --- | --- | --- |
 | `maxSurge` | How many Pods *above* `replicas` may exist during the update | 25% (rounded up) |
 | `maxUnavailable` | How many Pods *below* `replicas` may be unavailable during the update | 25% (rounded down) |
 
@@ -177,7 +177,7 @@ Deployments are the default for stateless applications, but not the only
 controller. You meet the others in later chapters; know when each is right:
 
 | Resource | Use it for | Pods are |
-|---|---|---|
+| --- | --- | --- |
 | Deployment | Stateless services: web servers, APIs, workers | Interchangeable, any node |
 | StatefulSet | Databases and clustered software that need stable names and storage | Named `name-0`, `name-1`, ...; each keeps its own volume |
 | DaemonSet | One Pod per node: log collectors, node agents, `kube-proxy` | One per (matching) node |
@@ -551,16 +551,16 @@ Save the name of the one that runs its Pods now.
 > **Exam tip:** `kubectl create deployment NAME --image=IMAGE --replicas=N
 > --dry-run=client -o yaml` gives you a correct Deployment skeleton in one line.
 > Add a `--port` flag if the question asks for a container port.
-
+>
 > **Exam tip:** `kubectl set image` needs the container name, and containers
 > created with `kubectl create deployment` are named after the image. When the
 > question's Deployment came from YAML, read the name first:
 > `kubectl get deploy NAME -o jsonpath='{.spec.template.spec.containers[*].name}'`.
-
+>
 > **Exam tip:** After any change to a Deployment, run `kubectl rollout status`.
 > It blocks until the rollout finishes or fails, so you know the task is done
 > before you move on.
-
+>
 > **Exam tip:** `kubectl rollout undo` without `--to-revision` goes back one
 > step. When the question names a revision or an image, read
 > `kubectl rollout history` first and roll back to that revision explicitly.

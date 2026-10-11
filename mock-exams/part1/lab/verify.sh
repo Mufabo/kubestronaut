@@ -97,13 +97,20 @@ rows() {
 }
 # every <awk-condition> : true if all 8 seeded Pods exist and each one satisfies the condition
 every() { local r; r="$(rows)" && [[ "$(wc -l <<<"$r" | tr -d '[:space:]')" == "8" ]] && awk -F'|' "!($1){bad=1} END{exit bad}" <<<"$r"; }
+# The awk programs below are single-quoted on purpose: $1..$7 are awk fields, not shell variables.
+# shellcheck disable=SC2016
 q7_protected() { every '($2=="db" || $2=="cache") ? $6=="true" : 1'; }
+# shellcheck disable=SC2016
 q7_only()      { every '($2=="db" || $2=="cache") ? 1 : $6==""'; }
+# shellcheck disable=SC2016
 q7_audit()     { every '$3=="prod" ? $7=="q4-2026" : $7==""'; }
+# shellcheck disable=SC2016
 q8_ga() { every '($1=="c-web-1" || $1=="c-db-1" || $1=="c-batch-1") ? $4=="ga" : 1'; }
 q8_others() {
+  # shellcheck disable=SC2016
   every '$1=="c-web-2" ? $4=="ga" : ($1=="c-db-2" || $1=="c-cache-2") ? $4=="alpha" : ($1=="c-cache-1" || $1=="c-misc") ? $4=="" : 1'
 }
+# shellcheck disable=SC2016
 q8_temp() { every '$5==""'; }
 
 # ---- Q9 output -----------------------------------------------------------------------

@@ -14,7 +14,7 @@ Status: **implemented** (chapter, six-part lab, shell setup, jq/yq tests, cheat 
 ## 2. Decisions already made
 
 | Decision | Choice |
-|---|---|
+| --- | --- |
 | Lab structure | **All three:** a shared seeded set of Pods, fresh mini-scenarios with their own reset, and guided drills plus a timed final task |
 | Shell and exam setup (aliases, completion, vim) | **Full treatment in this chapter** (Chapter 37 then covers strategy and mock-exam technique, not setup) |
 | `jq` and `yq` | **Covered** in the chapter, alongside built-in `kubectl` output tools |
@@ -47,7 +47,7 @@ After this chapter the reader can:
 Word counts are targets for the concept text; the lab is separate.
 
 | # | Section | Content | ~Words |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | 1 | Lab setup | Prerequisites per OS (Linux, macOS, and **WSL2 for Windows**; native PowerShell is out of scope), install commands pinned from `versions.env` (including `jq` and `yq`), `make cluster`, verifying with `kubectl get nodes`, common failures (Docker not running, port conflicts, low memory, WSL2 integration), how to delete and recreate the cluster, hardware requirements per tier | 500 |
 | 2 | kubeconfig and contexts | Recap in 3 sentences; the `KUBECONFIG` variable and file merging; `config get-contexts/use-context/set-context/rename-context/delete-context/view --minify`; default namespace per context; why the lab tooling refuses non-kind contexts (safety); exam habit of setting the context first | 450 |
 | 3 | Getting exactly the data you need | Output formats; `--show-labels`, `-L`; `--sort-by`; label selectors (equality and set-based) and field selectors; JSONPath (ranges, filters, `{"\n"}`), `custom-columns`; `kubectl get events` sorted by time; caution about `get all`; **`jq` and `yq` in depth** (filtering `-o json` with `jq`, reading and editing YAML with `yq`, and when each beats JSONPath; which `yq` you have matters, see risks) | 950 |
@@ -89,7 +89,7 @@ and an `owner` annotation. Labels are assigned by a fixed table so the layout is
 deterministic; expected answers are computed from the live cluster by `verify.sh`.
 
 | Task | Skill | Success |
-|---|---|---|
+| --- | --- | --- |
 | A1 | Label selectors | Names of Pods with `env=prod` and `tier=web`, one per line, to `/tmp/ch03-a1.txt` |
 | A2 | `custom-columns` / JSONPath | `name image` for every Pod, sorted by name, to `/tmp/ch03-a2.txt` |
 | A3 | Set-based selectors | Names of Pods that are **not** `env=prod`, to `/tmp/ch03-a3.txt` |
@@ -101,7 +101,7 @@ deterministic; expected answers are computed from the live cluster by `verify.sh
 ### Part B: fresh mini-scenarios (each with its own namespace and reset)
 
 | Part | Scenario | Tasks (outcome-checked) | Reset |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | **b1** Context juggling | Two namespaces, each with a ConfigMap `where` | Create contexts `ch03-a` and `ch03-b` (same cluster and user as the current context, different namespaces); read each ConfigMap's value through its context and save both values to files | Deletes namespaces **and** the two named contexts from the kubeconfig, and restores the original current context and namespace |
 | **b2** Imperative creation (config objects) | Namespace with one running Pod `web` | Create ConfigMap `app-config` (two literals), Secret `db-pass`, ServiceAccount `robot`, a run-once Pod `hello` (`--restart=Never`) that prints text, and expose Pod `web` as a Service on port 80 | Deletes the namespace |
 | **b2p** Imperative creation (Pods only) | Namespace with Pods `web` (older image tag) and `junk` | (1) `run` Pod `probe` (`busybox:1.36`, command `sleep 3600`, label `role=probe`) in one command; (2) run-once Pod `hello` that prints text and finishes; (3) label `web` with `tier=front` and annotate it `contact=ops`; (4) `set image` on `web` to `nginx:1.27`; (5) `run` Pod `envpod` with env var `APP_MODE=test`; (6) delete `junk` immediately | Deletes the namespace |
@@ -133,7 +133,7 @@ These small changes to the shared tooling are prerequisites:
 These live in `envs/shell/` and are referenced from the chapter. (`tmux` is only an inline optional box in the chapter, so it has no file here.)
 
 | File | Purpose |
-|---|---|
+| --- | --- |
 | `kubectl-exam.sh` | Sourced from `~/.bashrc` (and zsh): `alias k=kubectl`, completion wired to `k`, `export do="--dry-run=client -o yaml"`, `export now="--force --grace-period 0"`, and `KUBE_EDITOR` |
 | `vimrc` | Minimal: 2-space indent, `expandtab`, `number`, sensible YAML behaviour |
 | `install.sh` / `uninstall.sh` | Idempotent: add or remove a single marked block in `~/.bashrc` / `~/.zshrc`; never overwrite existing files without a backup. Supports Linux, macOS, and WSL2 only |
@@ -187,7 +187,7 @@ Also update: `docs/coverage-matrix.md`, `docs/lab-authoring.md`,
 ## 10. Risks and things to verify
 
 | Risk | Mitigation |
-|---|---|
+| --- | --- |
 | `kubectl` flags change between versions (some `run`/`create` flags have been removed in the past) | Run every command on the pinned version; keep solutions in YAML form where a flag is fragile |
 | Completion behaves differently in bash, zsh, and fish | Support bash and zsh explicitly; state that others are unsupported; test both |
 | Two different programs are both called `yq` (mikefarah's Go version and a Python wrapper around `jq`) with incompatible syntax | Pin and teach mikefarah/yq v4; show `yq --version` and how to tell which one is installed |
@@ -201,7 +201,7 @@ Also update: `docs/coverage-matrix.md`, `docs/lab-authoring.md`,
 ## 11. Resolved questions, and what they changed
 
 | Question | Answer | Effect on this plan |
-|---|---|---|
+| --- | --- | --- |
 | Cover `jq` and `yq`? | Yes | New section content, an optional lab task (A7), one question, pinned versions, and tests for the examples |
 | Include `tmux`? | Optional box only | No `tmux.conf` and no installer support; five inline lines in the text |
 | PowerShell? | No; Windows users use WSL2 | Setup instructions and installer cover Linux, macOS, and WSL2 only |

@@ -6,7 +6,7 @@ wreck it and be back at the starting line in under a minute.
 ## The contract
 
 | Script | Rules |
-|---|---|
+| --- | --- |
 | `setup.sh` | Idempotent. Starts by tearing down previous state, then builds the exact starting state. Ends only when the lab is ready to use (wait for what must be running). |
 | `reset.sh` | Tears down and calls `setup.sh`. Never leaves half a lab behind. |
 | `verify.sh` | **Read-only, and CI proves it** (a before/after snapshot of the lab namespace(s) must match). One `check` per task, with ids `1..n` in the order the tasks appear in the chapter text. Prints PASS/FAIL and a hint on FAIL. Exits non-zero if any task fails. With `LAB_ONLY_TASK=<id>` it runs only that check (the step runner uses this). |

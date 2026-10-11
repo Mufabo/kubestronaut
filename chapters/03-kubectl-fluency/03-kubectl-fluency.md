@@ -30,7 +30,7 @@ Chapter 02 gave you a ten-line `kubectl` primer and the structure of a kubeconfi
 You need four tools: a container runtime (Docker), **kind** (Kubernetes in Docker), **kubectl**, and **make**. `jq` and `yq` are used in section 4.
 
 | Platform | Notes |
-|---|---|
+| --- | --- |
 | Linux | Docker Engine, or any runtime kind supports |
 | macOS | Docker Desktop (or an alternative runtime that kind supports) |
 | Windows | Use **WSL2**. Native PowerShell is not supported by this book. Install Docker Desktop with WSL integration turned on, or Docker Engine inside your WSL2 distribution, and keep the repository in the Linux filesystem (`~/`), not under `/mnt/c`, or everything is slow |
@@ -88,12 +88,12 @@ kbook-worker          Ready    <none>          2m    v1.35.0
 kbook-worker2         Ready    <none>          2m    v1.35.0
 ```
 
-*(Example output; ages and versions will differ.)*
+Example output (ages and versions will differ):
 
 ### When the cluster will not start
 
 | Symptom | Likely cause | Fix |
-|---|---|---|
+| --- | --- | --- |
 | `Cannot connect to the Docker daemon` | Docker is not running, or your user is not in the `docker` group | Start Docker; log out and back in after `usermod` |
 | `kind create cluster` hangs or fails pulling the node image | No network, or a proxy | Check connectivity; `docker pull kindest/node:v1.35.0` by hand shows the real error |
 | Nodes stay `NotReady` | Not enough memory for Docker | Give Docker 4 GB or more; delete the cluster and retry |
@@ -182,7 +182,7 @@ Sort with a JSONPath-style field: `kubectl get pods --sort-by=.metadata.creation
 **Label selectors** (`-l`) filter by labels:
 
 | Selector | Meaning |
-|---|---|
+| --- | --- |
 | `-l env=prod` | label `env` equals `prod` |
 | `-l env=prod,tier=web` | both (comma means AND) |
 | `-l env!=prod` | `env` is not `prod`, **including objects that have no `env` label at all** |
@@ -544,7 +544,7 @@ status: {}
 ### `create`, `apply`, `replace`, `edit`, `patch`
 
 | Command | What it does | Use when |
-|---|---|---|
+| --- | --- | --- |
 | `kubectl create -f file` | Creates; **fails** if the object already exists | You want an error on duplicates |
 | `kubectl apply -f file` | Creates or updates to match the file | The usual declarative workflow, repeatable |
 | `kubectl replace -f file` | Replaces the whole object; fails if it does not exist | You are sure it exists and want the file to be the whole truth |
@@ -643,7 +643,7 @@ The Linux Foundation's published exam instructions (checked while writing this c
 You therefore do not need to build the alias and completion *in* the exam, but you do need to be fast with them there, and you should practise with the same setup at home. `envs/shell/` in this repository gives you that:
 
 | File | What it does |
-|---|---|
+| --- | --- |
 | `kubectl-exam.sh` | `alias k=kubectl`, completion for `kubectl` and `k`, `$do`, `$now`, `KUBE_EDITOR`, and the `kn` helper |
 | `vimrc` | Two-space indentation and `expandtab` (YAML forbids tabs) |
 | `install.sh` / `uninstall.sh` | Add or remove one clearly marked block in your rc file and `~/.vimrc` |
@@ -713,7 +713,7 @@ independent: each has its own namespaces, tasks, solution, and reset. Pick a
 part with `PART=<part>`; with no `PART`, part `a` runs.
 
 | Part | What it practises | Namespace(s) |
-|---|---|---|
+| --- | --- | --- |
 | `a` | Selectors, output formats, annotating, generating manifests, `explain`, optional `jq`/`yq` | `ch03-kubectl` |
 | `b1` | Contexts | `ch03-b1-a`, `ch03-b1-b` |
 | `b2` | Imperative creation of config objects | `ch03-b2` |
@@ -994,13 +994,13 @@ Write the name of the one Pod in Namespace `ch03-f1` whose image is
 ## Exam tips
 
 > **Exam tip:** Generate, do not type. `k run ... $do > x.yaml`, edit with `yq -i` or `vim`, then `k apply -f x.yaml`. Writing a manifest from memory is the slowest and most error-prone way.
-
+>
 > **Exam tip:** Check the result of every task before moving on: `k get`, `k describe`, or `k auth can-i`. A command that printed no error may still not have done what you meant.
-
+>
 > **Exam tip:** Always pass `-n` and always run the context command a task gives you. Wrong cluster or wrong namespace costs tasks you actually solved.
-
+>
 > **Exam tip:** Do not get stuck. With 15 to 20 tasks in two hours you have about six to eight minutes per task on average. Skip a hard task, come back to it, and remember that some tasks are worth more than others.
-
+>
 > **Exam tip:** `kubectl explain` and `kubectl api-resources` answer "what is the field or `apiVersion`" faster than any web page, and they match the exam cluster's version.
 
 ## Common mistakes

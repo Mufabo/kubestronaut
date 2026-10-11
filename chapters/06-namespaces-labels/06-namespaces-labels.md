@@ -41,7 +41,7 @@ StorageClasses, ClusterRoles, and namespaces themselves.
 Every cluster starts with four namespaces:
 
 | Namespace | Holds |
-|---|---|
+| --- | --- |
 | `default` | Whatever you create without `-n`. Avoid using it for real work |
 | `kube-system` | The control plane and cluster add-ons (Chapter 02) |
 | `kube-public` | Data readable by everyone, including unauthenticated clients; almost empty |
@@ -81,7 +81,7 @@ Kubernetes recommends a common set of labels so tools can understand any
 application:
 
 | Label | Example | Meaning |
-|---|---|---|
+| --- | --- | --- |
 | `app.kubernetes.io/name` | `mysql` | The application |
 | `app.kubernetes.io/instance` | `mysql-orders` | This installation of it |
 | `app.kubernetes.io/version` | `8.4.2` | Its version |
@@ -98,7 +98,7 @@ A **label selector** picks objects by their labels. There are two kinds, and
 you can combine them (a comma means AND):
 
 | Kind | Command line | In a manifest |
-|---|---|---|
+| --- | --- | --- |
 | Equality | `-l app=web`, `-l 'tier!=db'` | `matchLabels: {app: web}` |
 | Set-based | `-l 'tier in (web,cache)'`, `-l 'env notin (prod)'`, `-l tier`, `-l '!tier'` | `matchExpressions` with `In`, `NotIn`, `Exists`, `DoesNotExist` |
 
@@ -501,14 +501,14 @@ not accept ordinary Pods.
 > **Exam tip:** Many tasks name a namespace in passing ("in namespace `prod`,
 > ..."). Read every task for it and add `-n` to every command; the exam does not
 > warn you when you create something in `default`.
-
+>
 > **Exam tip:** `kubectl get pods -A --field-selector metadata.name=NAME` finds
 > an object when you do not know its namespace. `kubectl get pods -A | grep NAME`
 > works too and is faster to type.
-
+>
 > **Exam tip:** `kubectl label` refuses to change an existing label without
 > `--overwrite`, and a trailing dash removes one: `kubectl label pod p app-`.
-
+>
 > **Exam tip:** `kubectl describe pod` on a `Pending` Pod tells you why the
 > scheduler skipped every node. Read the `FailedScheduling` event before you
 > change anything.

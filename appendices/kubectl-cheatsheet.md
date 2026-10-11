@@ -7,7 +7,7 @@ One page of the commands from Chapter 03. `k` is the alias for `kubectl`
 ## Contexts and namespaces
 
 | Task | Command |
-|---|---|
+| --- | --- |
 | List contexts / show current | `k config get-contexts` / `k config current-context` |
 | Switch context | `k config use-context NAME` |
 | Default namespace of current context | `k config set-context --current --namespace=NS` (or `kn NS`) |
@@ -19,7 +19,7 @@ One page of the commands from Chapter 03. `k` is the alias for `kubectl`
 ## Getting information
 
 | Task | Command |
-|---|---|
+| --- | --- |
 | Wide / YAML / JSON / names | `-o wide`, `-o yaml`, `-o json`, `-o name` |
 | All namespaces | `-A` |
 | Watch | `-w` |
@@ -38,7 +38,7 @@ One page of the commands from Chapter 03. `k` is the alias for `kubectl`
 ## Discovering the API
 
 | Task | Command |
-|---|---|
+| --- | --- |
 | All resource types | `k api-resources` |
 | Cluster-scoped only | `k api-resources --namespaced=false` |
 | One group, with verbs | `k api-resources --api-group=apps -o wide` |
@@ -48,7 +48,7 @@ One page of the commands from Chapter 03. `k` is the alias for `kubectl`
 ## Creating
 
 | Task | Command |
-|---|---|
+| --- | --- |
 | Pod | `k run NAME --image=IMG [--port=P] [--labels=a=b] [--env=K=V] [--restart=Never] [--command] -- ARGS` |
 | ConfigMap | `k create configmap NAME --from-literal=K=V` |
 | Secret | `k create secret generic NAME --from-literal=K=V` |
@@ -60,7 +60,7 @@ One page of the commands from Chapter 03. `k` is the alias for `kubectl`
 ## Changing
 
 | Task | Command |
-|---|---|
+| --- | --- |
 | Create or update from a file | `k apply -f FILE` |
 | Create only (error if it exists) | `k create -f FILE` |
 | Delete and recreate | `k replace --force -f FILE` |
@@ -78,7 +78,7 @@ One page of the commands from Chapter 03. `k` is the alias for `kubectl`
 ## Deployments and rollouts (Chapter 05)
 
 | Task | Command |
-|---|---|
+| --- | --- |
 | Create | `k create deployment NAME --image=IMG --replicas=N [--port=P]` (container is named after the image) |
 | Scale | `k scale deployment NAME --replicas=N` |
 | Container names | `k get deploy NAME -o jsonpath='{.spec.template.spec.containers[*].name}'` |
@@ -93,7 +93,7 @@ One page of the commands from Chapter 03. `k` is the alias for `kubectl`
 ## Permissions
 
 | Task | Command |
-|---|---|
+| --- | --- |
 | Can I? | `k auth can-i create pods -n NS` |
 | Can they? | `k auth can-i list secrets -n NS --as=system:serviceaccount:NS:SA` |
 | Everything I can do | `k auth can-i --list -n NS` |
@@ -103,7 +103,7 @@ One page of the commands from Chapter 03. `k` is the alias for `kubectl`
 ## jq and yq (mikefarah v4)
 
 | Task | Command |
-|---|---|
+| --- | --- |
 | Names | `k get pods -o json \| jq -r '.items[].metadata.name'` |
 | Filter | `jq -r '.items[] \| select(.metadata.labels.env=="prod") \| .metadata.name'` |
 | Distinct values | `jq -r '[.items[].spec.containers[].image] \| unique \| .[]'` |
