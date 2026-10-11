@@ -1,0 +1,54 @@
+# Tier 2 lab environment: three VirtualBox VMs running a kubeadm cluster.
+# Requires VirtualBox and Vagrant on the host (see envs/vagrant/README.md).
+# UNTESTED in CI: CI cannot run VirtualBox VMs. Run `vagrant up` locally first.
+#
+# Versions come from versions.env, the single source of truth. This file reads it
+# the same way the Makefile does, so there is no second copy of any version.
+
+def read_versions(path)
+  File.readlines(path).each_with_object({}) do |line, h|
+    line = line.strip
+    next if line.empty? || line.start_with?("#")
+    key, value = line.split("=", 2)
+    h[key.strip] = value.to_s.split("#", 2).first.to_s.strip
+  end
+end
+
+VERSIONS = read_versions(File.expand_path("../../versions.env", __dir__))
+K8S_MINOR = VERSIONS.fetch("K8S_VERSION").sub(/\.\d+$/, "").sub(/^v/, "")
+NODES = {
+  "cp1"   => { ip: "192.168.56.10", role: "control-plane" },
+  "node1" => { ip: "192.168.56.11", role: "worker" },
+  "node2" => { ip: "192.168.56.12", role: "worker" },
+}.freeze
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "generic/ubuntu2204"
+  config.vm.box_check_update = false
+  # Keep the bootstrap scripts' shared state inside the repo, ignored by git.
+  config.vm.synced_folder ".", "/vagrant", type: "virtualbox"
+
+  NODES.each do |name, node|
+    config.vm.define name do |vm|
+      vm.vm.hostname = name
+      vm.vm.network "private_network", ip: node[:ip]
+      vm.vm.provider "virtualbox" do |vb|
+        vb.name = "kbook-#{name}"
+        vb.cpus = 2
+        vb.memory = 2560
+      end
+      vm.vm.provision "shell", path: "bootstrap-node.sh",
+        env: { "K8S_MINOR" => K8S_MINOR, "NODE_IP" => node[:ip] }
+      if node[:role] == "control-plane"
+        vm.vm.provision "shell", path: "bootstrap-control-plane.sh",
+          env: {
+            "K8S_VERSION" => VERSIONS.fetch("K8S_VERSION"),
+            "CALICO_VERSION" => VERSIONS.fetch("CALICO_VERSION"),
+            "NODE_IP" => node[:ip],
+          }
+      else
+        vm.vm.provision "shell", path: "bootstrap-worker.sh"
+      end
+    end
+  end
+end
