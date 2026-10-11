@@ -70,8 +70,8 @@ The KCNA curriculum lists topics, not tasks, so each row is broad. Chapters
 
 | Domain | Bullet (verbatim) | Chapter | Lab | Questions | Status |
 | --- | --- | --- | --- | --- | --- |
-| Storage | Implement storage classes and dynamic volume provisioning | 13, 22 | 13/T1, T5 | ch13-q04, q10 | partly (22 planned) |
-| Storage | Configure volume types, access modes and reclaim policies | 13, 22 | 13/T3–T5 | ch13-q01, q03, q05, q07 | partly (22 planned) |
+| Storage | Implement storage classes and dynamic volume provisioning | 13, 22 | 13/T1, T5; 22/T1, T4 | ch13-q04, q10; ch22-q01–q04, q08 | drafted |
+| Storage | Configure volume types, access modes and reclaim policies | 13, 22 | 13/T3–T5; 22/T2–T3 | ch13-q01, q03, q05, q07; ch22-q05, q07, q10 | drafted |
 | Storage | Manage persistent volumes and persistent volume claims | 13 | 13/T1–T3 | ch13-q02, q08, q11 | drafted |
 | Troubleshooting | Troubleshoot clusters and nodes | 02, 27 | 02/T1, 02/T3 | ch02-q03, q07 | partly |
 | Troubleshooting | Troubleshoot cluster components | 02, 27 | 02/T2, 02/T3; P1 Q14 | ch02-q01..q05, q07 | partly |
@@ -95,7 +95,7 @@ The KCNA curriculum lists topics, not tasks, so each row is broad. Chapters
 | Cluster Architecture, Installation and Configuration | Manage the lifecycle of Kubernetes clusters | 19, 20 | | | planned |
 | Cluster Architecture, Installation and Configuration | Implement and configure a highly-available control plane | 18 | | | planned |
 | Cluster Architecture, Installation and Configuration | Use Helm and Kustomize to install cluster components | 14 | 14/T1–T4 | ch14-q01, q06, q11 | partly (cluster components not installed in this chapter) |
-| Cluster Architecture, Installation and Configuration | Understand extension interfaces (CNI, CSI, CRI, etc.) | 01, 24 | | ch01-q04, q05 | partly |
+| Cluster Architecture, Installation and Configuration | Understand extension interfaces (CNI, CSI, CRI, etc.) | 01, 22, 24 | 22/T5 | ch01-q04, q05; ch22-q01–q03 | partly (24 planned) |
 | Cluster Architecture, Installation and Configuration | Understand CRDs, install and configure operators | 24 | | | planned |
 
 ## CKAD
