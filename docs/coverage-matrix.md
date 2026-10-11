@@ -86,8 +86,8 @@ The KCNA curriculum lists topics, not tasks, so each row is broad. Chapters
 | Servicing and Networking | Understand connectivity between Pods | 11, 21 | | | planned |
 | Servicing and Networking | Define and enforce Network Policies | 21, 36 | | | planned |
 | Servicing and Networking | Use ClusterIP, NodePort, LoadBalancer service types and endpoints | 03, 11 | 03/b2 C5; 11/T1–T2; P1 Q11 | ch11-q01–q03, q08; LoadBalancer described only | drafted |
-| Servicing and Networking | Use the Gateway API to manage Ingress traffic | 12 | | | planned |
-| Servicing and Networking | Know how to use Ingress controllers and Ingress resources | 12 | | | planned |
+| Servicing and Networking | Use the Gateway API to manage Ingress traffic | 12 | 12/T4–T5 | ch12-q05, q07, q10, q11 | drafted (checked against the API server; no controller runs) |
+| Servicing and Networking | Know how to use Ingress controllers and Ingress resources | 12 | 12/T1–T3 | ch12-q02–q04, q08 | partly (controllers described; none installed in the lab) |
 | Servicing and Networking | Understand and use CoreDNS | 11, 21 | 11/T3–T4 | ch11-q05–q07 | partly (21 planned) |
 | Cluster Architecture, Installation and Configuration | Manage role based access control (RBAC) | 03, 23 | 03/b3; P1 Q13 | ch03-q05, q14 | partly (03 checks permissions; 23 manages RBAC) |
 | Cluster Architecture, Installation and Configuration | Prepare underlying infrastructure for installing a Kubernetes cluster | 18 | | | planned |
@@ -133,7 +133,7 @@ The KCNA curriculum lists topics, not tasks, so each row is broad. Chapters
 | Application Environment, Configuration and Security | Understand Application Security (SecurityContexts, Capabilities, etc.) | 10, 33 | 10/T5 | ch10-q06, q07, q11 | partly (10 drafted; 33 planned) |
 | Services and Networking | Demonstrate basic understanding of NetworkPolicies | 21 | | | planned |
 | Services and Networking | Provide and troubleshoot access to applications via services | 03, 11, 26 | 03/b2 C5; 11/T1–T5; P1 Q11 | ch11-q01, q04, q06, q08–q11 | partly (26 planned) |
-| Services and Networking | Use Ingress rules to expose applications | 12 | | | planned |
+| Services and Networking | Use Ingress rules to expose applications | 12 | 12/T1–T3 | ch12-q02–q04, q08 | drafted |
 
 ## CKS
 
@@ -150,7 +150,7 @@ The KCNA curriculum lists topics, not tasks, so each row is broad. Chapters
 | --- | --- | --- | --- | --- | --- |
 | Cluster Setup | Use Network security policies to restrict cluster level access | 21, 36 | | | planned |
 | Cluster Setup | Use CIS benchmark to review the security configuration of Kubernetes components (etcd, kubelet, kubedns, kubeapi) | 30 | | | planned |
-| Cluster Setup | Properly set up Ingress objects with TLS | 12, 30 | | | planned |
+| Cluster Setup | Properly set up Ingress objects with TLS | 12, 30 | 12/T2 | ch12-q06, q09 | partly (30 planned) |
 | Cluster Setup | Protect node metadata and endpoints | 30, 36 | | | planned |
 | Cluster Setup | Verify platform binaries before deploying | 30 | | | planned |
 | Cluster Hardening | Use Role Based Access Controls to minimize exposure | 23, 31 | | | planned |

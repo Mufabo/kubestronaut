@@ -1,0 +1,161 @@
+- id: ch12-q01
+  type: mcq
+  exams: [KCNA, CKAD]
+  question: "Why do many clusters route HTTP through one Ingress or Gateway instead of giving each application its own LoadBalancer Service?"
+  choices:
+    - "A LoadBalancer Service cannot receive HTTP traffic"
+    - "One entry point can route by host name and path to many Services, and terminate TLS in one place"
+    - "Ingress is faster than a LoadBalancer, because it skips kube-proxy"
+    - "Each LoadBalancer Service is limited to a single Pod"
+  answer: B
+  explanation: "A controller behind one external address reads the Host header and the path, and forwards to the matching Service. That saves one external address per application and keeps TLS certificates in one place. Ingress does not bypass kube-proxy, and LoadBalancer Services can serve any protocol."
+
+- id: ch12-q02
+  type: mcq
+  exams: [CKAD, CKA]
+  question: "An Ingress rule has path `/api` with `pathType: Exact`. Which request does the rule match?"
+  choices:
+    - "`/api/users`"
+    - "`/api`, and only `/api`"
+    - "`/apis`"
+    - "Every path that starts with a slash"
+  answer: B
+  explanation: "`Exact` matches the path as a whole and nothing else. `Prefix` would also match `/api/users`, because it compares path segments. Neither `Exact` nor `Prefix` matches `/apis`, since that is a different segment."
+
+- id: ch12-q03
+  type: mcq
+  exams: [CKAD, CKA]
+  question: "Which request does an Ingress rule with path `/docs` and `pathType: Prefix` NOT match?"
+  choices:
+    - "`/docs/a/b`"
+    - "`/docs`"
+    - "`/docsy`"
+    - "`/docs/`"
+  answer: C
+  explanation: "`Prefix` matches whole path segments, so `/docs` matches `/docs`, `/docs/` and `/docs/a/b`. It does not match `/docsy`, because `docsy` is a different segment from `docs`."
+
+- id: ch12-q04
+  type: mcq
+  exams: [CKAD, CKA]
+  question: "You apply an Ingress whose `ingressClassName` names a class that no controller in the cluster handles. What happens?"
+  choices:
+    - "The API server rejects the Ingress"
+    - "The Ingress is accepted and stored, but no controller acts on it, so no traffic is routed"
+    - "The Ingress is automatically assigned to the default controller"
+    - "The Ingress routes traffic through the kube-proxy on each node"
+  answer: B
+  explanation: "The API server validates the shape of the Ingress, not whether a controller exists for its class. An Ingress with an unhandled class is stored and silently ignored. Check the class name and the controller's status when traffic does not arrive."
+
+- id: ch12-q05
+  type: mcq
+  exams: [CKAD]
+  question: "In the Gateway API, which object does an application team usually create to route traffic to its own Services?"
+  choices:
+    - "A GatewayClass"
+    - "A Gateway"
+    - "An HTTPRoute, attached to a Gateway through parentRefs"
+    - "A Secret of type kubernetes.io/tls"
+  answer: C
+  explanation: "The application team creates the HTTPRoute, which declares hosts, matches and backends. The platform team creates the GatewayClass and the Gateway, which define the controller and the listeners. A Secret carries TLS material, and it is not a routing object."
+
+- id: ch12-q06
+  type: mcq
+  exams: [CKA]
+  question: "Which Secret type and keys does an Ingress's `tls` block expect?"
+  choices:
+    - "`Opaque`, with any keys, as long as the names match the Ingress"
+    - "`kubernetes.io/tls`, with the keys `tls.crt` and `tls.key`"
+    - "`kubernetes.io/dockerconfigjson`, with the key `.dockerconfigjson`"
+    - "`kubernetes.io/basic-auth`, with the keys `username` and `password`"
+  answer: B
+  explanation: "The TLS Secret type is `kubernetes.io/tls`, and it has the keys `tls.crt` (the certificate) and `tls.key` (its private key). `kubectl create secret tls` builds it with the right type and keys. The other types exist for other features and do not carry TLS material."
+
+- id: ch12-q07
+  type: mcq
+  exams: [CKAD]
+  question: "You list a Gateway and its `Accepted` and `Programmed` conditions are both `Unknown`. What does that most likely mean?"
+  choices:
+    - "The YAML contains a syntax error"
+    - "The Gateway is misconfigured and must be deleted"
+    - "No controller has evaluated the Gateway yet, usually because no controller handles its GatewayClass"
+    - "The Gateway is working, and the conditions are only shown for compatibility"
+  answer: C
+  explanation: "`Accepted` and `Programmed` are written by the controller. If no controller claims the GatewayClass, nothing sets them, so they stay `Unknown`. The API server accepted the YAML, which is why there is no syntax error. Install or check the controller for the class to see the conditions move to `True`."
+
+- id: ch12-q08
+  type: task
+  exams: [CKAD, CKA]
+  prompt: "In namespace `prod`, create an Ingress named `web` with ingress class `nginx`, host `web.prod.example.test`, and path `/app` with path type `Prefix`. Its backend is the Service `web` on port `80`. Show the Ingress's host and path."
+  solution: |
+    ```bash
+    kubectl -n prod create ingress web --class=nginx --rule="web.prod.example.test/app*=web:80"
+    kubectl -n prod get ingress web -o jsonpath='{.spec.rules[0].host}{" "}{.spec.rules[0].http.paths[0].path}{" "}{.spec.rules[0].http.paths[0].pathType}{"\n"}'
+    ```
+
+    The `*` after `/app` gives `pathType: Prefix`; without it the type would be `Exact`.
+
+- id: ch12-q09
+  type: task
+  exams: [CKAD, CKA]
+  prompt: "In namespace `prod`, create a Secret named `web-tls` of type `kubernetes.io/tls` from the certificate file `web.crt` and key file `web.key` in your current directory. Then show the Secret's type."
+  solution: |
+    ```bash
+    kubectl -n prod create secret tls web-tls --cert=web.crt --key=web.key
+    kubectl -n prod get secret web-tls -o jsonpath='{.type}{"\n"}'
+    ```
+
+    `kubectl create secret tls` sets the type and the key names the Ingress expects.
+
+- id: ch12-q10
+  type: task
+  exams: [CKAD]
+  prompt: "In namespace `prod`, create a Gateway named `public` that uses the GatewayClass `standard`. It has one listener named `web`, protocol `HTTP`, port `80`, and hostname `*.prod.example.test`. Show the Gateway's class and listener name."
+  solution: |
+    ```bash
+    cat <<'YAML' | kubectl -n prod apply -f -
+    apiVersion: gateway.networking.k8s.io/v1
+    kind: Gateway
+    metadata:
+      name: public
+    spec:
+      gatewayClassName: standard
+      listeners:
+        - name: web
+          protocol: HTTP
+          port: 80
+          hostname: "*.prod.example.test"
+    YAML
+    kubectl -n prod get gateway public -o jsonpath='{.spec.gatewayClassName}{" "}{.spec.listeners[0].name}{"\n"}'
+    ```
+
+    The GatewayClass `standard` is cluster-scoped and must already exist; the Gateway refers to it by name.
+
+- id: ch12-q11
+  type: task
+  exams: [CKAD]
+  prompt: "In namespace `prod`, create an HTTPRoute named `web-route` attached to the Gateway `public`. It matches hostname `web.prod.example.test` and path prefix `/app`, and sends the traffic to the Service `web` on port `80`. Show the route's parent and backend."
+  solution: |
+    ```bash
+    cat <<'YAML' | kubectl -n prod apply -f -
+    apiVersion: gateway.networking.k8s.io/v1
+    kind: HTTPRoute
+    metadata:
+      name: web-route
+    spec:
+      parentRefs:
+        - name: public
+      hostnames:
+        - web.prod.example.test
+      rules:
+        - matches:
+            - path:
+                type: PathPrefix
+                value: /app
+          backendRefs:
+            - name: web
+              port: 80
+    YAML
+    kubectl -n prod get httproute web-route -o jsonpath='{.spec.parentRefs[0].name}{" "}{.spec.rules[0].backendRefs[0].name}{"\n"}'
+    ```
+
+    `parentRefs` names the Gateway the route attaches to. The backend's `port` is the Service port.
