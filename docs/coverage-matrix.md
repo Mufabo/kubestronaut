@@ -70,9 +70,9 @@ The KCNA curriculum lists topics, not tasks, so each row is broad. Chapters
 
 | Domain | Bullet (verbatim) | Chapter | Lab | Questions | Status |
 | --- | --- | --- | --- | --- | --- |
-| Storage | Implement storage classes and dynamic volume provisioning | 13, 22 | | | planned |
-| Storage | Configure volume types, access modes and reclaim policies | 13, 22 | | | planned |
-| Storage | Manage persistent volumes and persistent volume claims | 13 | | | planned |
+| Storage | Implement storage classes and dynamic volume provisioning | 13, 22 | 13/T1, T5 | ch13-q04, q10 | partly (22 planned) |
+| Storage | Configure volume types, access modes and reclaim policies | 13, 22 | 13/T3–T5 | ch13-q01, q03, q05, q07 | partly (22 planned) |
+| Storage | Manage persistent volumes and persistent volume claims | 13 | 13/T1–T3 | ch13-q02, q08, q11 | drafted |
 | Troubleshooting | Troubleshoot clusters and nodes | 02, 27 | 02/T1, 02/T3 | ch02-q03, q07 | partly |
 | Troubleshooting | Troubleshoot cluster components | 02, 27 | 02/T2, 02/T3; P1 Q14 | ch02-q01..q05, q07 | partly |
 | Troubleshooting | Monitor cluster and application resource usage | 10, 15 | | | planned |
@@ -113,7 +113,7 @@ The KCNA curriculum lists topics, not tasks, so each row is broad. Chapters
 | Application Design and Build | Define, build and modify container images | 01, 16 | | ch01-q05 | partly (01 explains images; 16 builds them) |
 | Application Design and Build | Choose and use the right workload resource (Deployment, DaemonSet, CronJob, etc.) | 05, 08 | 05/T1; 08/T1–T5 | ch05-q09, ch08-q01–q07 | partly (08 drafted; DaemonSet and StatefulSet not yet) |
 | Application Design and Build | Understand multi-container Pod design patterns (e.g. sidecar, init and others) | 04, 09 | 09/T1–T5; P1 Q10 | ch04-q02, ch09-q01–q11 | drafted |
-| Application Design and Build | Utilize persistent and ephemeral volumes | 13 | | | planned |
+| Application Design and Build | Utilize persistent and ephemeral volumes | 13 | 13/T1–T2, T4 | ch13-q01, q06, q09 | drafted |
 | Application Deployment | Use Kubernetes primitives to implement common deployment strategies (e.g. blue/green or canary) | 05, 16 | 05/T5; P1 Q17 | ch05-q06, q13 | partly (05 covers rolling update and Recreate; 16 covers blue/green and canary) |
 | Application Deployment | Understand Deployments and how to perform rolling updates | 05 | 05/T1-T6; P1 Q15-Q17 | ch05-q04..q08, q10..q14 | drafted |
 | Application Deployment | Use the Helm package manager to deploy existing packages | 14 | | | planned |
