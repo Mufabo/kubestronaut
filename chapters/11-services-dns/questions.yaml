@@ -1,0 +1,133 @@
+- id: ch11-q01
+  type: mcq
+  exams: [KCNA, CKAD]
+  question: "Why should a client connect to a Service's name rather than to a Pod's IP address?"
+  choices:
+    - "Pod IP addresses are not routable inside the cluster"
+    - "A Service keeps a stable name and IP while the Pods behind it are replaced, and sends traffic only to ready Pods"
+    - "Service names are faster to resolve than IP addresses"
+    - "Pods cannot receive traffic on their own IP, only through a Service"
+  answer: B
+  explanation: "Pod IPs are assigned at start and change whenever a Pod is replaced, for example during a rollout. A Service gives a stable name and virtual IP, selects Pods by label, and routes only to Pods that are ready. Pod IPs are routable within the cluster, and Pods can receive traffic on their own IP; the Service is about stability and load distribution."
+
+- id: ch11-q02
+  type: mcq
+  exams: [CKAD, CKA]
+  question: "A Service exists and has a cluster IP, but `kubectl get endpointslices` shows no endpoints. What is the most likely cause?"
+  choices:
+    - "The Service is of type ExternalName"
+    - "The Service's selector does not match the labels of any ready Pod"
+    - "The Service's port is above 1024"
+    - "The cluster DNS has not yet learned the Service's name"
+  answer: B
+  explanation: "Endpoints are the ready Pods that match the Service's selector. If no Pod matches, or the matching Pods are not ready, the list is empty. Compare the selector with `kubectl get pods --show-labels`. Port numbers and DNS do not decide which Pods are endpoints."
+
+- id: ch11-q03
+  type: mcq
+  exams: [KCNA, CKAD, CKA]
+  question: "Which Service type gives a client outside the cluster access through any node's IP address, on a port the cluster opens on every node?"
+  choices:
+    - "ClusterIP"
+    - "NodePort"
+    - "ExternalName"
+    - "Headless"
+  answer: B
+  explanation: "NodePort opens the same port on every node (30000 to 32767 by default) and forwards it to the Service. ClusterIP is reachable only inside the cluster. ExternalName is a DNS CNAME with no proxying. A headless Service is a ClusterIP Service with no virtual IP, so it is not reachable from outside either."
+
+- id: ch11-q04
+  type: mcq
+  exams: [CKAD, CKA]
+  question: "A Service has `port: 80` and `targetPort: 8080`. A client connects to the Service on port 80. Which port does the container receive the connection on?"
+  choices:
+    - "80, because the Service and the container use the same port"
+    - "8080, because targetPort is the port on the Pod that receives the traffic"
+    - "Either, chosen at random for each connection"
+    - "It depends on the nodePort, which is always 8080"
+  answer: B
+  explanation: "`port` is the port the Service listens on, and `targetPort` is the port the Pod's container receives on. Clients use the Service's port; the container listens on targetPort. The nodePort only matters for NodePort and LoadBalancer Services."
+
+- id: ch11-q05
+  type: mcq
+  exams: [CKAD, CKA]
+  question: "You create a headless Service for a set of Pods. What does a DNS lookup of the Service's name return?"
+  choices:
+    - "A single cluster IP, which the cluster load-balances across the Pods"
+    - "A CNAME to the first Pod's name"
+    - "One address for each ready Pod behind the Service"
+    - "NXDOMAIN, because headless Services have no DNS name"
+  answer: C
+  explanation: "A headless Service has `clusterIP: None`, so no virtual IP is allocated. The cluster DNS returns the IP of each ready Pod, and the client chooses which one to use. A normal ClusterIP Service returns its single cluster IP instead."
+
+- id: ch11-q06
+  type: mcq
+  exams: [CKAD, CKA]
+  question: "A Pod in namespace `prod` wants to reach a Service named `web` in the same namespace. Which name works without any extra configuration?"
+  choices:
+    - "`web`, through the search domains in the Pod's resolv.conf"
+    - "`web.prod.internal`, which the cluster DNS creates"
+    - "`web:80`, as the cluster DNS understands ports in names"
+    - "`prod-web`, because Services are named after their namespace"
+  answer: A
+  explanation: "The Pod's resolv.conf has the search domain `prod.svc.cluster.local` among others, so `web` expands to `web.prod.svc.cluster.local`. Names with a port, such as `web:80`, are not DNS names, and `prod.internal` is not a cluster domain. Use the port in the client's configuration, not the name."
+
+- id: ch11-q07
+  type: mcq
+  exams: [CKAD]
+  question: "What does an ExternalName Service do when a Pod looks it up?"
+  choices:
+    - "It proxies every connection to the external host through the node"
+    - "It returns a CNAME record that points to the externalName, and the Pod then connects to that host directly"
+    - "It creates a load balancer that routes to the external host"
+    - "It returns the external host's IP address, read from the Service's endpoints"
+  answer: B
+  explanation: "An ExternalName Service has no proxying and no cluster IP. The cluster DNS answers the lookup with a CNAME for the `externalName`, and the client resolves and connects to that name directly. There are no endpoints for it, because nothing inside the cluster serves the traffic."
+
+- id: ch11-q08
+  type: task
+  exams: [CKAD, CKA]
+  prompt: "In namespace `prod`, the Deployment `shop` runs nginx in two Pods labeled `app=shop`. Create a ClusterIP Service named `shop` that forwards port 80 to port 80 of those Pods. Show its endpoints."
+  solution: |
+    ```bash
+    kubectl -n prod expose deployment shop --name=shop --port=80 --target-port=80
+    kubectl -n prod get endpointslices -l kubernetes.io/service-name=shop -o jsonpath='{range .items[*].endpoints[*]}{.addresses[0]}{"\n"}{end}'
+    ```
+
+    `expose` reads the Deployment's labels and uses them as the selector. The endpoint list shows the two Pod IPs once the Pods are ready.
+
+- id: ch11-q09
+  type: task
+  exams: [CKAD, CKA]
+  prompt: "In namespace `prod`, create a headless Service named `shop-headless` for the Pods labeled `app=shop`, on port 80. Show that its cluster IP is `None`."
+  solution: |
+    ```bash
+    kubectl -n prod expose deployment shop --name=shop-headless --cluster-ip=None --port=80 --target-port=80
+    kubectl -n prod get svc shop-headless -o jsonpath='{.spec.clusterIP}{"\n"}'
+    ```
+
+    `--cluster-ip=None` is the imperative way to make a headless Service. The printed value is `None`.
+
+- id: ch11-q10
+  type: task
+  exams: [CKAD, CKA]
+  prompt: "In namespace `prod`, create a Service named `reporting` of type `ExternalName`, pointing at `reports.example.com`. Then show the Service's external name."
+  solution: |
+    ```bash
+    kubectl -n prod create service externalname reporting --external-name=reports.example.com
+    kubectl -n prod get svc reporting -o jsonpath='{.spec.externalName}{"\n"}'
+    ```
+
+    `kubectl create service externalname` sets the type and the external name in one command.
+
+- id: ch11-q11
+  type: task
+  exams: [CKAD, CKA]
+  prompt: "In namespace `prod`, the Service `api` has no endpoints, because its selector is `app=api-v1` and the Pods are labeled `app=api`. Fix the Service so that its selector matches the Pods, then show the selector."
+  solution: |
+    ```bash
+    kubectl -n prod patch svc api -p '{"spec":{"selector":{"app":"api"}}}'
+    kubectl -n prod get svc api -o jsonpath='{.spec.selector}{"\n"}'
+    kubectl -n prod get endpointslices -l kubernetes.io/service-name=api
+    ```
+
+    The patch changes the value of the existing `app` key in place. Afterwards the
+    endpoint list is no longer empty.

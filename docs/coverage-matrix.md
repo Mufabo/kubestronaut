@@ -77,7 +77,7 @@ The KCNA curriculum lists topics, not tasks, so each row is broad. Chapters
 | Troubleshooting | Troubleshoot cluster components | 02, 27 | 02/T2, 02/T3; P1 Q14 | ch02-q01..q05, q07 | partly |
 | Troubleshooting | Monitor cluster and application resource usage | 10, 15 | | | planned |
 | Troubleshooting | Manage and evaluate container output streams | 04, 15 | 04/T3; P1 Q4 | ch04-q11 | partly |
-| Troubleshooting | Troubleshoot services and networking | 11, 21, 26 | | | planned |
+| Troubleshooting | Troubleshoot services and networking | 11, 21, 26 | 11/T5 | ch11-q02, q11 | partly (11 covers Service endpoints; 21 and 26 planned) |
 | Workloads and Scheduling | Understand application deployments and how to perform rolling update and rollbacks | 05 | 05/T1-T6; P1 Q15-Q17 | ch05-q04..q08, q10..q14 | drafted |
 | Workloads and Scheduling | Use ConfigMaps and Secrets to configure applications | 03, 07 | 03/b2 C1, C2; 07/T1–T5; P1 Q11 | ch07-q01–q03, q08–q11 | drafted |
 | Workloads and Scheduling | Configure workload autoscaling | 25 | | | planned |
@@ -85,10 +85,10 @@ The KCNA curriculum lists topics, not tasks, so each row is broad. Chapters
 | Workloads and Scheduling | Configure Pod admission and scheduling (limits, node affinity, etc.) | 04, 06, 10, 17 | 04/T4; 06/T5; P1 Q5 | ch04-q07, q09; ch06-q12 | partly (06 covers nodeSelector; 17 affinity and taints) |
 | Servicing and Networking | Understand connectivity between Pods | 11, 21 | | | planned |
 | Servicing and Networking | Define and enforce Network Policies | 21, 36 | | | planned |
-| Servicing and Networking | Use ClusterIP, NodePort, LoadBalancer service types and endpoints | 03, 11 | 03/b2 C5; P1 Q11 | | partly (03 exposes a Pod; 11 teaches Services) |
+| Servicing and Networking | Use ClusterIP, NodePort, LoadBalancer service types and endpoints | 03, 11 | 03/b2 C5; 11/T1–T2; P1 Q11 | ch11-q01–q03, q08; LoadBalancer described only | drafted |
 | Servicing and Networking | Use the Gateway API to manage Ingress traffic | 12 | | | planned |
 | Servicing and Networking | Know how to use Ingress controllers and Ingress resources | 12 | | | planned |
-| Servicing and Networking | Understand and use CoreDNS | 11, 21 | | | planned |
+| Servicing and Networking | Understand and use CoreDNS | 11, 21 | 11/T3–T4 | ch11-q05–q07 | partly (21 planned) |
 | Cluster Architecture, Installation and Configuration | Manage role based access control (RBAC) | 03, 23 | 03/b3; P1 Q13 | ch03-q05, q14 | partly (03 checks permissions; 23 manages RBAC) |
 | Cluster Architecture, Installation and Configuration | Prepare underlying infrastructure for installing a Kubernetes cluster | 18 | | | planned |
 | Cluster Architecture, Installation and Configuration | Create and manage Kubernetes clusters using kubeadm | 18 | | | planned |
@@ -132,7 +132,7 @@ The KCNA curriculum lists topics, not tasks, so each row is broad. Chapters
 | Application Environment, Configuration and Security | Understand ServiceAccounts | 03, 23 | 03/b2 C3; P1 Q11 | | partly |
 | Application Environment, Configuration and Security | Understand Application Security (SecurityContexts, Capabilities, etc.) | 10, 33 | 10/T5 | ch10-q06, q07, q11 | partly (10 drafted; 33 planned) |
 | Services and Networking | Demonstrate basic understanding of NetworkPolicies | 21 | | | planned |
-| Services and Networking | Provide and troubleshoot access to applications via services | 03, 11, 26 | 03/b2 C5; P1 Q11 | | partly |
+| Services and Networking | Provide and troubleshoot access to applications via services | 03, 11, 26 | 03/b2 C5; 11/T1–T5; P1 Q11 | ch11-q01, q04, q06, q08–q11 | partly (26 planned) |
 | Services and Networking | Use Ingress rules to expose applications | 12 | | | planned |
 
 ## CKS
