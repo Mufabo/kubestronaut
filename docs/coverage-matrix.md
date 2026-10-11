@@ -48,7 +48,7 @@ The KCNA curriculum lists topics, not tasks, so each row is broad. Chapters
 | Kubernetes Fundamentals | Administration | 03, 06, 18, 19, 20 | 03/a, 03/b1, 03/b2p; 06/T2; P1 Q15 | ch02-q10; ch03-q01, q08; ch06-q09 | partly |
 | Kubernetes Fundamentals | Scheduling | 02, 17 | 02/T4; 17/T1–T5 | ch02-q02, q12; ch17-q01–q07 | drafted |
 | Kubernetes Fundamentals | Containerization | 01, 04 | 04/T1, 04/T5 | ch01-q04..q06; ch04-q01 | drafted |
-| Container Orchestration | Networking | 11, 21 | | | planned |
+| Container Orchestration | Networking | 11, 21 | 11/T1–T5; 21/T1–T5 | ch11-q01–q11; ch21-q01–q11 | partly (26 planned) |
 | Container Orchestration | Security | 23, 29, 33 | 03/b3 | ch03-q05 | partly |
 | Container Orchestration | Troubleshooting | 04, 26 | 04/T2; P1 Q3 | ch04-q03, q11 | partly |
 | Container Orchestration | Storage | 13 | | | planned |
@@ -83,12 +83,12 @@ The KCNA curriculum lists topics, not tasks, so each row is broad. Chapters
 | Workloads and Scheduling | Configure workload autoscaling | 25 | | | planned |
 | Workloads and Scheduling | Understand the primitives used to create robust, self-healing, application deployments | 04, 05, 10 | 04/T5; 05/T1, T2, T5; P1 Q18 | ch04-q04, q05; ch05-q01..q03, q06, q07 | partly |
 | Workloads and Scheduling | Configure Pod admission and scheduling (limits, node affinity, etc.) | 04, 06, 10, 17 | 04/T4; 06/T5; 17/T1–T2; P1 Q5 | ch04-q07, q09; ch06-q12; ch17-q02–q05 | partly (17 covers affinity and taints; priority and static Pods in 17 too) |
-| Servicing and Networking | Understand connectivity between Pods | 11, 21 | | | planned |
-| Servicing and Networking | Define and enforce Network Policies | 21, 36 | | | planned |
+| Servicing and Networking | Understand connectivity between Pods | 11, 21 | 21/T1–T2 | ch21-q01, q02 | partly (11 covers Services; 21 covers the CNI) |
+| Servicing and Networking | Define and enforce Network Policies | 21, 36 | 21/T3–T4 | ch21-q03–q06, q08, q09 | partly (36 planned) |
 | Servicing and Networking | Use ClusterIP, NodePort, LoadBalancer service types and endpoints | 03, 11 | 03/b2 C5; 11/T1–T2; P1 Q11 | ch11-q01–q03, q08; LoadBalancer described only | drafted |
 | Servicing and Networking | Use the Gateway API to manage Ingress traffic | 12 | 12/T4–T5 | ch12-q05, q07, q10, q11 | drafted (checked against the API server; no controller runs) |
 | Servicing and Networking | Know how to use Ingress controllers and Ingress resources | 12 | 12/T1–T3 | ch12-q02–q04, q08 | partly (controllers described; none installed in the lab) |
-| Servicing and Networking | Understand and use CoreDNS | 11, 21 | 11/T3–T4 | ch11-q05–q07 | partly (21 planned) |
+| Servicing and Networking | Understand and use CoreDNS | 11, 21 | 11/T3–T4; 21/T2 | ch11-q05–q07; ch21-q07, q11 | partly (21 covers CoreDNS in the walkthrough) |
 | Cluster Architecture, Installation and Configuration | Manage role based access control (RBAC) | 03, 23 | 03/b3; P1 Q13 | ch03-q05, q14 | partly (03 checks permissions; 23 manages RBAC) |
 | Cluster Architecture, Installation and Configuration | Prepare underlying infrastructure for installing a Kubernetes cluster | 18 | | | planned |
 | Cluster Architecture, Installation and Configuration | Create and manage Kubernetes clusters using kubeadm | 18 | | | planned |
@@ -131,7 +131,7 @@ The KCNA curriculum lists topics, not tasks, so each row is broad. Chapters
 | Application Environment, Configuration and Security | Create & consume Secrets | 03, 07 | 03/b2 C2; 07/T2–T5; P1 Q11 | ch07-q01, q05, q09, q11 | drafted |
 | Application Environment, Configuration and Security | Understand ServiceAccounts | 03, 23 | 03/b2 C3; P1 Q11 | | partly |
 | Application Environment, Configuration and Security | Understand Application Security (SecurityContexts, Capabilities, etc.) | 10, 33 | 10/T5 | ch10-q06, q07, q11 | partly (10 drafted; 33 planned) |
-| Services and Networking | Demonstrate basic understanding of NetworkPolicies | 21 | | | planned |
+| Services and Networking | Demonstrate basic understanding of NetworkPolicies | 21 | 21/T3–T4 | ch21-q03–q06, q08, q09 | drafted |
 | Services and Networking | Provide and troubleshoot access to applications via services | 03, 11, 26 | 03/b2 C5; 11/T1–T5; P1 Q11 | ch11-q01, q04, q06, q08–q11 | partly (26 planned) |
 | Services and Networking | Use Ingress rules to expose applications | 12 | 12/T1–T3 | ch12-q02–q04, q08 | drafted |
 
@@ -202,7 +202,7 @@ The KCNA curriculum lists topics, not tasks, so each row is broad. Chapters
 | Kubernetes Cluster Component Security | KubeProxy | 02, 21 | P1 Q14 | | partly |
 | Kubernetes Cluster Component Security | Pod | 04, 33 | 04/T1-T5 | ch04-q01, q02 | partly |
 | Kubernetes Cluster Component Security | Etcd | 02, 20, 30 | 02/T2 | ch02-q01, q08 | partly |
-| Kubernetes Cluster Component Security | Container Networking | 21, 36 | | | planned |
+| Kubernetes Cluster Component Security | Container Networking | 21, 36 | 21/T1–T2 | ch21-q01, q02 | partly (36 planned) |
 | Kubernetes Cluster Component Security | Client Security | 03, 30 | 03/b1 | ch02-q10; ch03-q08 | partly (03 covers kubeconfig; 30 secures it) |
 | Kubernetes Cluster Component Security | Storage | 13, 22 | | | planned |
 | Kubernetes Security Fundamentals | Pod Security Standards | 33 | | | planned |
@@ -211,7 +211,7 @@ The KCNA curriculum lists topics, not tasks, so each row is broad. Chapters
 | Kubernetes Security Fundamentals | Secrets | 07, 33 | 03/b2 C2 | | partly |
 | Kubernetes Security Fundamentals | Isolation and Segmentation | 06, 33, 36 | 06/T2 | ch06-q02 | partly (06 explains what namespaces do not isolate) |
 | Kubernetes Security Fundamentals | Audit Logging | 35 | | | planned |
-| Kubernetes Security Fundamentals | Network Policy | 21, 36 | | | planned |
+| Kubernetes Security Fundamentals | Network Policy | 21, 36 | 21/T3–T4 | ch21-q03–q06, q08, q09 | partly (36 planned) |
 | Kubernetes Threat Model | Kubernetes Trust Boundaries and Data Flow | 29 | | | planned |
 | Kubernetes Threat Model | Persistence | 29, 35 | | | planned |
 | Kubernetes Threat Model | Denial of Service | 10, 29 | | | planned |

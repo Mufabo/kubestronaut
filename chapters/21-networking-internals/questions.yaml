@@ -1,0 +1,165 @@
+- id: ch21-q01
+  type: mcq
+  exams: [KCNA, CKA]
+  question: "Which component gives each Pod its IP address and sets up the routes that let Pods on different nodes reach each other?"
+  choices:
+    - "kube-proxy"
+    - "CoreDNS"
+    - "The CNI plugin"
+    - "The kubelet alone, without any plugin"
+  answer: C
+  explanation: "The CNI plugin allocates Pod addresses from the node's range, creates the Pod's network interface, and routes traffic between nodes. kube-proxy handles Service forwarding, and CoreDNS answers name lookups. The kubelet calls the plugin but does not do the networking itself."
+
+- id: ch21-q02
+  type: mcq
+  exams: [CKA]
+  question: "Which component programs the rules that forward traffic sent to a Service's cluster IP to one of its Pods?"
+  choices:
+    - "The CNI plugin, through its DaemonSet"
+    - "kube-proxy, on every node"
+    - "The API server, which rewrites the packets"
+    - "CoreDNS, by returning the Pod IP"
+  answer: B
+  explanation: "kube-proxy watches Services and EndpointSlices and programs each node's packet filter (iptables, IPVS or nftables) to rewrite Service traffic to a ready Pod. CoreDNS returns the Service IP and does not forward packets."
+
+- id: ch21-q03
+  type: mcq
+  exams: [CKA]
+  question: "A Pod is not selected by any NetworkPolicy in its namespace. What traffic does it accept?"
+  choices:
+    - "Only traffic from Pods in the same namespace"
+    - "All ingress traffic, because no policy restricts it"
+    - "No ingress traffic, because the default is deny"
+    - "Only traffic on the ports the Service exposes"
+  answer: B
+  explanation: "NetworkPolicy is an allow-list that applies only to the Pods it selects. A Pod with no selecting policy accepts all traffic in that direction. A default deny requires a policy that selects the Pod and allows nothing."
+
+- id: ch21-q04
+  type: mcq
+  exams: [CKA]
+  question: "A NetworkPolicy has `podSelector: {}`, `policyTypes: [Ingress]`, and no `ingress` rules. What does it do in its namespace?"
+  choices:
+    - "Denies all ingress to every Pod in the namespace"
+    - "Denies all egress from every Pod in the namespace"
+    - "Allows all ingress, because it has no rules"
+    - "Denies ingress only to Pods without labels"
+  answer: A
+  explanation: "An empty pod selector selects every Pod in the namespace. Naming `Ingress` in `policyTypes` with no allowing rules makes it a default deny for inbound traffic. It does not affect egress, which needs its own policy type."
+
+- id: ch21-q05
+  type: mcq
+  exams: [CKA]
+  question: "You create a NetworkPolicy on a cluster whose CNI plugin does not enforce NetworkPolicy. What happens?"
+  choices:
+    - "The API server rejects the policy with an error"
+    - "The policy is stored and listed, but traffic is not restricted"
+    - "The policy is applied to the nodes' firewalls and works"
+    - "The policy takes effect after the next node restart"
+  answer: B
+  explanation: "The API server validates and stores the object whether or not the CNI enforces it. Only an enforcing plugin turns the policy into packet rules. Test a policy by sending traffic, because reading the object cannot tell you whether it is enforced."
+
+- id: ch21-q06
+  type: mcq
+  exams: [CKA]
+  question: "Two NetworkPolicies select the same Pod for ingress. Policy A allows TCP 80 from label `app=web`. Policy B allows TCP 443 from label `app=admin`. Which traffic is accepted?"
+  choices:
+    - "Only traffic that both policies allow"
+    - "TCP 80 from app=web, and TCP 443 from app=admin"
+    - "Traffic from every Pod, because two policies conflict"
+    - "Only TCP 80 from app=web, because the first policy wins"
+  answer: B
+  explanation: "Policies add up as allow-lists: the union of what each one allows is accepted. Neither policy takes away what the other allows, and the order of creation does not matter."
+
+- id: ch21-q07
+  type: mcq
+  exams: [CKA]
+  question: "Which DNS name, inside the cluster, does a Service `web` in namespace `prod` have?"
+  choices:
+    - "web.prod.cluster.local"
+    - "web.prod.svc.cluster.local"
+    - "prod.web.svc.cluster.local"
+    - "web.svc.prod.cluster.local"
+  answer: B
+  explanation: "A Service's DNS name is SERVICE.NAMESPACE.svc.cluster.local, with the cluster domain (cluster.local by default) at the end. The `svc` label sits between the namespace and the cluster domain."
+
+- id: ch21-q08
+  type: task
+  exams: [CKA]
+  prompt: "In namespace `prod`, create a NetworkPolicy named `db-only` that selects the Pods labelled `app=db`, and allows ingress to them only from Pods labelled `app=api`, on TCP port 5432. Show the policy's selected label."
+  solution: |
+    ```bash
+    cat <<'YAML' | kubectl -n prod apply -f -
+    apiVersion: networking.k8s.io/v1
+    kind: NetworkPolicy
+    metadata:
+      name: db-only
+    spec:
+      podSelector:
+        matchLabels:
+          app: db
+      policyTypes:
+        - Ingress
+      ingress:
+        - from:
+            - podSelector:
+                matchLabels:
+                  app: api
+          ports:
+            - protocol: TCP
+              port: 5432
+    YAML
+    kubectl -n prod get networkpolicy db-only -o jsonpath='{.spec.podSelector.matchLabels.app}{"\n"}'
+    ```
+
+    The policy selects the database and allows only the API on the database port.
+    Other traffic to `app=db` is denied, because `Ingress` is in `policyTypes`.
+
+- id: ch21-q09
+  type: task
+  exams: [CKA]
+  prompt: "In namespace `prod`, create a NetworkPolicy named `no-egress` that selects every Pod and blocks all outbound traffic. Show its policy types."
+  solution: |
+    ```bash
+    cat <<'YAML' | kubectl -n prod apply -f -
+    apiVersion: networking.k8s.io/v1
+    kind: NetworkPolicy
+    metadata:
+      name: no-egress
+    spec:
+      podSelector: {}
+      policyTypes:
+        - Egress
+    YAML
+    kubectl -n prod get networkpolicy no-egress -o jsonpath='{.spec.policyTypes}{"\n"}'
+    ```
+
+    `Egress` in `policyTypes` with no `egress` rules denies all outbound traffic. That
+    includes DNS, so Pods in the namespace cannot resolve names afterwards.
+
+- id: ch21-q10
+  type: task
+  exams: [CKA]
+  prompt: "Find the kube-proxy mode in the ConfigMap `kube-proxy` in namespace `kube-system`. Write that mode, and nothing else, to `/tmp/ch21-q10-mode.txt`."
+  solution: |
+    ```bash
+    kubectl -n kube-system get configmap kube-proxy -o jsonpath='{.data.config\.conf}' | sed -n 's/^mode: *"\{0,1\}\([a-z]*\)"\{0,1\}$/\1/p' > /tmp/ch21-q10-mode.txt
+    cat /tmp/ch21-q10-mode.txt
+    ```
+
+    The mode is a line inside the embedded `config.conf`, which is why the command reads
+    that key and extracts the value.
+
+- id: ch21-q11
+  type: task
+  exams: [CKA]
+  prompt: "In namespace `prod`, the Service `web` exists. From the Pod `client` (image `busybox:1.36`, running `sleep 3600`), look up `web` with DNS. Write the IP address it returns to `/tmp/ch21-q11-ip.txt`, and nothing else."
+  solution: |
+    ```bash
+    kubectl -n prod exec client -- nslookup web.prod.svc.cluster.local | awk '/^Address/ && !/10\.96\.0\.10|:53/ {print $NF}' | head -1 > /tmp/ch21-q11-ip.txt
+    cat /tmp/ch21-q11-ip.txt
+    ```
+
+    `nslookup` prints the DNS server's own address first, so the command skips the lines
+    for the server and takes the Service's address. The simpler and safer method is to
+    read `kubectl -n prod get svc web -o jsonpath='{.spec.clusterIP}'`, which gives the
+    same address.
