@@ -46,7 +46,7 @@ The KCNA curriculum lists topics, not tasks, so each row is broad. Chapters
 | --- | --- | --- | --- | --- | --- |
 | Kubernetes Fundamentals | Kubernetes Core Concepts | 02, 04, 05, 06 | 02/T1-T5, 04/T1-T5, 05/T1-T6, 06/T1-T5; P1 Q15, Q18 | ch02-q01..q05, q08; ch04-q01, q02, q04; ch05-q01..q03; ch06-q01..q05 | drafted |
 | Kubernetes Fundamentals | Administration | 03, 06, 18, 19, 20 | 03/a, 03/b1, 03/b2p; 06/T2; P1 Q15 | ch02-q10; ch03-q01, q08; ch06-q09 | partly |
-| Kubernetes Fundamentals | Scheduling | 02, 17 | 02/T4 | ch02-q02, q12 | partly |
+| Kubernetes Fundamentals | Scheduling | 02, 17 | 02/T4; 17/T1–T5 | ch02-q02, q12; ch17-q01–q07 | drafted |
 | Kubernetes Fundamentals | Containerization | 01, 04 | 04/T1, 04/T5 | ch01-q04..q06; ch04-q01 | drafted |
 | Container Orchestration | Networking | 11, 21 | | | planned |
 | Container Orchestration | Security | 23, 29, 33 | 03/b3 | ch03-q05 | partly |
@@ -82,7 +82,7 @@ The KCNA curriculum lists topics, not tasks, so each row is broad. Chapters
 | Workloads and Scheduling | Use ConfigMaps and Secrets to configure applications | 03, 07 | 03/b2 C1, C2; 07/T1–T5; P1 Q11 | ch07-q01–q03, q08–q11 | drafted |
 | Workloads and Scheduling | Configure workload autoscaling | 25 | | | planned |
 | Workloads and Scheduling | Understand the primitives used to create robust, self-healing, application deployments | 04, 05, 10 | 04/T5; 05/T1, T2, T5; P1 Q18 | ch04-q04, q05; ch05-q01..q03, q06, q07 | partly |
-| Workloads and Scheduling | Configure Pod admission and scheduling (limits, node affinity, etc.) | 04, 06, 10, 17 | 04/T4; 06/T5; P1 Q5 | ch04-q07, q09; ch06-q12 | partly (06 covers nodeSelector; 17 affinity and taints) |
+| Workloads and Scheduling | Configure Pod admission and scheduling (limits, node affinity, etc.) | 04, 06, 10, 17 | 04/T4; 06/T5; 17/T1–T2; P1 Q5 | ch04-q07, q09; ch06-q12; ch17-q02–q05 | partly (17 covers affinity and taints; priority and static Pods in 17 too) |
 | Servicing and Networking | Understand connectivity between Pods | 11, 21 | | | planned |
 | Servicing and Networking | Define and enforce Network Policies | 21, 36 | | | planned |
 | Servicing and Networking | Use ClusterIP, NodePort, LoadBalancer service types and endpoints | 03, 11 | 03/b2 C5; 11/T1–T2; P1 Q11 | ch11-q01–q03, q08; LoadBalancer described only | drafted |
@@ -196,7 +196,7 @@ The KCNA curriculum lists topics, not tasks, so each row is broad. Chapters
 | Overview of Cloud Native Security | Workload and Application Code Security | 33, 34 | | | planned |
 | Kubernetes Cluster Component Security | API Server | 02, 30 | 02/T2, 02/T3 | ch02-q01, q06 | partly (02 explains its role; 30 secures it) |
 | Kubernetes Cluster Component Security | Controller Manager | 02, 30 | 02/T3 | ch02-q05 | partly |
-| Kubernetes Cluster Component Security | Scheduler | 02, 30 | 02/T4 | ch02-q02 | partly |
+| Cluster Component Security | Scheduler | 02, 30 | 02/T4; 17/T5 | ch02-q02; ch17-q01, q06, q07 | partly (30 planned) |
 | Kubernetes Cluster Component Security | Kubelet | 02, 30 | | ch02-q03, q07 | partly |
 | Kubernetes Cluster Component Security | Container Runtime | 01, 33 | | ch01-q04, q05 | partly |
 | Kubernetes Cluster Component Security | KubeProxy | 02, 21 | P1 Q14 | | partly |
