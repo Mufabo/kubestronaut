@@ -112,7 +112,7 @@ The KCNA curriculum lists topics, not tasks, so each row is broad. Chapters
 | --- | --- | --- | --- | --- | --- |
 | Application Design and Build | Define, build and modify container images | 01, 16 | | ch01-q05 | partly (01 explains images; 16 builds them) |
 | Application Design and Build | Choose and use the right workload resource (Deployment, DaemonSet, CronJob, etc.) | 05, 08 | 05/T1; 08/T1–T5 | ch05-q09, ch08-q01–q07 | partly (08 drafted; DaemonSet and StatefulSet not yet) |
-| Application Design and Build | Understand multi-container Pod design patterns (e.g. sidecar, init and others) | 04, 09 | P1 Q10 | ch04-q02 | partly |
+| Application Design and Build | Understand multi-container Pod design patterns (e.g. sidecar, init and others) | 04, 09 | 09/T1–T5; P1 Q10 | ch04-q02, ch09-q01–q11 | drafted |
 | Application Design and Build | Utilize persistent and ephemeral volumes | 13 | | | planned |
 | Application Deployment | Use Kubernetes primitives to implement common deployment strategies (e.g. blue/green or canary) | 05, 16 | 05/T5; P1 Q17 | ch05-q06, q13 | partly (05 covers rolling update and Recreate; 16 covers blue/green and canary) |
 | Application Deployment | Understand Deployments and how to perform rolling updates | 05 | 05/T1-T6; P1 Q15-Q17 | ch05-q04..q08, q10..q14 | drafted |
