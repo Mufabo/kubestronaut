@@ -26,6 +26,14 @@ else
   kind create cluster --name "$CLUSTER_NAME" --image "$KIND_NODE_IMAGE" --config "${BOOK_ROOT}/envs/kind/cluster.yaml"
 fi
 
+# Calico is the CNI (envs/kind/cluster.yaml disables the default one). Applying
+# the pinned manifest is idempotent, and it runs whether the cluster was just
+# created here or by the CI kind action.
+kubectl --context "$ctx" apply -f "https://raw.githubusercontent.com/projectcalico/calico/${CALICO_VERSION}/manifests/calico.yaml" >/dev/null
+kubectl --context "$ctx" -n kube-system rollout status daemonset/calico-node --timeout=300s >/dev/null
+kubectl --context "$ctx" wait --for=condition=Ready nodes --all --timeout=300s >/dev/null
+info "CNI: Calico ${CALICO_VERSION}; all nodes are Ready"
+
 # The marker that tools/lib.sh checks before any lab may change anything.
 kubectl --context "$ctx" apply -f - >/dev/null <<YAML
 apiVersion: v1

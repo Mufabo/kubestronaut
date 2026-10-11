@@ -3,7 +3,8 @@
 
 Keeps what a read-only command must never change (identity, spec, data, labels,
 annotations, ownership) and drops volatile fields (status, resourceVersion,
-managedFields, timestamps) so an idle cluster produces identical snapshots."""
+managedFields, timestamps, CNI-written annotations) so an idle cluster produces
+identical snapshots."""
 import json
 import sys
 
@@ -15,11 +16,16 @@ for it in items:
     kind, name = it.get("kind", "?"), md.get("name", "?")
     if kind == "ConfigMap" and name == "kube-root-ca.crt":
         continue  # injected into every namespace by the control plane
+    # Annotations the CNI plugin writes when a Pod's sandbox is created (for
+    # example cni.projectcalico.org/podIP) are volatile, like status: they appear
+    # between two reads of an idle Pod, so they are not part of the snapshot.
+    annotations = {k: v for k, v in (md.get("annotations") or {}).items()
+                   if not k.startswith("cni.projectcalico.org/")}
     entry = {
         "uid": md.get("uid"),
         "generation": md.get("generation"),
         "labels": md.get("labels"),
-        "annotations": md.get("annotations"),
+        "annotations": annotations or None,
         "owners": [o.get("uid") for o in md.get("ownerReferences", [])],
     }
     for key in ("spec", "data", "binaryData", "type", "rules", "roleRef", "subjects"):

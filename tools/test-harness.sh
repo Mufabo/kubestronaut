@@ -236,6 +236,9 @@ expect "make test-tier1 fails when there are no Tier 1 labs" nonzero "no Tier 1 
 # (This exercises the scripts' logic. Real kubectl behaviour is CI's job.)
 # NOTE: the lab writes its answer files under /tmp/ch03-*; this section removes them.
 cp -r "${root}/chapters/03-kubectl-fluency" "${sb}/chapters/"
+# The copy starts from a clean state: a .state folder left by an earlier run of
+# the real lab (a saved kubeconfig, for example) must not leak into these tests.
+rm -rf "${sb}/chapters/03-kubectl-fluency/lab/.state"
 rm -f /tmp/ch03-*.txt /tmp/ch03-*.yaml
 fresh_state kind-kbook kbook alpha
 expect "chapter 3: all six parts pass the full loop" 0 "LAB TEST OK" -- bash tools/test-lab.sh 3
