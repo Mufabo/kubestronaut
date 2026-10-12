@@ -2,6 +2,8 @@
 # Smoke test for the Tier 2 VMs (envs/vagrant). Run it inside cp1, on any of
 # the snapshots:   cd /kbook && make test-tier2-env
 # CI cannot run VirtualBox, so this is how the environment is proven.
+# ok and bad only print, so "test && ok || bad" is safe here; the bash -c snippets are meant literal
+# shellcheck disable=SC2015,SC2016
 set -uo pipefail
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=/dev/null

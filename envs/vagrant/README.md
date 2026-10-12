@@ -4,7 +4,7 @@ Three VMs on the private network `192.168.56.0/24`, built with Vagrant and
 VirtualBox:
 
 | VM | Address | Role | Memory |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | `cp1` | 192.168.56.10 | control plane; you work here | 2 GB |
 | `node1` | 192.168.56.11 | worker | 1.5 GB |
 | `node2` | 192.168.56.12 | worker | 1.5 GB |
@@ -56,7 +56,7 @@ early keeps a worker half-configured, and Pods there cannot reach the rest of
 the cluster.
 
 | Snapshot | What it holds | Used by |
-|---|---|---|
+| --- | --- | --- |
 | `prereqs` | containerd, kubelet, kubeadm and kubectl at `K8S_VERSION`; no cluster | Chapter 18 (you run `kubeadm init` yourself) |
 | `cluster` | a ready three-node cluster at `K8S_VERSION`, Calico CNI | most Tier 2 labs |
 | `cluster-prev` | the same cluster one minor version back, at `K8S_PREV_VERSION` | Chapter 19 (you upgrade it) |
@@ -106,7 +106,7 @@ The `Vagrantfile` defines named provisioning stages, all of them `run: "never"`,
 so plain `vagrant up` only boots the VMs. The driver runs them in order:
 
 | Stage | Script | Runs on |
-|---|---|---|
+| --- | --- | --- |
 | `os` | `bootstrap-os.sh`: DNS fix, swap off, kernel settings, containerd, host names, SSH from cp1 to the workers | all |
 | `k8s-tools` | `bootstrap-tools.sh`: kubelet, kubeadm, kubectl at an exact version, held | all |
 | `cluster-init` | `bootstrap-control-plane.sh`: `kubeadm init`, Calico, the `kbook-vm` context, the lab-cluster marker | cp1 |

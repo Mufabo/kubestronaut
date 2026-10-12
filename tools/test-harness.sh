@@ -191,6 +191,26 @@ expect "a Tier 2 reset points to the host's snapshot restore instead of running"
 out="$(in_sb bash tools/run-lab.sh 89 reset 2>&1)"
 if [[ "$out" != *"reset ran"* ]]; then pass "a Tier 2 reset never runs reset.sh"; else flunk "a Tier 2 reset never runs reset.sh"; fi
 
+# A Tier 2 lab on the prereqs snapshot has no cluster: the loop must work
+# without one, guard with the snapshot instead, and skip the reset phase.
+t2="${sb}/chapters/88-prereqs/lab"
+mkdir -p "$t2"
+printf '## Hands-on lab\n\n### Task 1: Do it\n\nTouch the file.\n' > "${t2}/../88-prereqs.md"
+printf 'LAB_TIER=2\nLAB_SNAPSHOT=prereqs\n' > "${t2}/lab.env"
+# shellcheck disable=SC2016  # the generated scripts must keep their $variables literal
+{
+  pre='here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"; source "${here}/../../../tools/lib.sh"; source "${here}/lab.env"; require_snapshot prereqs'
+  printf '#!/usr/bin/env bash\nset -euo pipefail\n%s\nmkdir -p "$here/.state"; rm -f "$here/.state/done"\n' "$pre" > "${t2}/setup.sh"
+  printf '#!/usr/bin/env bash\nset -euo pipefail\n%s\ntouch "$here/.state/done"\n' "$pre" > "${t2}/solve.sh"
+  printf '#!/usr/bin/env bash\nset -uo pipefail\n%s\ndone_it() { [[ -f "$here/.state/done" ]]; }\ncheck 1 "the file exists" "touch it" done_it\nfinish_checks\n' "$pre" > "${t2}/verify.sh"
+}
+printf 'prereqs\n' > "${work}/snap-prereqs"
+fresh_state kind-production ""   # no usable lab cluster at all
+expect "a Tier 2 prereqs lab passes the loop without a cluster, and skips reset" 0 "reset: skipped" -- \
+  env KBOOK_SNAPSHOT_FILE="${work}/snap-prereqs" bash tools/test-lab.sh 88
+expect "a Tier 2 lab on the wrong snapshot is refused by the loop" nonzero "kbook-vm restore prereqs" -- \
+  env KBOOK_SNAPSHOT_FILE="$snapfile" bash tools/test-lab.sh 88
+
 # ---- exam style and mock exams ------------------------------------------------------
 fresh_state kind-kbook kbook
 in_sb bash tools/run-lab.sh 98 setup >/dev/null 2>&1

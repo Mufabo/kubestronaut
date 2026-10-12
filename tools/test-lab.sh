@@ -26,7 +26,23 @@ part=""
 fail() { echo "LAB TEST FAILED (chapter ${ch}${part:+ part ${part}}): $*" >&2; exit 1; }
 run()  { bash "${here}/run-lab.sh" "$@"; }
 
-require_lab_cluster
+# Tier 2 labs run on the VMs (envs/vagrant). On the `prereqs` snapshot there is
+# no cluster yet, so there is no cluster state to guard; and no Tier 2 lab can
+# reset itself (only the host restores snapshots), so the reset phase is skipped.
+labdir="$(bash "${here}/lab-path.sh" "$ch")" || exit 1
+read -r tier snap t2ctx t2name < <(bash -c 'source "$1" 2>/dev/null
+  printf "%s %s %s %s\n" "${LAB_TIER:-1}" "${LAB_SNAPSHOT:--}" "${LAB_CONTEXT:--}" "${LAB_CLUSTER_NAME:--}"' _ "${labdir}/lab/lab.env")
+guard_cluster=1
+if [[ "$tier" == 2 ]]; then
+  require_snapshot "$snap"
+  if [[ "$snap" == prereqs ]]; then
+    guard_cluster=0
+  else
+    LAB_TIER=2 LAB_CONTEXT="$t2ctx" LAB_CLUSTER_NAME="$t2name" require_lab_cluster
+  fi
+else
+  require_lab_cluster
+fi
 
 # ---- sentinel: unrelated cluster state that must survive ---------------------
 SENT=kbook-sentinel
@@ -40,14 +56,17 @@ sentinel_cleanup() {
   kubectl delete namespace "$SENT" --ignore-not-found --wait=true --timeout=120s >/dev/null 2>&1 || true
   kubectl delete clusterrole "$SENT" --ignore-not-found >/dev/null 2>&1 || true
 }
-trap sentinel_cleanup EXIT
-sentinel_cleanup
-kubectl create namespace "$SENT" >/dev/null || fail "could not create the sentinel namespace"
-kubectl -n "$SENT" create configmap sentinel --from-literal=purpose=must-survive >/dev/null || fail "could not create the sentinel ConfigMap"
-kubectl create clusterrole "$SENT" --verb=get --resource=pods >/dev/null || fail "could not create the sentinel ClusterRole"
-sentinel_before="$(sentinel_uids)"
-[[ "$sentinel_before" != *"||"* && "$sentinel_before" != "|"* && "$sentinel_before" != *"|" ]] ||
-  fail "sentinel resources were not created properly (${sentinel_before})"
+sentinel_before=""
+if ((guard_cluster)); then
+  trap sentinel_cleanup EXIT
+  sentinel_cleanup
+  kubectl create namespace "$SENT" >/dev/null || fail "could not create the sentinel namespace"
+  kubectl -n "$SENT" create configmap sentinel --from-literal=purpose=must-survive >/dev/null || fail "could not create the sentinel ConfigMap"
+  kubectl create clusterrole "$SENT" --verb=get --resource=pods >/dev/null || fail "could not create the sentinel ClusterRole"
+  sentinel_before="$(sentinel_uids)"
+  [[ "$sentinel_before" != *"||"* && "$sentinel_before" != "|"* && "$sentinel_before" != *"|" ]] ||
+    fail "sentinel resources were not created properly (${sentinel_before})"
+fi
 
 # ---- helpers ------------------------------------------------------------------
 snapshot() {
@@ -147,12 +166,18 @@ for part in "${list[@]}"; do
   run_verify pass "verify failed after the reference solution"
   echo "### text and checks line up (step labs: make check passes every task in order)"
   walk_steps
-  echo "### reset";                      run "$ch" reset "$part" || fail "reset failed"
-  echo "### verify after reset (must fail, every task on its own)"
-  run_verify fail "verify passed after reset"
-  each_task_fails
-  [[ "$(sentinel_uids)" == "$sentinel_before" ]] ||
-    fail "the lab changed or deleted unrelated cluster state (sentinel resources differ)"
+  if [[ "$tier" == 2 ]]; then
+    echo "### reset: skipped (Tier 2: restore snapshot ${snap} on the host, then run setup and verify to check the starting state)"
+  else
+    echo "### reset";                      run "$ch" reset "$part" || fail "reset failed"
+    echo "### verify after reset (must fail, every task on its own)"
+    run_verify fail "verify passed after reset"
+    each_task_fails
+  fi
+  if ((guard_cluster)); then
+    [[ "$(sentinel_uids)" == "$sentinel_before" ]] ||
+      fail "the lab changed or deleted unrelated cluster state (sentinel resources differ)"
+  fi
 done
 part=""
 echo "LAB TEST OK (${ch})"

@@ -45,7 +45,7 @@ The KCNA curriculum lists topics, not tasks, so each row is broad. Chapters
 | Domain | Bullet (verbatim) | Chapter | Lab | Questions | Status |
 | --- | --- | --- | --- | --- | --- |
 | Kubernetes Fundamentals | Kubernetes Core Concepts | 02, 04, 05, 06 | 02/T1-T5, 04/T1-T5, 05/T1-T6, 06/T1-T5; P1 Q15, Q18 | ch02-q01..q05, q08; ch04-q01, q02, q04; ch05-q01..q03; ch06-q01..q05 | drafted |
-| Kubernetes Fundamentals | Administration | 03, 06, 18, 19, 20 | 03/a, 03/b1, 03/b2p; 06/T2; P1 Q15 | ch02-q10; ch03-q01, q08; ch06-q09 | partly |
+| Kubernetes Fundamentals | Administration | 03, 06, 18, 19, 20 | 03/a, 03/b1, 03/b2p; 06/T2; 18/T1–T5; P1 Q15 | ch02-q10; ch03-q01, q08; ch06-q09; ch18-q10 | partly |
 | Kubernetes Fundamentals | Scheduling | 02, 17 | 02/T4; 17/T1–T5 | ch02-q02, q12; ch17-q01–q07 | drafted |
 | Kubernetes Fundamentals | Containerization | 01, 04 | 04/T1, 04/T5 | ch01-q04..q06; ch04-q01 | drafted |
 | Container Orchestration | Networking | 11, 21 | 11/T1–T5; 21/T1–T5 | ch11-q01–q11; ch21-q01–q11 | partly (26 planned) |
@@ -90,10 +90,10 @@ The KCNA curriculum lists topics, not tasks, so each row is broad. Chapters
 | Servicing and Networking | Know how to use Ingress controllers and Ingress resources | 12 | 12/T1–T3 | ch12-q02–q04, q08 | partly (controllers described; none installed in the lab) |
 | Servicing and Networking | Understand and use CoreDNS | 11, 21 | 11/T3–T4; 21/T2 | ch11-q05–q07; ch21-q07, q11 | partly (21 covers CoreDNS in the walkthrough) |
 | Cluster Architecture, Installation and Configuration | Manage role based access control (RBAC) | 03, 23 | 03/b3; 23/T1–T2, T5 | ch03-q05, q14; ch23-q02–q04, q06, q07 | partly (03 checks permissions; 23 manages RBAC) |
-| Cluster Architecture, Installation and Configuration | Prepare underlying infrastructure for installing a Kubernetes cluster | 18 | | | planned |
-| Cluster Architecture, Installation and Configuration | Create and manage Kubernetes clusters using kubeadm | 18 | | | planned |
+| Cluster Architecture, Installation and Configuration | Prepare underlying infrastructure for installing a Kubernetes cluster | 18 | 18 walkthrough (prepared on the `prereqs` snapshot) | ch18-q03, q04, q05, q13 | drafted (the reader inspects the preparation; `bootstrap-os.sh` and `bootstrap-tools.sh` script it) |
+| Cluster Architecture, Installation and Configuration | Create and manage Kubernetes clusters using kubeadm | 18 | 18/T1–T5 | ch18-q01, q02, q06, q07, q10–q12, q14 | drafted (verified by hand on the Tier 2 VMs) |
 | Cluster Architecture, Installation and Configuration | Manage the lifecycle of Kubernetes clusters | 19, 20 | | | planned |
-| Cluster Architecture, Installation and Configuration | Implement and configure a highly-available control plane | 18 | | | planned |
+| Cluster Architecture, Installation and Configuration | Implement and configure a highly-available control plane | 18 | | ch18-q08, q09 | partly (concepts and flags only; the lab cluster has one control plane node) |
 | Cluster Architecture, Installation and Configuration | Use Helm and Kustomize to install cluster components | 14 | 14/T1–T4 | ch14-q01, q06, q11 | partly (cluster components not installed in this chapter) |
 | Cluster Architecture, Installation and Configuration | Understand extension interfaces (CNI, CSI, CRI, etc.) | 01, 22, 24 | 21/T1–T2; 22/T5; 24/T5 | ch01-q04, q05; ch22-q01–q03; ch24-q03, q04 | partly (24 covers CRI, CNI and CSI; 36 planned) |
 | Cluster Architecture, Installation and Configuration | Understand CRDs, install and configure operators | 24 | 24/T1–T4 | ch24-q01, q02, q05–q07 | drafted (no operator is installed; the controller part is described) |

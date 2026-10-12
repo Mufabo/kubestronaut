@@ -234,3 +234,9 @@ Rules on top of the Tier 1 ones:
 5. **CI cannot run VMs.** Tier 2 labs are proven by hand: restore the snapshot,
    run `make test CH=n` on `cp1`, and record the date in the chapter's plan.
    `make test-tier2-env` checks the environment itself on any snapshot.
+   `tools/test-lab.sh` knows Tier 2: it checks the snapshot, skips the cluster
+   sentinels on `prereqs` (there is no API yet), and skips the reset phase,
+   because only the host can restore. Restore the snapshot again before each run.
+   Chapter 18 is the reference for a `prereqs` lab; its checks read the cluster
+   through `/etc/kubernetes/admin.conf` with `sudo`, so they do not depend on
+   the kubeconfig the reader sets up.
