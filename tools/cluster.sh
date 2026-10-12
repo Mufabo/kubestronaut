@@ -34,6 +34,15 @@ kubectl --context "$ctx" -n kube-system rollout status daemonset/calico-node --t
 kubectl --context "$ctx" wait --for=condition=Ready nodes --all --timeout=300s >/dev/null
 info "CNI: Calico ${CALICO_VERSION}; all nodes are Ready"
 
+# metrics-server gives kubectl top and the HPA their numbers (Chapter 25). kind's
+# kubelets use self-signed certificates, so the lab's copy skips their verification.
+# Applying the manifest first resets the arguments, so the patch adds the flag once.
+kubectl --context "$ctx" apply -f "https://github.com/kubernetes-sigs/metrics-server/releases/download/${METRICS_SERVER_VERSION}/components.yaml" >/dev/null
+kubectl --context "$ctx" -n kube-system patch deployment metrics-server --type=json \
+  -p '[{"op":"add","path":"/spec/template/spec/containers/0/args/-","value":"--kubelet-insecure-tls"}]' >/dev/null
+kubectl --context "$ctx" -n kube-system rollout status deployment/metrics-server --timeout=300s >/dev/null
+info "metrics-server ${METRICS_SERVER_VERSION} is installed"
+
 # The marker that tools/lib.sh checks before any lab may change anything.
 kubectl --context "$ctx" apply -f - >/dev/null <<YAML
 apiVersion: v1

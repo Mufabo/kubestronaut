@@ -75,12 +75,12 @@ The KCNA curriculum lists topics, not tasks, so each row is broad. Chapters
 | Storage | Manage persistent volumes and persistent volume claims | 13 | 13/T1–T3 | ch13-q02, q08, q11 | drafted |
 | Troubleshooting | Troubleshoot clusters and nodes | 02, 27 | 02/T1, 02/T3 | ch02-q03, q07 | partly |
 | Troubleshooting | Troubleshoot cluster components | 02, 27 | 02/T2, 02/T3; P1 Q14 | ch02-q01..q05, q07 | partly |
-| Troubleshooting | Monitor cluster and application resource usage | 10, 15 | | ch15-q05, q06 (described; no metrics-server in the lab) | partly |
+| Troubleshooting | Monitor cluster and application resource usage | 10, 15, 25 | 25/T3 | ch15-q05, q06; ch25-q03, q11 | partly (application metrics described in 15) |
 | Troubleshooting | Manage and evaluate container output streams | 04, 15 | 04/T3; 15/T1; P1 Q4 | ch04-q11, ch15-q01, q02, q04 | partly |
 | Troubleshooting | Troubleshoot services and networking | 11, 21, 26 | 11/T5 | ch11-q02, q11 | partly (11 covers Service endpoints; 21 and 26 planned) |
 | Workloads and Scheduling | Understand application deployments and how to perform rolling update and rollbacks | 05 | 05/T1-T6; P1 Q15-Q17 | ch05-q04..q08, q10..q14 | drafted |
 | Workloads and Scheduling | Use ConfigMaps and Secrets to configure applications | 03, 07 | 03/b2 C1, C2; 07/T1–T5; P1 Q11 | ch07-q01–q03, q08–q11 | drafted |
-| Workloads and Scheduling | Configure workload autoscaling | 25 | | | planned |
+| Workloads and Scheduling | Configure workload autoscaling | 25 | 25/T1–T5 | ch25-q01–q03, q06, q07, q08, q09, q10, q11 | drafted (VPA and cluster autoscaler described, not installed) |
 | Workloads and Scheduling | Understand the primitives used to create robust, self-healing, application deployments | 04, 05, 10 | 04/T5; 05/T1, T2, T5; P1 Q18 | ch04-q04, q05; ch05-q01..q03, q06, q07 | partly |
 | Workloads and Scheduling | Configure Pod admission and scheduling (limits, node affinity, etc.) | 04, 06, 10, 17 | 04/T4; 06/T5; 17/T1–T2; P1 Q5 | ch04-q07, q09; ch06-q12; ch17-q02–q05 | partly (17 covers affinity and taints; priority and static Pods in 17 too) |
 | Servicing and Networking | Understand connectivity between Pods | 11, 21 | 21/T1–T2 | ch21-q01, q02 | partly (11 covers Services; 21 covers the CNI) |

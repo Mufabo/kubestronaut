@@ -1,0 +1,153 @@
+- id: ch25-q01
+  type: mcq
+  exams: [CKA]
+  question: "The HPA's CPU target is 50%, and the Deployment has 2 replicas running at an average of 100% utilization. What replica count does the HPA compute, before minReplicas and maxReplicas apply?"
+  choices:
+    - "2"
+    - "3"
+    - "4"
+    - "1"
+  answer: C
+  explanation: "`desiredReplicas = ceil(currentReplicas * currentMetric / targetMetric)` gives `ceil(2 * 100 / 50) = 4`. The minimum and maximum then bound the result."
+
+- id: ch25-q02
+  type: mcq
+  exams: [CKA]
+  question: "Why does a CPU-based HPA need its Pods to set a CPU request?"
+  choices:
+    - "The request is the price the HPA pays per replica"
+    - "Utilization is measured as usage divided by the request, so without a request there is nothing to compare"
+    - "The scheduler refuses to run Pods with no request"
+    - "The request sets the HPA's maximum replicas"
+  answer: B
+  explanation: "The HPA's CPU metric is utilization relative to each Pod's CPU request. Without a request, the HPA cannot compute a utilization percentage, and it reports the metric as unknown."
+
+- id: ch25-q03
+  type: mcq
+  exams: [CKA]
+  question: "Which component supplies the CPU and memory numbers that `kubectl top` and the HPA read?"
+  choices:
+    - "The kubelet alone, through its own API"
+    - "metrics-server, which serves the metrics.k8s.io API"
+    - "CoreDNS"
+    - "The cluster autoscaler"
+  answer: B
+  explanation: "metrics-server collects CPU and memory from each kubelet and serves them through the metrics.k8s.io API. Both `kubectl top` and the HPA read that API."
+
+- id: ch25-q04
+  type: mcq
+  exams: [CKA]
+  question: "A VerticalPodAutoscaler is in `Off` mode. What does it do with its recommendations?"
+  choices:
+    - "It evicts Pods to apply them"
+    - "It writes them into the VPA object and changes nothing in the workload"
+    - "It applies them to new Pods only"
+    - "It deletes the HPA"
+  answer: B
+  explanation: "`Off` computes and publishes recommendations without applying them. `Initial` applies them only when Pods are created, and `Auto` evicts Pods so they restart with the new requests."
+
+- id: ch25-q05
+  type: mcq
+  exams: [CKA]
+  question: "When does the cluster autoscaler add a node?"
+  choices:
+    - "Every time a Deployment is scaled up"
+    - "When Pods are Pending because no existing node has room for them, and the node group can grow"
+    - "When a node reports a Ready condition"
+    - "Once a day, regardless of load"
+  answer: B
+  explanation: "The cluster autoscaler reacts to Pods the scheduler cannot place for lack of capacity, and it asks the cloud's node group to add a node. It also removes underused nodes whose Pods can be moved."
+
+- id: ch25-q06
+  type: mcq
+  exams: [CKA]
+  question: "What does the `stabilizationWindowSeconds` setting of `scaleDown` in an HPA's `behavior` do?"
+  choices:
+    - "It delays the first scale-up after a Pod starts"
+    - "It makes the HPA use the highest recommendation over the window, so a short dip in load does not remove Pods"
+    - "It sets how long a Pod has to be ready before it counts"
+    - "It removes a Pod after the window expires"
+  answer: B
+  explanation: "The scale-down stabilization window keeps the highest recommended replica count seen during the window. That prevents a brief drop in utilization from removing Pods that a rebound would need."
+
+- id: ch25-q07
+  type: mcq
+  exams: [CKA]
+  question: "Which API serves custom metrics to an HPA that uses `type: Pods` or `type: Object`?"
+  choices:
+    - "metrics.k8s.io"
+    - "custom.metrics.k8s.io"
+    - "apps/v1"
+    - "policy/v1"
+  answer: B
+  explanation: "metrics.k8s.io serves the resource metrics from metrics-server. Custom metrics come through custom.metrics.k8s.io, which an adapter serves. External metrics use external.metrics.k8s.io."
+
+- id: ch25-q08
+  type: task
+  exams: [CKA]
+  prompt: "In namespace `prod`, the Deployment `web` exists. Create a HorizontalPodAutoscaler named `web` that targets it with 2 to 6 replicas and a CPU target of 70% average utilization. Show its minimum and maximum replicas."
+  solution: |
+    ```bash
+    cat <<'YAML' | kubectl -n prod apply -f -
+    apiVersion: autoscaling/v2
+    kind: HorizontalPodAutoscaler
+    metadata:
+      name: web
+    spec:
+      scaleTargetRef:
+        apiVersion: apps/v1
+        kind: Deployment
+        name: web
+      minReplicas: 2
+      maxReplicas: 6
+      metrics:
+        - type: Resource
+          resource:
+            name: cpu
+            target:
+              type: Utilization
+              averageUtilization: 70
+    YAML
+    kubectl -n prod get hpa web -o jsonpath='{.spec.minReplicas}/{.spec.maxReplicas}{"\n"}'
+    ```
+
+    The `autoscaling/v2` API is the one that supports the `metrics` list and `behavior`.
+
+- id: ch25-q09
+  type: task
+  exams: [CKA]
+  prompt: "In namespace `prod`, change the HPA `web` so that it scales down only after 300 seconds of lower load, and scales up with no waiting. Show the scale-down window."
+  solution: |
+    ```bash
+    kubectl -n prod patch hpa web --type=merge -p '{"spec":{"behavior":{"scaleUp":{"stabilizationWindowSeconds":0},"scaleDown":{"stabilizationWindowSeconds":300}}}}'
+    kubectl -n prod get hpa web -o jsonpath='{.spec.behavior.scaleDown.stabilizationWindowSeconds}{"\n"}'
+    ```
+
+    `behavior` is a field of the HPA's spec, with `scaleUp` and `scaleDown` sections.
+    A window of `0` on `scaleUp` is the default, and it is set here to make the intent explicit.
+
+- id: ch25-q10
+  type: task
+  exams: [CKA]
+  prompt: "Write the name of the APIService that serves resource metrics to `kubectl top` and to the HPA into `/tmp/ch25-q10.txt`, and nothing else."
+  solution: |
+    ```bash
+    kubectl get apiservices v1beta1.metrics.k8s.io -o jsonpath='{.metadata.name}' > /tmp/ch25-q10.txt
+    cat /tmp/ch25-q10.txt
+    ```
+
+    The APIService for resource metrics is `v1beta1.metrics.k8s.io`, and its availability
+    shows whether metrics-server is working.
+
+- id: ch25-q11
+  type: task
+  exams: [CKA]
+  prompt: "In namespace `prod`, count the Pods that have CPU metrics available with `kubectl top pods`, and write the number to `/tmp/ch25-q11.txt`, and nothing else."
+  solution: |
+    ```bash
+    kubectl top pods -n prod --no-headers | wc -l | tr -d '[:space:]' > /tmp/ch25-q11.txt
+    cat /tmp/ch25-q11.txt
+    ```
+
+    `kubectl top` lists only the Pods that have metrics, and `--no-headers` leaves
+    one line for each of them. In a namespace with no Pods, the answer is `0`.
