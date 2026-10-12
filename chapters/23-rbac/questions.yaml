@@ -1,0 +1,149 @@
+- id: ch23-q01
+  type: mcq
+  exams: [CKA, CKS]
+  question: "A request to the API server comes from a valid identity, but that identity has no permission for the action. Which HTTP status does the client see?"
+  choices:
+    - "401 Unauthorized"
+    - "403 Forbidden"
+    - "404 Not Found"
+    - "500 Internal Server Error"
+  answer: B
+  explanation: "401 means the identity is missing or invalid, which is an authentication failure. 403 means the identity is known and the authorization check denied it. RBAC decides 403; the identity itself came from authentication."
+
+- id: ch23-q02
+  type: mcq
+  exams: [CKA, CKS]
+  question: "Which object grants permissions in one namespace to a subject, and can point at a ClusterRole?"
+  choices:
+    - "A ClusterRoleBinding"
+    - "A RoleBinding"
+    - "A ServiceAccount"
+    - "A Role"
+  answer: B
+  explanation: "A RoleBinding grants a Role or a ClusterRole to subjects within its own namespace. A ClusterRoleBinding grants a ClusterRole across the whole cluster. A Role and a ServiceAccount do not grant anything on their own."
+
+- id: ch23-q03
+  type: mcq
+  exams: [CKA, CKS]
+  question: "A rule lists `apiGroups: [\"\"]`, `resources: [pods]`, `verbs: [get, list]`. Which request is allowed by this rule alone?"
+  choices:
+    - "Deleting a Pod"
+    - "Listing Pods in the namespace"
+    - "Creating a Deployment in the apps group"
+    - "Reading a Secret"
+  answer: B
+  explanation: "The empty API group is the core group, where Pods live. The verbs `get` and `list` allow reading Pods. Deleting, creating a Deployment, and reading Secrets each need a different verb, group or resource."
+
+- id: ch23-q04
+  type: mcq
+  exams: [CKA, CKS]
+  question: "A subject has two bindings: one gives `get` on Pods, and another gives `list` on Pods. What can the subject do?"
+  choices:
+    - "Only get, because the first binding wins"
+    - "Both get and list, because RBAC permissions add up"
+    - "Neither, because the bindings conflict"
+    - "Only list, because it was granted last"
+  answer: B
+  explanation: "RBAC has no deny rules, and every binding adds permissions. The subject can get and list Pods. To remove a permission, remove the binding that grants it."
+
+- id: ch23-q05
+  type: mcq
+  exams: [CKA, CKS]
+  question: "Which field stops the kubelet from mounting a ServiceAccount token into a Pod that does not need the API?"
+  choices:
+    - "`spec.serviceAccountName: none`"
+    - "`automountServiceAccountToken: false` on the Pod or the ServiceAccount"
+    - "`spec.securityContext.readOnlyRootFilesystem: true`"
+    - "`spec.volumes` with an empty secret"
+  answer: B
+  explanation: "`automountServiceAccountToken: false` on the ServiceAccount sets the default for its Pods, and the Pod's own field overrides it. The other options do not control the token mount, and `serviceAccountName` does not accept `none`."
+
+- id: ch23-q06
+  type: mcq
+  exams: [CKA, CKS]
+  question: "You want to check whether the ServiceAccount `app` in namespace `shop` can list Secrets in namespace `shop`, without running a Pod. Which command does that?"
+  choices:
+    - "`kubectl auth can-i list secrets --as=system:serviceaccount:shop:app -n shop`"
+    - "`kubectl get secrets --as=app`"
+    - "`kubectl describe serviceaccount app`"
+    - "`kubectl auth whoami`"
+  answer: A
+  explanation: "`kubectl auth can-i` with `--as` evaluates the RBAC rules for another identity, and the ServiceAccount name is written as `system:serviceaccount:NAMESPACE:NAME`. `--as=app` names no real identity, and the other two commands do not evaluate permissions."
+
+- id: ch23-q07
+  type: mcq
+  exams: [CKA, CKS]
+  question: "A Role lives in namespace `prod`. Which of these can it grant permissions on?"
+  choices:
+    - "Pods in namespace `prod` only"
+    - "Nodes, because nodes are the most important resource"
+    - "Pods in every namespace, when bound with a RoleBinding"
+    - "Only Secrets, because a Role is for secrets"
+  answer: A
+  explanation: "A Role's rules apply to objects in its own namespace. Nodes are cluster-scoped, so granting them needs a ClusterRole and a ClusterRoleBinding. A RoleBinding cannot widen a Role beyond its namespace."
+
+- id: ch23-q08
+  type: task
+  exams: [CKA]
+  prompt: "In namespace `prod`, create a ServiceAccount named `deployer`. Give it a Role named `deploy-manager` that allows `get`, `list`, `create` and `update` on Deployments in the `apps` group, and bind it with a RoleBinding named `deployer-manages`. Show whether `deployer` may delete Deployments."
+  solution: |
+    ```bash
+    kubectl -n prod create serviceaccount deployer
+    kubectl -n prod create role deploy-manager --verb=get,list,create,update --resource=deployments.apps
+    kubectl -n prod create rolebinding deployer-manages --role=deploy-manager --serviceaccount=prod:deployer
+    kubectl auth can-i delete deployments --as=system:serviceaccount:prod:deployer -n prod
+    ```
+
+    The `--resource` flag accepts `deployments.apps` to name the group. The last command
+    prints `no`, because no verb `delete` was granted.
+
+- id: ch23-q09
+  type: task
+  exams: [CKA]
+  prompt: "Create a ClusterRole named `ns-lister` that allows `list` on namespaces. Bind it to the user `auditor` with a ClusterRoleBinding named `auditor-lists-ns`. Show whether `auditor` may list namespaces."
+  solution: |
+    ```bash
+    kubectl create clusterrole ns-lister --verb=list --resource=namespaces
+    kubectl create clusterrolebinding auditor-lists-ns --clusterrole=ns-lister --user=auditor
+    kubectl auth can-i list namespaces --as=auditor
+    ```
+
+    Namespaces are cluster-scoped, so the rule needs a ClusterRole, and the binding needs
+    a ClusterRoleBinding. The answer is `yes`.
+
+- id: ch23-q10
+  type: task
+  exams: [CKA]
+  prompt: "In namespace `prod`, a Pod named `batch-run` must not receive an API token, and it runs the image `busybox:1.36` with the command `sleep 3600`. Create it so that its service account token is not mounted, then show the value of `automountServiceAccountToken` on the Pod."
+  solution: |
+    ```bash
+    cat <<'YAML' | kubectl -n prod apply -f -
+    apiVersion: v1
+    kind: Pod
+    metadata:
+      name: batch-run
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - name: batch-run
+          image: busybox:1.36
+          command: ["sleep", "3600"]
+    YAML
+    kubectl -n prod get pod batch-run -o jsonpath='{.spec.automountServiceAccountToken}{"\n"}'
+    ```
+
+    The Pod's own field is used here. It overrides the ServiceAccount's setting, which
+    is why it works even when the ServiceAccount itself mounts tokens.
+
+- id: ch23-q11
+  type: task
+  exams: [CKA]
+  prompt: "Print the rules that apply to the ServiceAccount `deployer` in namespace `prod` (see question 8) with `kubectl auth can-i --list`, and save the output to `/tmp/ch23-q11.txt`."
+  solution: |
+    ```bash
+    kubectl auth can-i --list --as=system:serviceaccount:prod:deployer -n prod > /tmp/ch23-q11.txt
+    cat /tmp/ch23-q11.txt
+    ```
+
+    The output lists the resources and verbs granted by every binding for that identity,
+    including the Deployment rule from question 8.

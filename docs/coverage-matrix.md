@@ -89,7 +89,7 @@ The KCNA curriculum lists topics, not tasks, so each row is broad. Chapters
 | Servicing and Networking | Use the Gateway API to manage Ingress traffic | 12 | 12/T4–T5 | ch12-q05, q07, q10, q11 | drafted (checked against the API server; no controller runs) |
 | Servicing and Networking | Know how to use Ingress controllers and Ingress resources | 12 | 12/T1–T3 | ch12-q02–q04, q08 | partly (controllers described; none installed in the lab) |
 | Servicing and Networking | Understand and use CoreDNS | 11, 21 | 11/T3–T4; 21/T2 | ch11-q05–q07; ch21-q07, q11 | partly (21 covers CoreDNS in the walkthrough) |
-| Cluster Architecture, Installation and Configuration | Manage role based access control (RBAC) | 03, 23 | 03/b3; P1 Q13 | ch03-q05, q14 | partly (03 checks permissions; 23 manages RBAC) |
+| Cluster Architecture, Installation and Configuration | Manage role based access control (RBAC) | 03, 23 | 03/b3; 23/T1–T2, T5 | ch03-q05, q14; ch23-q02–q04, q06, q07 | partly (03 checks permissions; 23 manages RBAC) |
 | Cluster Architecture, Installation and Configuration | Prepare underlying infrastructure for installing a Kubernetes cluster | 18 | | | planned |
 | Cluster Architecture, Installation and Configuration | Create and manage Kubernetes clusters using kubeadm | 18 | | | planned |
 | Cluster Architecture, Installation and Configuration | Manage the lifecycle of Kubernetes clusters | 19, 20 | | | planned |
@@ -124,12 +124,12 @@ The KCNA curriculum lists topics, not tasks, so each row is broad. Chapters
 | Application Observability and Maintenance | Utilize container logs | 04, 15 | 04/T3; 15/T1, T3; P1 Q4 | ch04-q11, ch15-q01, q02, q04, q08 | partly |
 | Application Observability and Maintenance | Debugging in Kubernetes | 04, 15, 26 | 04/T2; 15/T1–T2; P1 Q3, Q6 | ch04-q03, q11; ch15-q03, q08, q09 | partly (26 planned) |
 | Application Environment, Configuration and Security | Discover and use resources that extend Kubernetes (CRD, Operators) | 03, 24 | 03/a A6; P1 Q12 | ch03-q12 | partly (03 discovers resource types; 24 teaches CRDs) |
-| Application Environment, Configuration and Security | Understand authentication, authorization and admission control | 03, 23, 31 | 03/b3; P1 Q13 | ch03-q05, q14 | partly |
+| Application Environment, Configuration and Security | Understand authentication, authorization and admission control | 03, 23, 31 | 03/b3; 23/T1–T5 | ch03-q05, q14; ch23-q01, q06 | partly (31 planned) |
 | Application Environment, Configuration and Security | Understand requests, limits, quotas | 04, 10 | 04/T4; 10/T3–T4; P1 Q5 | ch04-q07, q09; ch10-q04, q05 | partly (quotas not yet in 10) |
 | Application Environment, Configuration and Security | Define resource requirements | 04, 10 | 04/T4; 10/T3–T4; P1 Q5 | ch04-q07, q09; ch10-q03, q04, q09, q10 | drafted |
 | Application Environment, Configuration and Security | Understand ConfigMaps | 03, 07 | 03/b2 C1; 07/T1, T3–T5; P1 Q11 | ch07-q02, q03, q06, q08 | drafted |
 | Application Environment, Configuration and Security | Create & consume Secrets | 03, 07 | 03/b2 C2; 07/T2–T5; P1 Q11 | ch07-q01, q05, q09, q11 | drafted |
-| Application Environment, Configuration and Security | Understand ServiceAccounts | 03, 23 | 03/b2 C3; P1 Q11 | | partly |
+| Application Environment, Configuration and Security | Understand ServiceAccounts | 03, 23 | 03/b2 C3; 23/T3–T4 | ch23-q05, q10 | drafted |
 | Application Environment, Configuration and Security | Understand Application Security (SecurityContexts, Capabilities, etc.) | 10, 33 | 10/T5 | ch10-q06, q07, q11 | partly (10 drafted; 33 planned) |
 | Services and Networking | Demonstrate basic understanding of NetworkPolicies | 21 | 21/T3–T4 | ch21-q03–q06, q08, q09 | drafted |
 | Services and Networking | Provide and troubleshoot access to applications via services | 03, 11, 26 | 03/b2 C5; 11/T1–T5; P1 Q11 | ch11-q01, q04, q06, q08–q11 | partly (26 planned) |
