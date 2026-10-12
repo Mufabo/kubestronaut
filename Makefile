@@ -7,7 +7,7 @@ PART ?=
 EXAM ?=
 SHELL := /usr/bin/env bash
 
-.PHONY: help cluster cluster-recreate cluster-delete lab question check skip use-namespace reset verify solve teardown test test-lib test-harness test-render test-shell test-examples test-tier1 mock mock-score mock-reset mock-solve mock-teardown mock-test test-mocks questions questions-check lint
+.PHONY: help cluster cluster-recreate cluster-delete cluster-pause cluster-resume test-tier2-env lab question check skip use-namespace reset verify solve teardown test test-lib test-harness test-render test-shell test-examples test-tier1 mock mock-score mock-reset mock-solve mock-teardown mock-test test-mocks questions questions-check lint
 
 help: ## Show this help
 	@grep -hE '^[a-zA-Z_-]+:.*## ' Makefile | awk -F':.*## ' '{printf "  %-16s %s\n", $$1, $$2}'
@@ -23,6 +23,15 @@ cluster-recreate: ## Delete and rebuild the Tier 1 cluster (use after changing v
 
 cluster-delete: ## Delete the Tier 1 kind cluster
 	kind delete cluster --name "$(CLUSTER_NAME)"
+
+cluster-pause: ## Stop the Tier 1 kind cluster's containers (frees RAM for the Tier 2 VMs)
+	@ids="$$(docker ps -q --filter label=io.x-k8s.kind.cluster=$(CLUSTER_NAME))"; if [ -z "$$ids" ]; then echo "kind cluster $(CLUSTER_NAME) is not running"; else docker stop $$ids >/dev/null && echo "kind cluster $(CLUSTER_NAME) paused; make cluster-resume starts it again"; fi
+
+cluster-resume: ## Start the paused Tier 1 kind cluster again and wait for its nodes
+	@ids="$$(docker ps -aq --filter label=io.x-k8s.kind.cluster=$(CLUSTER_NAME))"; [ -n "$$ids" ] || { echo "no kind cluster $(CLUSTER_NAME); run: make cluster" >&2; exit 1; }; docker start $$ids >/dev/null; for i in $$(seq 1 90); do kubectl --context kind-$(CLUSTER_NAME) get nodes >/dev/null 2>&1 && break; sleep 2; done; kubectl --context kind-$(CLUSTER_NAME) wait --for=condition=Ready node --all --timeout=180s
+
+test-tier2-env: ## Smoke-test the Tier 2 VMs (run inside cp1, on any snapshot)
+	@bash tools/test-tier2-env.sh
 
 lab: ## Set up the lab for CH (also resets it) and show its first task
 	@bash tools/run-lab.sh "$(CH)" setup "$(PART)"
@@ -106,6 +115,6 @@ questions-check: ## Fail if any chapter file is out of date with its questions.y
 	@python3 tools/render-questions.py --check
 
 lint: ## shellcheck, yamllint, markdownlint
-	@shellcheck -x tools/*.sh envs/shell/*.sh chapters/*/lab/*.sh chapters/*/lab/parts/*.sh chapters/*/testdata/*.sh mock-exams/*/lab/*.sh
+	@shellcheck -x tools/*.sh envs/shell/*.sh chapters/*/lab/*.sh chapters/*/lab/parts/*.sh chapters/*/testdata/*.sh mock-exams/*/lab/*.sh envs/vagrant/*.sh
 	@yamllint -c .yamllint .
 	@markdownlint-cli2 "**/*.md" "#node_modules"

@@ -4,3 +4,4 @@ mock-exams/*/lab/.state/
 .DS_Store
 __pycache__/
 envs/vagrant/.state/
+envs/vagrant/.vagrant/

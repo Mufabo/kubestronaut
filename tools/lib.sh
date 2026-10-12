@@ -63,9 +63,29 @@ require_lab_cluster() {
   kubectl cluster-info >/dev/null 2>&1 || die "cluster for context '${ctx}' is not reachable"
   if [[ "${LAB_ALLOW_ANY_CONTEXT:-0}" != "1" ]]; then
     marker="$(kubectl -n kube-system get configmap "$LAB_MARKER_NAME" -o jsonpath='{.data.cluster}' 2>/dev/null || true)"
-    [[ "$marker" == "${LAB_CLUSTER_NAME:-$CLUSTER_NAME}" ]] ||
+    if [[ "$marker" != "${LAB_CLUSTER_NAME:-$CLUSTER_NAME}" ]]; then
+      if [[ "${LAB_TIER:-1}" == "2" ]]; then
+        die "this cluster is not marked as the Tier 2 lab cluster (ConfigMap kube-system/${LAB_MARKER_NAME} missing or wrong). On the host, restore a cluster snapshot: envs/vagrant/kbook-vm restore cluster"
+      fi
       die "this cluster is not marked as a lab cluster (ConfigMap kube-system/${LAB_MARKER_NAME} missing or wrong). If it is your disposable lab cluster, run: make cluster"
+    fi
   fi
+}
+
+# require_snapshot <name>...
+# Tier 2 labs run inside the VMs (envs/vagrant). Each VM records the snapshot
+# it was built as in /etc/kbook/snapshot; a lab that needs a particular one
+# (for example `prereqs`, where no cluster exists yet) checks it here. Only the
+# host can restore snapshots, so the error says which command to run there.
+KBOOK_SNAPSHOT_FILE="${KBOOK_SNAPSHOT_FILE:-/etc/kbook/snapshot}"
+require_snapshot() {
+  local current="" want
+  [[ -r "$KBOOK_SNAPSHOT_FILE" ]] && current="$(tr -d '[:space:]' < "$KBOOK_SNAPSHOT_FILE")"
+  for want in "$@"; do
+    [[ "$current" == "$want" ]] && return 0
+  done
+  [[ -n "$current" ]] || die "this lab runs on the Tier 2 VMs (snapshot '$1'), but this machine is not one of them. Work on cp1: envs/vagrant/kbook-vm ssh"
+  die "this lab needs the VM snapshot '$1', but the VMs are on '${current}'. On the host, run: envs/vagrant/kbook-vm restore $1"
 }
 
 # wait_for <description> <timeout-seconds> <command...>

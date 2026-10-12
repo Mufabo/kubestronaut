@@ -103,7 +103,7 @@ Example output (ages and versions will differ):
 
 To start over: `make cluster-recreate`. To remove the cluster entirely: `make cluster-delete`.
 
-**Hardware.** Tier 1 labs (this chapter) need about 4 GB of RAM free for Docker. The multi-VM Tier 2 environment used later in the book needs 8 to 16 GB; the book offers a hosted option for readers who do not have that.
+**Hardware.** Tier 1 labs (this chapter) need about 4 GB of RAM free for Docker. The Tier 2 environment used from Chapter 18 on is three VirtualBox VMs that need about 5 GB more (pause the kind cluster with `make cluster-pause` while you use them), plus VirtualBox and Vagrant on your machine; `envs/vagrant/README.md` explains the setup. The book offers a hosted option for readers who do not have that.
 
 ## 2. kubeconfig and contexts
 

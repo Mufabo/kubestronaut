@@ -171,6 +171,26 @@ expect "answer folders outside /tmp/kbook are refused" nonzero "refusing" -- \
 expect "answer folders must be one level below /tmp/kbook" nonzero "refusing" -- \
   bash -c 'source tools/lib.sh; lab_course_remove /tmp/kbook'
 
+# ---- Tier 2: VM snapshots ------------------------------------------------------------
+snapfile="${work}/kbook-snapshot"
+printf 'cluster\n' > "$snapfile"
+expect "require_snapshot accepts the snapshot the VMs are on" 0 "" -- \
+  env KBOOK_SNAPSHOT_FILE="$snapfile" bash -c 'source tools/lib.sh; require_snapshot cluster'
+expect "require_snapshot accepts any of several snapshots" 0 "" -- \
+  env KBOOK_SNAPSHOT_FILE="$snapfile" bash -c 'source tools/lib.sh; require_snapshot prereqs cluster'
+expect "require_snapshot names the host command for the wrong snapshot" nonzero "kbook-vm restore prereqs" -- \
+  env KBOOK_SNAPSHOT_FILE="$snapfile" bash -c 'source tools/lib.sh; require_snapshot prereqs'
+expect "require_snapshot refuses a machine that is not a Tier 2 VM" nonzero "not one of them" -- \
+  env KBOOK_SNAPSHOT_FILE="${work}/no-such-file" bash -c 'source tools/lib.sh; require_snapshot cluster'
+mkdir -p "${sb}/chapters/89-tiertwo/lab"
+printf '### Task 1: x\n' > "${sb}/chapters/89-tiertwo/89-tiertwo.md"
+printf 'LAB_TIER=2\nLAB_SNAPSHOT=cluster-prev\n' > "${sb}/chapters/89-tiertwo/lab/lab.env"
+printf '#!/usr/bin/env bash\necho reset ran\n' > "${sb}/chapters/89-tiertwo/lab/reset.sh"
+expect "a Tier 2 reset points to the host's snapshot restore instead of running" nonzero "kbook-vm restore cluster-prev" -- \
+  bash tools/run-lab.sh 89 reset
+out="$(in_sb bash tools/run-lab.sh 89 reset 2>&1)"
+if [[ "$out" != *"reset ran"* ]]; then pass "a Tier 2 reset never runs reset.sh"; else flunk "a Tier 2 reset never runs reset.sh"; fi
+
 # ---- exam style and mock exams ------------------------------------------------------
 fresh_state kind-kbook kbook
 in_sb bash tools/run-lab.sh 98 setup >/dev/null 2>&1

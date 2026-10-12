@@ -199,7 +199,38 @@ Debugging a check: `LAB_DEBUG=1 make verify CH=n` prints a shell trace, includin
 
 ## Tier 2 labs
 
-Tier 2 labs run against the multi-VM kubeadm environment in `envs/`. They set
-`LAB_TIER=2` and `LAB_CONTEXT`. Reset restores VM snapshots instead of deleting
-namespaces; the snapshot name is recorded in `lab.env` as `LAB_SNAPSHOT`.
-Tier 2 environment work is Phase 2 in `ROADMAP.md`.
+Tier 2 labs run on the three VirtualBox VMs in `envs/vagrant` (`cp1`, `node1`,
+`node2`, a kubeadm cluster). See `envs/vagrant/README.md` for building them. The
+reader works on `cp1`, where the book is mounted at `/kbook`, and runs the usual
+targets there (`make lab CH=19`, `make check CH=19`). Node-level work goes over
+SSH from `cp1` (`ssh node1`), as on the exam's hosts.
+
+`lab.env` for a Tier 2 lab:
+
+```bash
+LAB_TIER=2
+LAB_CONTEXT=kbook-vm          # the context on cp1
+LAB_CLUSTER_NAME=kbook-vm     # the marker ConfigMap's data.cluster on the VM cluster
+LAB_SNAPSHOT=cluster          # prereqs | cluster | cluster-prev
+LAB_NS=ch19-upgrade           # still own a namespace for anything you create in it
+```
+
+Rules on top of the Tier 1 ones:
+
+1. **Name the snapshot, and check it first.** `setup.sh` starts with
+   `require_snapshot "$LAB_SNAPSHOT"`, which reads `/etc/kbook/snapshot` and
+   refuses to run on any other snapshot (or off the VMs), naming the host
+   command that fixes it. On `prereqs` there is no cluster yet, so do not call
+   `require_lab_cluster` there; on the cluster snapshots, call it as usual.
+2. **Reset is a snapshot restore, run on the host.** `make reset` on a Tier 2
+   lab never runs `reset.sh`; `tools/run-lab.sh` prints
+   `kbook-vm restore $LAB_SNAPSHOT` instead. `setup.sh` must therefore work on a
+   freshly restored snapshot; it need not undo node-level changes itself.
+3. **Node-level state is fair game, but only on the VMs.** A Tier 2 lab may change
+   files under `/etc/kubernetes`, systemd units, packages, or etcd, because the
+   snapshot restores all of it. It still never touches the host.
+4. **Checks may read nodes over SSH.** `ssh node1 'cat /var/lib/...'` from
+   `verify.sh` is fine; keep it read-only like every other check.
+5. **CI cannot run VMs.** Tier 2 labs are proven by hand: restore the snapshot,
+   run `make test CH=n` on `cp1`, and record the date in the chapter's plan.
+   `make test-tier2-env` checks the environment itself on any snapshot.

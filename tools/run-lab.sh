@@ -38,6 +38,17 @@ if [[ "$action" == "use-namespace" ]]; then
   exec bash "${here}/use-namespace.sh" "$ch"
 fi
 
+# Tier 2 labs reset by restoring a VM snapshot, which only the host can do.
+if [[ "$action" == reset && -f "${dir}/lab/lab.env" ]]; then
+  read -r tier snap < <(bash -c 'source "$1"; printf "%s %s\n" "${LAB_TIER:-1}" "${LAB_SNAPSHOT:-cluster}"' _ "${dir}/lab/lab.env")
+  if [[ "$tier" == 2 ]]; then
+    echo "Tier 2 labs reset by restoring the VMs' snapshot. On the host, run:" >&2
+    echo "  envs/vagrant/kbook-vm restore ${snap}      (Windows: .\\envs\\vagrant\\kbook-vm.ps1 restore ${snap})" >&2
+    echo "then, back on cp1: make lab CH=${ch}${part:+ PART=${part}}" >&2
+    exit 2
+  fi
+fi
+
 script="${dir}/lab/${action}.sh"
 if [[ ! -f "$script" ]]; then
   if [[ "$action" == "teardown" ]]; then

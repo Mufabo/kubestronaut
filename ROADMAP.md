@@ -83,7 +83,7 @@ kubestronaut-book/
 
 Each lab runs in its own namespace (Tier 1) or snapshot (Tier 2) so that chapters never interfere with each other.
 
-**Hardware requirements to state in Chapter 3:** Tier 1 needs roughly 4 GB RAM free; Tier 2 needs roughly 8 to 16 GB. Point everyone else to Tier 3.
+**Hardware requirements to state in Chapter 3:** Tier 1 needs roughly 4 GB RAM free; Tier 2 needs roughly 5 GB more for its three VMs (with the kind cluster paused), plus about 30 GB of disk for the VMs and snapshots. Point everyone else to Tier 3.
 
 ---
 
@@ -230,7 +230,7 @@ Estimates assume one author working part-time; adjust for your pace and any co-a
 
 ### Phase 2: Part III (~8 weeks)
 
-- [ ] Tier 2 environment built first: Vagrant config, base-image build, snapshot-based reset
+- [x] Tier 2 environment built first: Vagrant config, staged build, snapshot-based reset (`envs/vagrant`, verified by hand 2026-10-12 with `make test-tier2-env` on all three snapshots)
 - [ ] Chapters 17 to 28
 - **Exit criterion:** a full kubeadm cluster can be rebuilt from scratch, upgraded, and restored from an etcd backup by following the book alone.
 
