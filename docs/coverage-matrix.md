@@ -54,9 +54,9 @@ The KCNA curriculum lists topics, not tasks, so each row is broad. Chapters
 | Container Orchestration | Storage | 13 | | | planned |
 | Cloud Native Application Delivery | Application Delivery | 14, 16 | 16/T1–T5 | ch16-q06, q08–q11 | drafted |
 | Cloud Native Application Delivery | Debugging | 04, 15 | 04/T2, 04/T3; P1 Q4 | ch04-q03, q11 | partly |
-| Cloud Native Architecture | Observability | 01, 15, 28 | | ch01-q10 | partly |
-| Cloud Native Architecture | Cloud Native Ecosystem and Principles | 01, 28 | 01 exploration exercise | ch01-q07..q11, q15 | partly |
-| Cloud Native Architecture | Could Native Community and Collaboration | 01, 28 | 01 exploration exercise | ch01-q02, q03, q12..q14 | partly |
+| Cloud Native Architecture | Observability | 01, 15, 28 | | ch01-q10; ch28-q01 | partly |
+| Cloud Native Architecture | Cloud Native Ecosystem and Principles | 01, 28 | 01 and 28 exploration exercises | ch01-q07..q11, q15; ch28-q01..q08 | partly |
+| Cloud Native Architecture | Could Native Community and Collaboration | 01, 28 | 01 and 28 exploration exercises | ch01-q02, q03, q12..q14; ch28-q09..q15 | partly |
 
 ## CKA
 
