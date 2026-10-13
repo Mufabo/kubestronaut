@@ -124,7 +124,7 @@ The KCNA curriculum lists topics, not tasks, so each row is broad. Chapters
 | Application Observability and Maintenance | Utilize container logs | 04, 15 | 04/T3; 15/T1, T3; P1 Q4 | ch04-q11, ch15-q01, q02, q04, q08 | partly |
 | Application Observability and Maintenance | Debugging in Kubernetes | 04, 15, 26 | 04/T2; 15/T1–T2; P1 Q3, Q6 | ch04-q03, q11; ch15-q03, q08, q09 | partly (26 planned) |
 | Application Environment, Configuration and Security | Discover and use resources that extend Kubernetes (CRD, Operators) | 03, 24 | 03/a A6; 24/T2–T4; P1 Q12 | ch03-q12; ch24-q06, q07 | drafted |
-| Application Environment, Configuration and Security | Understand authentication, authorization and admission control | 03, 23, 31 | 03/b3; 23/T1–T5 | ch03-q05, q14; ch23-q01, q06 | partly (31 planned) |
+| Application Environment, Configuration and Security | Understand authentication, authorization and admission control | 03, 23, 31 | 03/b3; 23/T1–T5; 31/T1–T4 | ch03-q05, q14; ch23-q01, q06; ch31-q01–q04, q06, q10 | partly (31 covers authentication, the request path and admission; 33 and 36 go further) |
 | Application Environment, Configuration and Security | Understand requests, limits, quotas | 04, 10 | 04/T4; 10/T3–T4; P1 Q5 | ch04-q07, q09; ch10-q04, q05 | partly (quotas not yet in 10) |
 | Application Environment, Configuration and Security | Define resource requirements | 04, 10 | 04/T4; 10/T3–T4; P1 Q5 | ch04-q07, q09; ch10-q03, q04, q09, q10 | drafted |
 | Application Environment, Configuration and Security | Understand ConfigMaps | 03, 07 | 03/b2 C1; 07/T1, T3–T5; P1 Q11 | ch07-q02, q03, q06, q08 | drafted |
@@ -206,8 +206,8 @@ The KCNA curriculum lists topics, not tasks, so each row is broad. Chapters
 | Kubernetes Cluster Component Security | Client Security | 03, 30 | 03/b1 | ch02-q10; ch03-q08 | partly (03 covers kubeconfig; 30 secures it) |
 | Kubernetes Cluster Component Security | Storage | 13, 22 | | | planned |
 | Kubernetes Security Fundamentals | Pod Security Standards | 33 | | | planned |
-| Kubernetes Security Fundamentals | Pod Security Admissions | 31, 33 | | | planned |
-| Kubernetes Security Fundamentals | Authentication | 31 | | | planned |
+| Kubernetes Security Fundamentals | Pod Security Admissions | 31, 33 | 31/T2 | ch31-q08, q09, q12 | partly (33 planned) |
+| Kubernetes Security Fundamentals | Authentication | 31 | 31/T3 | ch31-q01, q02, q10, q13 | drafted |
 | Kubernetes Security Fundamentals | Secrets | 07, 33 | 03/b2 C2 | | partly |
 | Kubernetes Security Fundamentals | Isolation and Segmentation | 06, 33, 36 | 06/T2 | ch06-q02 | partly (06 explains what namespaces do not isolate) |
 | Kubernetes Security Fundamentals | Audit Logging | 35 | | | planned |
@@ -225,7 +225,7 @@ The KCNA curriculum lists topics, not tasks, so each row is broad. Chapters
 | Platform Security | Service Mesh | 28, 36 | | | planned |
 | Platform Security | PKI | 27, 30 | | | planned |
 | Platform Security | Connectivity | 21, 36 | | | planned |
-| Platform Security | Admission Control | 31 | | | planned |
+| Platform Security | Admission Control | 31 | 31/T1–T2, T4 | ch31-q05–q07, q11 | drafted |
 | Compliance and Security Frameworks | Compliance Frameworks | 29 | | | planned |
 | Compliance and Security Frameworks | Threat Modeling Frameworks | 29 | | | planned |
 | Compliance and Security Frameworks | Supply Chain Compliance | 34 | | | planned |

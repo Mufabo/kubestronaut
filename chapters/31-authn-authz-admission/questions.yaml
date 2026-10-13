@@ -1,0 +1,163 @@
+- id: ch31-q01
+  type: mcq
+  exams: [KCSA]
+  question: "A request reaches the API server with valid credentials. Which stage runs first?"
+  choices:
+    - "Authentication"
+    - "Authorization"
+    - "Validating admission"
+    - "Mutating admission"
+  answer: A
+  explanation: "The API server always authenticates the identity first. Authorization, mutating admission, and validating admission only run for an identified request, in that order."
+
+- id: ch31-q02
+  type: mcq
+  exams: [KCSA]
+  question: "An identity is known and valid, but no authorization mode allows the request. Which HTTP status does the client receive?"
+  choices:
+    - "401 Unauthorized"
+    - "403 Forbidden"
+    - "404 Not Found"
+    - "422 Unprocessable Entity"
+  answer: B
+  explanation: "401 means the identity is missing or invalid. When the identity is known and not allowed, the API server returns 403 Forbidden."
+
+- id: ch31-q03
+  type: mcq
+  exams: [KCSA]
+  question: "The API server runs with --authorization-mode=Node,RBAC. How are the two modes combined?"
+  choices:
+    - "A request must be allowed by both modes"
+    - "The first mode that allows the request wins; if none allows it, the request is forbidden"
+    - "Each mode can remove permissions granted by the other"
+    - "Only RBAC is consulted; Node is used for logging"
+  answer: B
+  explanation: "Authorization modes are asked in order, and any one of them can allow a request. A mode cannot subtract a permission that another mode grants."
+
+- id: ch31-q04
+  type: mcq
+  exams: [KCSA]
+  question: "Which kind of check does RBAC perform?"
+  choices:
+    - "It inspects the contents of an object, such as whether a container is privileged"
+    - "It decides whether an identity may perform a verb on a resource"
+    - "It verifies the signature of a container image"
+    - "It validates the certificate chain of the API server"
+  answer: B
+  explanation: "Authorization decides who may do what to which resource. Inspecting an object's contents is the job of admission, so a Deployment with privileged containers can pass RBAC and still be refused by a policy."
+
+- id: ch31-q05
+  type: mcq
+  exams: [KCSA]
+  question: "Which statement about admission controllers is correct?"
+  choices:
+    - "Validating admission runs before mutating admission"
+    - "Mutating admission runs first, and validating admission runs after the object has been mutated"
+    - "Admission controllers run before authentication"
+    - "Admission controllers can only read objects, never reject them"
+  answer: B
+  explanation: "Mutating admission can change an object, such as adding defaults. Validating admission then checks the object as it will be stored, and it can only accept or reject it."
+
+- id: ch31-q06
+  type: mcq
+  exams: [KCSA]
+  question: "A ValidatingAdmissionPolicy exists in the cluster, but no ValidatingAdmissionPolicyBinding refers to it. What happens to Deployments?"
+  choices:
+    - "They are all refused until a binding is created"
+    - "The policy is not enforced anywhere, because a policy applies only through a binding"
+    - "The policy is enforced cluster-wide by default"
+    - "The policy is enforced in the default Namespace only"
+  answer: B
+  explanation: "A policy says what to check, and a binding says where it applies and what action to take. Without a binding, the policy has no effect."
+
+- id: ch31-q07
+  type: mcq
+  exams: [CKS]
+  question: "A binding for a ValidatingAdmissionPolicy sets validationActions to [Warn] only. What happens to a request that fails the policy?"
+  choices:
+    - "The request is refused with a 403"
+    - "The request is accepted, and the client receives a warning"
+    - "The request is accepted silently, and the failure is only in the audit log"
+    - "The request is queued until the policy passes"
+  answer: B
+  explanation: "Warn accepts the request and returns the failure as a warning to the client. Deny refuses it. Audit records the failure in the audit log without warning the client."
+
+- id: ch31-q08
+  type: mcq
+  exams: [KCSA]
+  question: "Which Pod Security level requires non-root users, the RuntimeDefault seccomp profile, dropped capabilities, and no privilege escalation?"
+  choices:
+    - "privileged"
+    - "baseline"
+    - "restricted"
+    - "unconfined"
+  answer: C
+  explanation: "The restricted level adds those requirements on top of baseline. Baseline blocks the known privilege escalations but does not require non-root users or dropped capabilities."
+
+- id: ch31-q09
+  type: mcq
+  exams: [CKS]
+  question: "A Namespace is labeled pod-security.kubernetes.io/audit=baseline. A Pod that is not allowed at the baseline level is created in it. What happens?"
+  choices:
+    - "The Pod is refused"
+    - "The Pod is created, and the violation is recorded in the audit log"
+    - "The Pod is created, and the client is warned"
+    - "The Namespace label is rejected"
+  answer: B
+  explanation: "The audit mode records a violation in the audit log and does not affect the request. Enforce refuses the Pod, and warn returns a warning to the client."
+
+- id: ch31-q10
+  type: mcq
+  exams: [KCSA]
+  question: "What does kubectl create token ci-bot -n payments produce?"
+  choices:
+    - "A long-lived token stored in a Secret of type kubernetes.io/service-account-token"
+    - "A short-lived token, bound to the ServiceAccount through the TokenRequest API, that expires"
+    - "A client certificate for the user ci-bot"
+    - "A kubeconfig file with the cluster's admin credentials"
+  answer: B
+  explanation: "kubectl create token asks the TokenRequest API for a token with a limited lifetime. Long-lived tokens in Secrets are discouraged, and the command never creates a certificate or copies the admin credentials."
+
+- id: ch31-q11
+  type: mcq
+  exams: [CKS]
+  question: "Which of these is the best fit for a rule that must mutate Pods, such as adding a default label to every one, and that needs reports on existing objects?"
+  choices:
+    - "A ValidatingAdmissionPolicy, which can mutate objects"
+    - "A policy engine such as Kyverno or OPA Gatekeeper"
+    - "A NetworkPolicy"
+    - "An RBAC Role with the verb mutate"
+  answer: B
+  explanation: "ValidatingAdmissionPolicy only validates, so it cannot mutate. Policy engines add mutation and reporting. NetworkPolicy controls traffic, and RBAC has no mutate verb."
+
+- id: ch31-q12
+  type: task
+  exams: [CKS]
+  prompt: "Label the Namespace `payments` so that Pod Security admission enforces the `baseline` level and warns on `restricted`. Show the labels on the Namespace."
+  solution: |
+    ```bash
+    kubectl label namespace payments pod-security.kubernetes.io/enforce=baseline pod-security.kubernetes.io/warn=restricted --overwrite
+    kubectl get namespace payments --show-labels
+    ```
+
+    The `enforce` label refuses Pods that break the baseline level. The `warn` label
+    returns a warning for Pods that break the restricted level, without refusing them.
+    `--overwrite` lets the command replace labels that already exist with those names.
+
+- id: ch31-q13
+  type: task
+  exams: [CKS]
+  prompt: "Show whether a ServiceAccount `ci-bot` in Namespace `payments` may delete Pods in `payments`, and then show the identity a token of `ci-bot` authenticates as, using a kubeconfig of its own. Assume the token is in the file `/tmp/token.txt`."
+  solution: |
+    ```bash
+    kubectl auth can-i delete pods --as=system:serviceaccount:payments:ci-bot -n payments
+    cfg="$(mktemp)"
+    kubectl config view --minify --raw > "$cfg"
+    kubectl --kubeconfig "$cfg" config set-credentials ci-check --token="$(cat /tmp/token.txt)"
+    kubectl --kubeconfig "$cfg" --user=ci-check auth whoami
+    rm -f "$cfg"
+    ```
+
+    `kubectl --token` alone does not replace the client certificate in the
+    kubeconfig, so the answer uses a copy of the kubeconfig that has only the token
+    user. `auth whoami` then reports `system:serviceaccount:payments:ci-bot`.

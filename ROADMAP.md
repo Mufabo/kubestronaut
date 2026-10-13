@@ -167,7 +167,7 @@ Legend: **A** = KCNA, **S** = KCSA, **D** = CKAD, **C** = CKA, **X** = CKS. Tier
 | --- | --- | --- | --- |
 | 29 | Cloud-native security model: 4Cs, threat modeling, compliance frameworks | S | none |
 | 30 | Cluster setup hardening: CIS benchmark (kube-bench), API server flags, TLS | S X | 2 |
-| 31 | AuthN, AuthZ, and admission control (ValidatingAdmissionPolicy, OPA Gatekeeper, Kyverno) | S X | 1/2 |
+| 31 | AuthN, AuthZ, and admission control (ValidatingAdmissionPolicy, OPA Gatekeeper, Kyverno) | S X | 1 |
 | 32 | System hardening: AppArmor, seccomp, host OS footprint | X | 2 |
 | 33 | Microservice hardening: Pod Security Standards, securityContext, secrets management, sandboxed runtimes | S X | 2 |
 | 34 | Supply chain security: image scanning, signing, SBOMs, image admission policy | S X | 1/2 |
