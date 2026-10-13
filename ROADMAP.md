@@ -170,7 +170,7 @@ Legend: **A** = KCNA, **S** = KCSA, **D** = CKAD, **C** = CKA, **X** = CKS. Tier
 | 31 | AuthN, AuthZ, and admission control (ValidatingAdmissionPolicy, OPA Gatekeeper, Kyverno) | S X | 1 |
 | 32 | System hardening: AppArmor, seccomp, host OS footprint | X | 2 |
 | 33 | Microservice hardening: Pod Security Standards, securityContext, secrets management, sandboxed runtimes | S X | 2 |
-| 34 | Supply chain security: image scanning, signing, SBOMs, image admission policy | S X | 1/2 |
+| 34 | Supply chain security: image scanning, signing, SBOMs, image admission policy | S X | 1 |
 | 35 | Runtime security, monitoring, and auditing: Falco, audit logs, immutability, incident response | S X | 2 |
 | 36 | Network security in depth: default-deny, mTLS, encryption in transit | S X | 1 |
 

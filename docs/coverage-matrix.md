@@ -165,10 +165,10 @@ The KCNA curriculum lists topics, not tasks, so each row is broad. Chapters
 | Minimize Microservice Vulnerabilities | Manage kubernetes secrets | 07, 33 | 07/T2 | ch07-q01, q09 | partly (07 drafted; 33 planned) |
 | Minimize Microservice Vulnerabilities | Understand and implement isolation techniques (multi-tenancy, sandboxed containers, etc.) | 33 | | | planned |
 | Minimize Microservice Vulnerabilities | Implement Pod-to-Pod encryption (Cilium, Istio) | 36 | | ch36-q07 (concept) | partly (encryption explained; no mesh or CNI encryption lab) |
-| Supply Chain Security | Minimize base image footprint | 34 | | | planned |
-| Supply Chain Security | Understand your supply chain (e.g. SBOM, CI/CD, artifact repositories) | 16, 34 | | ch16-q06 | partly (16 covers CI/CD and GitOps; 34 planned) |
-| Supply Chain Security | Secure your supply chain (permitted registries, sign and validate artifacts, etc.) | 34 | | | planned |
-| Supply Chain Security | Perform static analysis of user workloads and container images (e.g. Kubesec, KubeLinter) | 34 | | | planned |
+| Supply Chain Security | Minimize base image footprint | 34 | | | planned (34 covers digests; base image size not covered) |
+| Supply Chain Security | Understand your supply chain (e.g. SBOM, CI/CD, artifact repositories) | 16, 34 | 34/T1–T3 | ch16-q06; ch34-q01–q03, q08 | partly (16 covers CI/CD and GitOps; 34 covers SBOMs and artifacts) |
+| Supply Chain Security | Secure your supply chain (permitted registries, sign and validate artifacts, etc.) | 34 | 34/T1–T2 | ch34-q04, q05, q07, q10 | partly (34 covers registries and digests; signature verification is a concept) |
+| Supply Chain Security | Perform static analysis of user workloads and container images (e.g. Kubesec, KubeLinter) | 34 | | ch34-q02 (concept) | partly (scanning explained; no scanner lab) |
 | Monitoring, Logging and Runtime Security | Perform behavioral analytics to detect malicious activities | 35 | | | planned |
 | Monitoring, Logging and Runtime Security | Detect threats within physical infrastructure, apps, networks, data, users and workloads | 35 | | | planned |
 | Monitoring, Logging and Runtime Security | Investigate and identify phases of attack and bad actors within the environment | 35 | | | planned |
@@ -192,7 +192,7 @@ The KCNA curriculum lists topics, not tasks, so each row is broad. Chapters
 | Overview of Cloud Native Security | Cloud Provider and Infrastructure Security | 29, 30 | | | planned |
 | Overview of Cloud Native Security | Controls and Frameworks | 29 | | | planned |
 | Overview of Cloud Native Security | Isolation Techniques | 33 | | | planned |
-| Overview of Cloud Native Security | Artifact Repository and Image Security | 34 | | | planned |
+| Overview of Cloud Native Security | Artifact Repository and Image Security | 34 | 34/T1–T3 | ch34-q01, q09, q11, q12 | drafted |
 | Overview of Cloud Native Security | Workload and Application Code Security | 33, 34 | | | planned |
 | Kubernetes Cluster Component Security | API Server | 02, 30 | 02/T2, 02/T3 | ch02-q01, q06 | partly (02 explains its role; 30 secures it) |
 | Kubernetes Cluster Component Security | Controller Manager | 02, 30 | 02/T3 | ch02-q05 | partly |
@@ -219,8 +219,8 @@ The KCNA curriculum lists topics, not tasks, so each row is broad. Chapters
 | Kubernetes Threat Model | Attacker on the Network | 29, 36 | | | planned |
 | Kubernetes Threat Model | Access to Sensitive Data | 29, 33 | | | planned |
 | Kubernetes Threat Model | Privilege Escalation | 29, 33 | | | planned |
-| Platform Security | Supply Chain Security | 34 | | | planned |
-| Platform Security | Image Repository | 34 | | | planned |
+| Platform Security | Supply Chain Security | 34 | 34/T1–T3 | ch34-q01–q12 | drafted |
+| Platform Security | Image Repository | 34 | 34/T1–T2 | ch34-q10 | partly |
 | Platform Security | Observability | 15, 35 | | | planned |
 | Platform Security | Service Mesh | 28, 36 | | | planned |
 | Platform Security | PKI | 27, 30 | | | planned |
