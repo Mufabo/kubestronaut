@@ -264,8 +264,8 @@ them. They are mapped here so their coverage stays visible.
 | Imperative creation and generated manifests (`--dry-run=client -o yaml`) | 03, 04 | 03/a A5; 03/b2p; 03/final Q1, Q5; 04/T1; P1 Q2, Q10 | ch03-q03, q04, q09; ch04-q06, q12 | drafted |
 | `kubectl wait`, `patch`, `set image`, `replace --force` | 03, 04 | 03/b2p P4; 03/final Q4; 04/T2; P1 Q3 | ch03-q11; ch04-q08 | drafted |
 | `jq` and `yq` | 03 | 03/a A7 (optional) | ch03-q15 | drafted |
-| Fast terminal: aliases, completion, `vim` | 03, 37 | | | partly |
-| Working under time pressure, context per question | 03, 37 | 03/final; P1 (whole exam) | | partly |
+| Fast terminal: aliases, completion, `vim` | 03, 37 | 37 drills | ch37-q01, q07, q08 | partly (37 drills the habits; setup is in 03) |
+| Working under time pressure, context per question | 03, 37 | 03/final; 37 drills; P1 (whole exam) | ch37-q10 | partly |
 
 ## Curriculum revisions checked
 
