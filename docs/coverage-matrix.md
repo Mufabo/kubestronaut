@@ -84,7 +84,7 @@ The KCNA curriculum lists topics, not tasks, so each row is broad. Chapters
 | Workloads and Scheduling | Understand the primitives used to create robust, self-healing, application deployments | 04, 05, 10 | 04/T5; 05/T1, T2, T5; P1 Q18 | ch04-q04, q05; ch05-q01..q03, q06, q07 | partly |
 | Workloads and Scheduling | Configure Pod admission and scheduling (limits, node affinity, etc.) | 04, 06, 10, 17 | 04/T4; 06/T5; 17/T1–T2; P1 Q5 | ch04-q07, q09; ch06-q12; ch17-q02–q05 | partly (17 covers affinity and taints; priority and static Pods in 17 too) |
 | Servicing and Networking | Understand connectivity between Pods | 11, 21 | 21/T1–T2 | ch21-q01, q02 | partly (11 covers Services; 21 covers the CNI) |
-| Servicing and Networking | Define and enforce Network Policies | 21, 36 | 21/T3–T4 | ch21-q03–q06, q08, q09 | partly (36 planned) |
+| Servicing and Networking | Define and enforce Network Policies | 21, 36 | 21/T3–T4; 36/T1–T3 | ch21-q03–q06, q08, q09; ch36-q01–q05, q10, q11 | partly (36 covers default deny, DNS and flows across tiers) |
 | Servicing and Networking | Use ClusterIP, NodePort, LoadBalancer service types and endpoints | 03, 11 | 03/b2 C5; 11/T1–T2; P1 Q11 | ch11-q01–q03, q08; LoadBalancer described only | drafted |
 | Servicing and Networking | Use the Gateway API to manage Ingress traffic | 12 | 12/T4–T5 | ch12-q05, q07, q10, q11 | drafted (checked against the API server; no controller runs) |
 | Servicing and Networking | Know how to use Ingress controllers and Ingress resources | 12 | 12/T1–T3 | ch12-q02–q04, q08 | partly (controllers described; none installed in the lab) |
@@ -164,7 +164,7 @@ The KCNA curriculum lists topics, not tasks, so each row is broad. Chapters
 | Minimize Microservice Vulnerabilities | Use appropriate pod security standards | 33 | | | planned |
 | Minimize Microservice Vulnerabilities | Manage kubernetes secrets | 07, 33 | 07/T2 | ch07-q01, q09 | partly (07 drafted; 33 planned) |
 | Minimize Microservice Vulnerabilities | Understand and implement isolation techniques (multi-tenancy, sandboxed containers, etc.) | 33 | | | planned |
-| Minimize Microservice Vulnerabilities | Implement Pod-to-Pod encryption (Cilium, Istio) | 36 | | | planned |
+| Minimize Microservice Vulnerabilities | Implement Pod-to-Pod encryption (Cilium, Istio) | 36 | | ch36-q07 (concept) | partly (encryption explained; no mesh or CNI encryption lab) |
 | Supply Chain Security | Minimize base image footprint | 34 | | | planned |
 | Supply Chain Security | Understand your supply chain (e.g. SBOM, CI/CD, artifact repositories) | 16, 34 | | ch16-q06 | partly (16 covers CI/CD and GitOps; 34 planned) |
 | Supply Chain Security | Secure your supply chain (permitted registries, sign and validate artifacts, etc.) | 34 | | | planned |
@@ -211,7 +211,7 @@ The KCNA curriculum lists topics, not tasks, so each row is broad. Chapters
 | Kubernetes Security Fundamentals | Secrets | 07, 33 | 03/b2 C2 | | partly |
 | Kubernetes Security Fundamentals | Isolation and Segmentation | 06, 33, 36 | 06/T2 | ch06-q02 | partly (06 explains what namespaces do not isolate) |
 | Kubernetes Security Fundamentals | Audit Logging | 35 | | | planned |
-| Kubernetes Security Fundamentals | Network Policy | 21, 36 | 21/T3–T4 | ch21-q03–q06, q08, q09 | partly (36 planned) |
+| Kubernetes Security Fundamentals | Network Policy | 21, 36 | 21/T3–T4; 36/T1–T3 | ch21-q03–q06, q08, q09; ch36-q01–q05, q10, q11 | drafted |
 | Kubernetes Threat Model | Kubernetes Trust Boundaries and Data Flow | 29 | | | planned |
 | Kubernetes Threat Model | Persistence | 29, 35 | | | planned |
 | Kubernetes Threat Model | Denial of Service | 10, 29 | | | planned |
