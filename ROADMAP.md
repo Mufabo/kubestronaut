@@ -229,10 +229,10 @@ Estimates assume one author working part-time; adjust for your pace and any co-a
 
 ### Phase 2: Part III (~8 weeks)
 
-*Status (2026-10-15): 17, 18, 21 to 26, and 28 are drafted and tested (18 by hand on the VMs). Missing: 19, 20, 27, and the Part III mock exam.*
+*Status (2026-10-15): 17 to 19, 21 to 26, and 28 are drafted and tested (18 and 19 by hand on the VMs). Missing: 20, 27, and the Part III mock exam.*
 
 - [x] Tier 2 environment built first: Vagrant config, staged build, snapshot-based reset (`envs/vagrant`, verified by hand 2026-10-12 with `make test-tier2-env` on all three snapshots)
-- [ ] Chapters 17 to 28 (missing: 19 upgrades, 20 etcd backup and restore, 27 troubleshooting II)
+- [ ] Chapters 17 to 28 (missing: 20 etcd backup and restore, 27 troubleshooting II)
 - [ ] Part III mock exam
 - **Exit criterion:** a full kubeadm cluster can be rebuilt from scratch, upgraded, and restored from an etcd backup by following the book alone.
 
@@ -279,8 +279,8 @@ Estimates assume one author working part-time; adjust for your pace and any co-a
 
 ## 9. Immediate next steps
 
-1. Decide the Kubernetes version. The book pins v1.35.0, upstream stable is v1.37.1, and the CKAD curriculum file is already v1.37. Check which version the exams currently run, and if moving, move before writing more chapters: every chapter's captured output must be re-run.
-2. Finish Part III on the VMs: Chapter 19 (upgrades, from the `cluster-prev` snapshot), Chapter 20 (etcd backup and restore), Chapter 27 (troubleshooting nodes, the kubelet, the control plane, and certificates).
+1. ~~Decide the Kubernetes version~~ Decided 2026-10-15: stay on v1.35. The Linux Foundation lists the CKA as based on v1.35 and moves the exam to a new minor release within about 4 to 8 weeks of its release, so check again before the beta (upstream stable is v1.37.1, and the CKAD curriculum file is already v1.37). A move means re-running every chapter's captured output.
+2. Finish Part III on the VMs: Chapter 20 (etcd backup and restore), Chapter 27 (troubleshooting nodes, the kubelet, the control plane, and certificates).
 3. Write the Part III mock exam.
 4. Finish Part IV: 29, 30, 32, 33, 35. Close the "Minimize base image footprint" gap in 34 (or 16).
 5. Build the Tier 3 devcontainer, so readers without the hardware for Tier 2 have a path.

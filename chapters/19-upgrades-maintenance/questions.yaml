@@ -1,0 +1,166 @@
+- id: ch19-q01
+  type: mcq
+  exams: [CKA]
+  question: "A kubeadm cluster runs v1.33.4. You must bring it to v1.35.0. What is the correct path?"
+  choices:
+    - "Upgrade directly from v1.33.4 to v1.35.0"
+    - "Upgrade to a v1.34 release first, then to v1.35.0"
+    - "Upgrade the kubelets to v1.35.0 first, then the control plane"
+    - "Rebuild the cluster; kubeadm cannot upgrade across minor versions"
+  answer: B
+  explanation: "kubeadm upgrades one minor version at a time, so the cluster goes to 1.34 first and then to 1.35. Patch versions inside a minor version can be skipped."
+
+- id: ch19-q02
+  type: mcq
+  exams: [CKA]
+  question: "The API server runs v1.35.0. Which kubelet version breaks the version skew policy?"
+  choices:
+    - "v1.32.9"
+    - "v1.34.12"
+    - "v1.35.0"
+    - "v1.36.0"
+  answer: D
+  explanation: "A kubelet may be up to three minor versions older than the API server, but never newer. That is why the control plane is upgraded before the kubelets."
+
+- id: ch19-q03
+  type: mcq
+  exams: [CKA]
+  question: "Which command upgrades the control plane on the first control plane node of a kubeadm cluster?"
+  choices:
+    - "`kubeadm upgrade node`"
+    - "`kubeadm upgrade apply v1.35.0`"
+    - "`apt-get upgrade kubelet`"
+    - "`kubeadm init --upgrade`"
+  answer: B
+  explanation: "`kubeadm upgrade apply` runs once, on the first control plane node, and upgrades the static Pods, etcd, and the CoreDNS and kube-proxy add-ons. Other control plane nodes and the workers run `kubeadm upgrade node`."
+
+- id: ch19-q04
+  type: mcq
+  exams: [CKA]
+  question: "After `kubeadm upgrade apply v1.35.0` succeeds, `kubectl get nodes` still shows v1.34.12 for every node. Why?"
+  choices:
+    - "The upgrade failed silently"
+    - "The VERSION column shows each node's kubelet version, and the kubelets have not been upgraded yet"
+    - "kubectl caches node versions for an hour"
+    - "The nodes must be rebooted first"
+  answer: B
+  explanation: "The kubelet is a package on each node, not a Pod, so `kubeadm upgrade` does not replace it. The column changes once the kubelet package is upgraded and the kubelet is restarted."
+
+- id: ch19-q05
+  type: mcq
+  exams: [CKA]
+  question: "On a node set up for 1.34 from pkgs.k8s.io, `apt-cache madison kubeadm` shows no 1.35 packages. What is missing?"
+  choices:
+    - "The node must be drained first"
+    - "The apt source must point at the v1.35 repository, which has its own path per minor version"
+    - "kubeadm 1.35 is only available as a container image"
+    - "The packages are held, which hides newer versions"
+  answer: B
+  explanation: "pkgs.k8s.io has one repository per minor version. Holding a package stops it from being upgraded, but does not hide versions from `apt-cache madison`."
+
+- id: ch19-q06
+  type: mcq
+  exams: [CKA]
+  question: "What does `kubectl cordon node1` do?"
+  choices:
+    - "Evicts every Pod from node1"
+    - "Marks node1 unschedulable; Pods already running there stay"
+    - "Stops the kubelet on node1"
+    - "Removes node1 from the cluster"
+  answer: B
+  explanation: "Cordoning sets `spec.unschedulable: true`, so the scheduler places no new Pods there. `kubectl drain` cordons the node and then also evicts its Pods."
+
+- id: ch19-q07
+  type: mcq
+  exams: [CKA]
+  question: "A drain stops with: cannot delete Pods that declare no controller (use --force to override). What happens to such a Pod if you add `--force`?"
+  choices:
+    - "It is moved to another node"
+    - "It is deleted, and nothing recreates it"
+    - "It stays on the node, which is cordoned"
+    - "It is paused until the node is uncordoned"
+  answer: B
+  explanation: "A Pod without a controller has nothing to recreate it elsewhere. `--force` acknowledges that it will be lost."
+
+- id: ch19-q08
+  type: mcq
+  exams: [CKA]
+  question: "A Deployment has 2 replicas and a PodDisruptionBudget with `minAvailable: 2`. What happens when you drain a node that runs one of its Pods?"
+  choices:
+    - "The drain evicts the Pod immediately"
+    - "The drain retries the eviction and never finishes, because the budget allows no disruption"
+    - "The PDB is deleted automatically"
+    - "The Deployment scales up to 3 replicas on its own"
+  answer: B
+  explanation: "Evictions that would break the budget are refused with HTTP 429, and drain keeps retrying. Allowed disruptions here is 0, so it never succeeds. Fix the budget or add replicas; do not delete the PDB."
+
+- id: ch19-q09
+  type: mcq
+  exams: [CKA]
+  question: "Why does `kubectl drain` need `--ignore-daemonsets` on almost every node?"
+  choices:
+    - "DaemonSet Pods cannot be deleted"
+    - "Evicting them is pointless, because the DaemonSet controller would put them back on the same node; the flag leaves them running"
+    - "The flag deletes the DaemonSets themselves"
+    - "It makes the drain skip PodDisruptionBudgets"
+  answer: B
+  explanation: "DaemonSets run one Pod per node, ignoring the unschedulable mark for many of their Pods. Most clusters run kube-proxy and the CNI plugin as DaemonSets, so nearly every drain needs the flag."
+
+- id: ch19-q10
+  type: mcq
+  exams: [CKA, CKS]
+  question: "Why is keeping a cluster on a supported minor version a security measure?"
+  choices:
+    - "Newer versions disable RBAC by default"
+    - "Only the three newest minor versions receive patch releases, including fixes for vulnerabilities"
+    - "Old versions cannot run NetworkPolicies"
+    - "The API server refuses clients after a year"
+  answer: B
+  explanation: "Each minor version gets patch releases for about 14 months. A cluster on an older minor version gets no fixes for newly found vulnerabilities."
+
+- id: ch19-q11
+  type: task
+  exams: [CKA]
+  prompt: "Take the worker `node1` out of service for maintenance: no Pods except DaemonSet Pods may remain on it, and no new Pods may be scheduled there. Some Pods on it use `emptyDir` volumes."
+  solution: |
+    ```bash
+    kubectl drain node1 --ignore-daemonsets --delete-emptydir-data
+    kubectl get nodes node1
+    kubectl get pods -A -o wide --field-selector spec.nodeName=node1
+    ```
+
+    The node shows `Ready,SchedulingDisabled`, and only DaemonSet Pods, such as `kube-proxy` and `calico-node`, remain. Add `--force` only if Pods without a controller are on the node and the task accepts losing them. When the work is done, `kubectl uncordon node1`.
+
+- id: ch19-q12
+  type: task
+  exams: [CKA]
+  prompt: "On the worker `node1`, which the control plane at v1.35.0 has already been upgraded for, upgrade the node's kubelet configuration and its kubelet to `1.35.0`, and keep the packages held. The apt source already points at the v1.35 repository, and the node is drained."
+  solution: |
+    ```bash
+    ssh node1
+    sudo apt-mark unhold kubeadm kubelet kubectl
+    sudo apt-get update
+    sudo apt-get install -y kubeadm=1.35.0-1.1
+    sudo kubeadm upgrade node
+    sudo apt-get install -y kubelet=1.35.0-1.1 kubectl=1.35.0-1.1
+    sudo apt-mark hold kubeadm kubelet kubectl
+    sudo systemctl daemon-reload
+    sudo systemctl restart kubelet
+    exit
+    kubectl uncordon node1
+    kubectl get nodes node1
+    ```
+
+    `kubeadm upgrade node` rewrites the kubelet's configuration for the new version; the kubelet package and the restart replace the running kubelet.
+
+- id: ch19-q13
+  type: task
+  exams: [CKA]
+  prompt: "In namespace `shop`, create a PodDisruptionBudget named `api` that keeps at most one Pod labelled `app=api` unavailable during voluntary disruptions, and show how many disruptions it currently allows."
+  solution: |
+    ```bash
+    kubectl -n shop create poddisruptionbudget api --selector=app=api --max-unavailable=1
+    kubectl -n shop get pdb api
+    ```
+
+    The `ALLOWED DISRUPTIONS` column shows how many matching Pods may be evicted right now. `--min-available` is the other way to express a budget; a PDB sets one or the other, not both.
