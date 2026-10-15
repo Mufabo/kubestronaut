@@ -207,39 +207,45 @@ Estimates assume one author working part-time; adjust for your pace and any co-a
 
 ### Phase 0: Foundations (2 to 3 weeks)
 
-*Hardening pass done after external review: exact-context plus cluster-marker safety check, no implicit kubeconfig changes (`make use-namespace` is opt-in, `make teardown` restores), CI proofs that `verify` is read-only and that unrelated cluster state survives, question-bank schema validation, cluster version-drift check, and a framework test harness. Still never run against a real kind cluster.*
+*Status (2026-10-15): done except the outside reader. The framework, CI, and the pilot run against a real kind cluster; the hardening pass (exact-context plus cluster-marker safety check, no implicit kubeconfig changes, read-only `verify`, sentinel survival, schema validation, version-drift check, framework test harness) is in place.*
 
-*Status: scaffold, docs, tooling, CI, and the pilot chapter (04) are drafted. Remaining: run the pilot against a real kind cluster and fix what breaks.*
-
-- [ ] Style guide, chapter template, lab-authoring guide
-- [ ] Repo skeleton, `versions.env`, Makefile targets (`lab`, `reset`, `verify`, `solve`)
-- [ ] Shared shell library (`tools/lib.sh`) with assertion and wait helpers
-- [ ] CI pipeline: markdown lint, shellcheck, yamllint, kind-based lab runner
-- [ ] Question-bank format and renderer
-- [ ] Coverage matrix populated from all five current curricula (empty status)
-- [ ] **Pilot chapter (Ch. 04) finished to the full definition of done**
+- [x] Style guide, chapter template, lab-authoring guide
+- [x] Repo skeleton, `versions.env`, Makefile targets (`lab`, `reset`, `verify`, `solve`)
+- [x] Shared shell library (`tools/lib.sh`) with assertion and wait helpers
+- [x] CI pipeline: markdown lint, shellcheck, yamllint, kind-based lab runner
+- [x] Question-bank format and renderer
+- [x] Coverage matrix populated from all five current curricula
+- [ ] **Pilot chapter (Ch. 04) finished to the full definition of done** (only the outside reader is missing)
 - **Exit criterion:** a stranger can clone the repo, run `make lab CH=04`, complete the lab, break it, and `make reset CH=04`.
 
 ### Phase 1: Parts I and II (~8 weeks)
 
-*Status: Chapters 01 to 04 are drafted. Chapter 02 has a read-only cluster-tour lab; Chapter 03 (kubectl fluency) has a six-part lab (a, b1, b2, b2p, b3, final), the practice-shell files in `envs/shell/`, a jq/yq example test, and a cheat-sheet appendix; Chapter 04 is the Pods pilot. All lab scripts pass the framework test loop against a fake `kubectl` and the jq/yq examples pass with the real tools, but nothing has been run against a real kind cluster yet, and the example output shown for `kubectl` commands in the chapters is unverified.*
+*Status (2026-10-15): Chapters 01 to 16 and the Part I and Part II mock exams are drafted, and every Tier 1 lab passes `make test` on kind. Not yet read by anyone at the target level.*
 
-- [ ] Chapters 01 to 16 drafted, tested, reviewed
-- [ ] Tier 3 devcontainer working
+- [x] Chapters 01 to 16 drafted and tested
+- [ ] Chapters 01 to 16 reviewed by a reader at the target level
+- [ ] Tier 3 devcontainer working (`envs/devcontainer` does not exist yet)
 - **Exit criterion:** all Tier 1 labs pass the CI loop; coverage matrix shows KCNA and CKAD material complete.
 
 ### Phase 2: Part III (~8 weeks)
 
+*Status (2026-10-15): 17, 18, 21 to 26, and 28 are drafted and tested (18 by hand on the VMs). Missing: 19, 20, 27, and the Part III mock exam.*
+
 - [x] Tier 2 environment built first: Vagrant config, staged build, snapshot-based reset (`envs/vagrant`, verified by hand 2026-10-12 with `make test-tier2-env` on all three snapshots)
-- [ ] Chapters 17 to 28
+- [ ] Chapters 17 to 28 (missing: 19 upgrades, 20 etcd backup and restore, 27 troubleshooting II)
+- [ ] Part III mock exam
 - **Exit criterion:** a full kubeadm cluster can be rebuilt from scratch, upgraded, and restored from an etcd backup by following the book alone.
 
 ### Phase 3: Part IV (~8 weeks)
+
+*Status (2026-10-15): 31, 34, and 36 are drafted and tested. Missing: 29, 30, 32, 33, 35.*
 
 - [ ] Chapters 29 to 36; pin and test Trivy, Falco, kube-bench, Kyverno/Gatekeeper versions
 - **Exit criterion:** every CKS and KCSA bullet in the coverage matrix is mapped and tested.
 
 ### Phase 4: Part V and mock exams (~4 weeks)
+
+*Status (2026-10-15): 37 is drafted and tested. Missing: 38, 39, and the full CKAD, CKA, and CKS simulators.*
 
 - [ ] Chapters 37 to 39
 - [ ] Five mock exams; time-test each yourself and record how long it took
@@ -273,9 +279,9 @@ Estimates assume one author working part-time; adjust for your pace and any co-a
 
 ## 9. Immediate next steps
 
-1. ~~Decide the Tier 2 tool~~ Decided: **Vagrant**. (Note: Vagrant needs a provider such as VirtualBox or libvirt; the setup guide must say which are supported per OS. Apple Silicon Macs are the awkward case.)
-2. Write `docs/chapter-template.md` and `docs/lab-authoring.md`.
-3. Build the Makefile and `tools/lib.sh`.
-4. Write the pilot chapter (04: Pods) end to end.
-5. Set up CI and make the pilot chapter pass the setup, solve, verify loop.
-6. Run the Pods lab on a real kind cluster (`make cluster && make test CH=4`), then fix whatever breaks. The stub-`kubectl` test only proves the script logic.
+1. Decide the Kubernetes version. The book pins v1.35.0, upstream stable is v1.37.1, and the CKAD curriculum file is already v1.37. Check which version the exams currently run, and if moving, move before writing more chapters: every chapter's captured output must be re-run.
+2. Finish Part III on the VMs: Chapter 19 (upgrades, from the `cluster-prev` snapshot), Chapter 20 (etcd backup and restore), Chapter 27 (troubleshooting nodes, the kubelet, the control plane, and certificates).
+3. Write the Part III mock exam.
+4. Finish Part IV: 29, 30, 32, 33, 35. Close the "Minimize base image footprint" gap in 34 (or 16).
+5. Build the Tier 3 devcontainer, so readers without the hardware for Tier 2 have a path.
+6. Find the first outside reader, starting with the pilot chapter (04).

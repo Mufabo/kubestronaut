@@ -51,7 +51,7 @@ The KCNA curriculum lists topics, not tasks, so each row is broad. Chapters
 | Container Orchestration | Networking | 11, 21 | 11/T1–T5; 21/T1–T5 | ch11-q01–q11; ch21-q01–q11 | partly (26 planned) |
 | Container Orchestration | Security | 23, 29, 33 | 03/b3 | ch03-q05 | partly |
 | Container Orchestration | Troubleshooting | 04, 26 | 04/T2; P1 Q3 | ch04-q03, q11 | partly |
-| Container Orchestration | Storage | 13 | | | planned |
+| Container Orchestration | Storage | 13 | 13/T1–T5 | ch13-q01–q03, q05 | drafted |
 | Cloud Native Application Delivery | Application Delivery | 14, 16 | 16/T1–T5 | ch16-q06, q08–q11 | drafted |
 | Cloud Native Application Delivery | Debugging | 04, 15 | 04/T2, 04/T3; P1 Q4 | ch04-q03, q11 | partly |
 | Cloud Native Architecture | Observability | 01, 15, 28 | | ch01-q10; ch28-q01 | partly |
@@ -148,13 +148,13 @@ The KCNA curriculum lists topics, not tasks, so each row is broad. Chapters
 
 | Domain | Bullet (verbatim) | Chapter | Lab | Questions | Status |
 | --- | --- | --- | --- | --- | --- |
-| Cluster Setup | Use Network security policies to restrict cluster level access | 21, 36 | | | planned |
+| Cluster Setup | Use Network security policies to restrict cluster level access | 21, 36 | 21/T3–T4; 36/T1–T3 | ch21-q03–q06, q08, q09; ch36-q01–q06, q10, q11 | drafted |
 | Cluster Setup | Use CIS benchmark to review the security configuration of Kubernetes components (etcd, kubelet, kubedns, kubeapi) | 30 | | | planned |
 | Cluster Setup | Properly set up Ingress objects with TLS | 12, 30 | 12/T2 | ch12-q06, q09 | partly (30 planned) |
 | Cluster Setup | Protect node metadata and endpoints | 30, 36 | | | planned |
 | Cluster Setup | Verify platform binaries before deploying | 30 | | | planned |
-| Cluster Hardening | Use Role Based Access Controls to minimize exposure | 23, 31 | | | planned |
-| Cluster Hardening | Exercise caution in using service accounts e.g. disable defaults, minimize permissions on newly created ones | 23 | | | planned |
+| Cluster Hardening | Use Role Based Access Controls to minimize exposure | 23, 31 | 23/T1–T2, T5; 31/T4 | ch23-q02–q04, q07–q09; ch31-q03, q04, q13 | drafted |
+| Cluster Hardening | Exercise caution in using service accounts e.g. disable defaults, minimize permissions on newly created ones | 23, 31 | 23/T3–T4; 31/T3 | ch23-q05, q06, q08, q10, q11; ch31-q10 | drafted |
 | Cluster Hardening | Restrict access to Kubernetes API | 30, 31 | | | planned |
 | Cluster Hardening | Upgrade Kubernetes to avoid vulnerabilities | 19 | | | planned |
 | System Hardening | Minimize host OS footprint (reduce attack surface) | 32 | | | planned |
@@ -165,7 +165,7 @@ The KCNA curriculum lists topics, not tasks, so each row is broad. Chapters
 | Minimize Microservice Vulnerabilities | Manage kubernetes secrets | 07, 33 | 07/T2 | ch07-q01, q09 | partly (07 drafted; 33 planned) |
 | Minimize Microservice Vulnerabilities | Understand and implement isolation techniques (multi-tenancy, sandboxed containers, etc.) | 33 | | | planned |
 | Minimize Microservice Vulnerabilities | Implement Pod-to-Pod encryption (Cilium, Istio) | 36 | | ch36-q07 (concept) | partly (encryption explained; no mesh or CNI encryption lab) |
-| Supply Chain Security | Minimize base image footprint | 34 | | | planned (34 covers digests; base image size not covered) |
+| Supply Chain Security | Minimize base image footprint | 34 | | | partly (gap: 34 is written but covers digests, not base image size; add distroless, multi-stage and scratch images to 34 or 16) |
 | Supply Chain Security | Understand your supply chain (e.g. SBOM, CI/CD, artifact repositories) | 16, 34 | 34/T1–T3 | ch16-q06; ch34-q01–q03, q08 | partly (16 covers CI/CD and GitOps; 34 covers SBOMs and artifacts) |
 | Supply Chain Security | Secure your supply chain (permitted registries, sign and validate artifacts, etc.) | 34 | 34/T1–T2 | ch34-q04, q05, q07, q10 | partly (34 covers registries and digests; signature verification is a concept) |
 | Supply Chain Security | Perform static analysis of user workloads and container images (e.g. Kubesec, KubeLinter) | 34 | | ch34-q02 (concept) | partly (scanning explained; no scanner lab) |
@@ -204,7 +204,7 @@ The KCNA curriculum lists topics, not tasks, so each row is broad. Chapters
 | Kubernetes Cluster Component Security | Etcd | 02, 20, 30 | 02/T2 | ch02-q01, q08 | partly |
 | Kubernetes Cluster Component Security | Container Networking | 21, 36 | 21/T1–T2 | ch21-q01, q02 | partly (36 planned) |
 | Kubernetes Cluster Component Security | Client Security | 03, 30 | 03/b1 | ch02-q10; ch03-q08 | partly (03 covers kubeconfig; 30 secures it) |
-| Kubernetes Cluster Component Security | Storage | 13, 22 | | | planned |
+| Kubernetes Cluster Component Security | Storage | 13, 22, 36 | 13/T5; 22/T2 | ch13-q05; ch22-q07; ch36-q09 | partly (storage security, such as encryption at rest, needs 30 or 33) |
 | Kubernetes Security Fundamentals | Pod Security Standards | 33 | | | planned |
 | Kubernetes Security Fundamentals | Pod Security Admissions | 31, 33 | 31/T2 | ch31-q08, q09, q12 | partly (33 planned) |
 | Kubernetes Security Fundamentals | Authentication | 31 | 31/T3 | ch31-q01, q02, q10, q13 | drafted |
@@ -222,13 +222,13 @@ The KCNA curriculum lists topics, not tasks, so each row is broad. Chapters
 | Platform Security | Supply Chain Security | 34 | 34/T1–T3 | ch34-q01–q12 | drafted |
 | Platform Security | Image Repository | 34 | 34/T1–T2 | ch34-q10 | partly |
 | Platform Security | Observability | 15, 35 | | | planned |
-| Platform Security | Service Mesh | 28, 36 | | | planned |
+| Platform Security | Service Mesh | 28, 36 | | ch28-q01–q04; ch36-q07 | drafted (concepts only, no mesh installed) |
 | Platform Security | PKI | 27, 30 | | | planned |
-| Platform Security | Connectivity | 21, 36 | | | planned |
+| Platform Security | Connectivity | 21, 36 | 21/T3–T4; 36/T1–T4 | ch21-q01–q05; ch36-q03–q08, q12 | drafted |
 | Platform Security | Admission Control | 31 | 31/T1–T2, T4 | ch31-q05–q07, q11 | drafted |
 | Compliance and Security Frameworks | Compliance Frameworks | 29 | | | planned |
 | Compliance and Security Frameworks | Threat Modeling Frameworks | 29 | | | planned |
-| Compliance and Security Frameworks | Supply Chain Compliance | 34 | | | planned |
+| Compliance and Security Frameworks | Supply Chain Compliance | 34 | 34/T1–T3 | ch34-q03–q05, q08 | partly (SBOMs, signing and provenance described; compliance frameworks come with 29) |
 | Compliance and Security Frameworks | Automation and Tooling | 30, 34 | | | planned |
 
 ## Gaps found and how they were closed
