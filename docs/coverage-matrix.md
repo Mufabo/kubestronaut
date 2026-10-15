@@ -73,11 +73,11 @@ The KCNA curriculum lists topics, not tasks, so each row is broad. Chapters
 | Storage | Implement storage classes and dynamic volume provisioning | 13, 22 | 13/T1, T5; 22/T1, T4 | ch13-q04, q10; ch22-q01–q04, q08 | drafted |
 | Storage | Configure volume types, access modes and reclaim policies | 13, 22 | 13/T3–T5; 22/T2–T3 | ch13-q01, q03, q05, q07; ch22-q05, q07, q10 | drafted |
 | Storage | Manage persistent volumes and persistent volume claims | 13 | 13/T1–T3 | ch13-q02, q08, q11 | drafted |
-| Troubleshooting | Troubleshoot clusters and nodes | 02, 27 | 02/T1, 02/T3 | ch02-q03, q07 | partly |
-| Troubleshooting | Troubleshoot cluster components | 02, 27 | 02/T2, 02/T3; P1 Q14 | ch02-q01..q05, q07 | partly |
+| Troubleshooting | Troubleshoot clusters and nodes | 02, 27 | 02/T1, 02/T3; 27/T1–T2 | ch02-q03, q07; ch27-q01–q03, q10 | drafted |
+| Troubleshooting | Troubleshoot cluster components | 02, 27 | 02/T2, 02/T3; 27/T3–T5; P1 Q14 | ch02-q01..q05, q07; ch27-q04–q09, q11, q12 | drafted |
 | Troubleshooting | Monitor cluster and application resource usage | 10, 15, 25 | 25/T3 | ch15-q05, q06; ch25-q03, q11 | partly (application metrics described in 15) |
 | Troubleshooting | Manage and evaluate container output streams | 04, 15 | 04/T3; 15/T1; 26/T1 | ch04-q11, ch15-q01, q02, q04; ch26-q01 | partly |
-| Troubleshooting | Troubleshoot services and networking | 11, 21, 26 | 11/T5; 26/T2–T5 | ch11-q02, q11; ch26-q02–q06 | partly (26 covers the application and networking checks; 27 planned) |
+| Troubleshooting | Troubleshoot services and networking | 11, 21, 26 | 11/T5; 26/T2–T5 | ch11-q02, q11; ch26-q02–q06 | drafted |
 | Workloads and Scheduling | Understand application deployments and how to perform rolling update and rollbacks | 05 | 05/T1-T6; P1 Q15-Q17 | ch05-q04..q08, q10..q14 | drafted |
 | Workloads and Scheduling | Use ConfigMaps and Secrets to configure applications | 03, 07 | 03/b2 C1, C2; 07/T1–T5; P1 Q11 | ch07-q01–q03, q08–q11 | drafted |
 | Workloads and Scheduling | Configure workload autoscaling | 25 | 25/T1–T5 | ch25-q01–q03, q06, q07, q08, q09, q10, q11 | drafted (VPA and cluster autoscaler described, not installed) |
@@ -223,7 +223,7 @@ The KCNA curriculum lists topics, not tasks, so each row is broad. Chapters
 | Platform Security | Image Repository | 34 | 34/T1–T2 | ch34-q10 | partly |
 | Platform Security | Observability | 15, 35 | | | planned |
 | Platform Security | Service Mesh | 28, 36 | | ch28-q01–q04; ch36-q07 | drafted (concepts only, no mesh installed) |
-| Platform Security | PKI | 27, 30 | | | planned |
+| Platform Security | PKI | 18, 27, 30 | 27/T4–T5 | ch18-q06, q07; ch27-q07–q09, q11 | partly (kubeadm certificates in 18 and 27; TLS hardening planned in 30) |
 | Platform Security | Connectivity | 21, 36 | 21/T3–T4; 36/T1–T4 | ch21-q01–q05; ch36-q03–q08, q12 | drafted |
 | Platform Security | Admission Control | 31 | 31/T1–T2, T4 | ch31-q05–q07, q11 | drafted |
 | Compliance and Security Frameworks | Compliance Frameworks | 29 | | | planned |

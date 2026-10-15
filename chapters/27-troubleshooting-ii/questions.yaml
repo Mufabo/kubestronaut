@@ -1,0 +1,153 @@
+- id: ch27-q01
+  type: mcq
+  exams: [CKA]
+  question: "A node shows `NotReady`, and `kubectl describe node` reports every condition as `Unknown` with the message \"Kubelet stopped posting node status.\" Where do you look first?"
+  choices:
+    - "The scheduler's logs"
+    - "The kubelet on that node: `systemctl status kubelet` and `journalctl -u kubelet`"
+    - "The CoreDNS Pods"
+    - "The Deployment that runs on the node"
+  answer: B
+  explanation: "Conditions turn `Unknown` when the node controller stops hearing from the kubelet. The cause is on the node: a stopped kubelet, a kubelet that cannot reach the API server, or a node that is down."
+
+- id: ch27-q02
+  type: mcq
+  exams: [CKA]
+  question: "The kubelet on a node is stopped. Which command starts it now and also makes it start at boot?"
+  choices:
+    - "`systemctl start kubelet`"
+    - "`systemctl enable kubelet`"
+    - "`systemctl enable --now kubelet`"
+    - "`kubectl uncordon NODE`"
+  answer: C
+  explanation: "`start` alone does not survive a reboot, and `enable` alone does not start it now. `enable --now` does both. Uncordoning only changes scheduling, not the kubelet."
+
+- id: ch27-q03
+  type: mcq
+  exams: [CKA]
+  question: "Which file tells a kubeadm node's kubelet the address of the API server and the client certificate to use?"
+  choices:
+    - "/var/lib/kubelet/config.yaml"
+    - "/etc/kubernetes/kubelet.conf"
+    - "/etc/kubernetes/manifests/kube-apiserver.yaml"
+    - "/etc/default/kubelet"
+  answer: B
+  explanation: "`kubelet.conf` is the kubelet's kubeconfig: server address and credentials. `/var/lib/kubelet/config.yaml` is its KubeletConfiguration (cgroup driver, static Pod path, and so on); `/etc/default/kubelet` adds extra flags."
+
+- id: ch27-q04
+  type: mcq
+  exams: [CKA]
+  question: "New Pods stay `Pending` with no events at all, and every node is Ready. Which component is the most likely cause?"
+  choices:
+    - "The kubelet on each node"
+    - "The scheduler"
+    - "kube-proxy"
+    - "etcd"
+  answer: B
+  explanation: "A Pod that the scheduler has looked at gets an event, even a `FailedScheduling` one. No events and no node assignment mean nothing is scheduling: check the kube-scheduler Pod in kube-system."
+
+- id: ch27-q05
+  type: mcq
+  exams: [CKA]
+  question: "The kube-apiserver static Pod is down, so `kubectl` gets connection refused. How do you see its containers and logs?"
+  choices:
+    - "`kubectl logs` with `--force`"
+    - "`crictl ps -a` and `crictl logs CONTAINER` on the control plane node, or the files under /var/log/pods"
+    - "Only by rebooting the node"
+    - "`kubeadm logs apiserver`"
+  answer: B
+  explanation: "`kubectl` needs the API server. The container runtime does not: `crictl` lists the exited containers and prints their logs, and the kubelet also writes them under /var/log/pods."
+
+- id: ch27-q06
+  type: mcq
+  exams: [CKA]
+  question: "You fixed a typo in /etc/kubernetes/manifests/kube-controller-manager.yaml. What do you do to apply the change?"
+  choices:
+    - "`kubectl apply -f` the file"
+    - "Nothing; the kubelet sees the changed file and recreates the static Pod"
+    - "Run kubeadm init phase control-plane all"
+    - "Reboot the node"
+  answer: B
+  explanation: "The kubelet watches the static Pod directory. Wait for the new container to start and check it; a manifest with invalid YAML may not start at all, so always look."
+
+- id: ch27-q07
+  type: mcq
+  exams: [CKA]
+  question: "How long are the certificates that kubeadm creates for the API server, the kubelet clients, and the admin kubeconfig valid by default?"
+  choices:
+    - "90 days"
+    - "One year; the CAs are valid for ten"
+    - "Ten years, like the CAs"
+    - "Until the next upgrade"
+  answer: B
+  explanation: "`kubeadm certs check-expiration` lists them. `kubeadm upgrade apply` and `upgrade node` renew them as a side effect, so a cluster upgraded at least yearly rarely sees one expire."
+
+- id: ch27-q08
+  type: mcq
+  exams: [CKA]
+  question: "You ran `kubeadm certs renew apiserver`. How do you confirm that the API server actually serves the renewed certificate?"
+  choices:
+    - "`kubectl get csr`"
+    - "Compare the serial or expiry of /etc/kubernetes/pki/apiserver.crt with what `openssl s_client -connect <IP>:6443` receives"
+    - "`kubeadm certs check-expiration` alone proves it"
+    - "Look for a new Secret in kube-system"
+  answer: B
+  explanation: "`check-expiration` reads the files, not what the running server presents. `openssl s_client` shows the certificate the API server serves. The API server reloads its serving certificate from disk, but components that read certificates from kubeconfig files only at start need a restart; for a static Pod, move its manifest out of /etc/kubernetes/manifests and back."
+
+- id: ch27-q09
+  type: mcq
+  exams: [CKA]
+  question: "Which command shows the expiry date of the certificate in /etc/kubernetes/pki/apiserver.crt?"
+  choices:
+    - "`openssl x509 -in /etc/kubernetes/pki/apiserver.crt -noout -enddate`"
+    - "`openssl rsa -in /etc/kubernetes/pki/apiserver.crt -check`"
+    - "`kubectl get csr`"
+    - "`cat /etc/kubernetes/pki/apiserver.crt`"
+  answer: A
+  explanation: "`openssl x509 -noout -enddate` prints `notAfter=...`. `-text` shows everything, including the subject alternative names. `kubeadm certs check-expiration` shows all of the cluster's certificates at once."
+
+- id: ch27-q10
+  type: task
+  exams: [CKA]
+  prompt: "The worker `node3` is `NotReady`. Find the cause on the node and fix it so the node becomes Ready and stays that way after a reboot."
+  solution: |
+    ```bash
+    kubectl describe node node3 | sed -n '/^Conditions:/,/^Addresses:/p'
+    ssh node3
+    sudo systemctl status kubelet
+    sudo journalctl -u kubelet --no-pager | tail -30
+    # fix what the log names, for example a stopped service:
+    sudo systemctl enable --now kubelet
+    exit
+    kubectl get nodes node3
+    ```
+
+    Common causes, in the order to check: the kubelet stopped or disabled; a wrong path or flag in its systemd drop-in or `/var/lib/kubelet/config.yaml`; a wrong server or certificate in `/etc/kubernetes/kubelet.conf`; the container runtime stopped (`systemctl status containerd`). After editing a unit file, run `systemctl daemon-reload`.
+
+- id: ch27-q11
+  type: task
+  exams: [CKA]
+  prompt: "List the expiry dates of every certificate kubeadm manages in the cluster, and save the residual time of the `apiserver` certificate, as kubeadm shows it, to `/tmp/ch27-q11.txt`."
+  solution: |
+    ```bash
+    sudo kubeadm certs check-expiration
+    sudo kubeadm certs check-expiration | awk '$1 == "apiserver" {print $7}' > /tmp/ch27-q11.txt
+    cat /tmp/ch27-q11.txt
+    ```
+
+    The `RESIDUAL TIME` column (for example `364d`) is the seventh field of the `apiserver` row, after the four words of the date.
+
+- id: ch27-q12
+  type: task
+  exams: [CKA]
+  prompt: "On the control plane node, the kube-scheduler Pod is in `CrashLoopBackOff`. Find out why from its logs, without relying on `kubectl logs`, and fix it."
+  solution: |
+    ```bash
+    sudo crictl ps -a --name kube-scheduler
+    sudo crictl logs CONTAINER_ID          # the newest exited container
+    sudo vim /etc/kubernetes/manifests/kube-scheduler.yaml
+    sudo crictl ps --name kube-scheduler   # running again?
+    kubectl -n kube-system get pod kube-scheduler-cp1
+    ```
+
+    The log names the problem, for example a kubeconfig file that does not exist or an unknown flag. Compare the manifest with the files that do exist (`ls /etc/kubernetes`), fix it, and let the kubelet restart the Pod.
