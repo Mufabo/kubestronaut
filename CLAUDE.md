@@ -17,7 +17,7 @@ make cluster                 # create the kind cluster "kbook" and its safety ma
 make lab|verify|reset|solve|teardown CH=4 [PART=b1]
 make check|question|skip CH=4 [PART=b1]   # step-by-step runner (tools/step.sh)
 make mock|mock-score|mock-reset|mock-solve|mock-teardown EXAM=part1
-make mock-test EXAM=part1    # full CI loop for one mock exam; make test-mocks runs them all
+make mock-test EXAM=part1    # full CI loop for one mock exam; make test-mocks runs every Tier 1 mock
 make test CH=3 [PART=b1]     # full CI loop for one chapter (needs the cluster)
 make test-tier1              # loop over every Tier 1 chapter
 make lint                    # shellcheck + yamllint + markdownlint-cli2
@@ -31,7 +31,21 @@ make test-examples           # every jq/yq example in Chapter 03 against pinned 
 LAB_DEBUG=1 make verify CH=4 # shell trace for failing checks
 ```
 
-CI (`.github/workflows/labs.yml`) runs lint, questions-check, test-render, test-harness, test-shell, test-examples, then a kind cluster with test-lib, test-tier1, and test-mocks. It also runs weekly to catch upstream drift.
+Running one thing at a time:
+
+```bash
+LAB_ONLY_TASK=3 make verify CH=4   # run only check 3 (no match exits 2)
+make check CH=4                    # step-by-step labs: the current task only
+make test CH=3 PART=b1             # one part of a multi-part lab
+make mock-test EXAM=part1          # one mock exam
+python3 tools/test_render_questions.py   # one renderer test file (make test-render runs it)
+bash tools/test-lib.sh             # kubeconfig helpers (needs kubectl, no cluster)
+bash tools/test-shell.sh           # envs/shell (needs no cluster)
+```
+
+No cluster needed: `make lint`, `make questions-check`, `make test-render`, `make test-harness`, `make test-shell`, `make test-lib`, `make test-examples`. Local tools for these: bash, make, shellcheck, yamllint, `markdownlint-cli2` at the version pinned in `versions.env`, pinned `jq` and `yq`, Python 3 with `tools/requirements.txt` (PyYAML), and vim. Labs and `make test*` on a cluster also need docker, kind, and kubectl.
+
+CI (`.github/workflows/labs.yml`) installs the same pinned tools, runs lint, questions-check, test-render, test-harness, test-shell, test-examples, then creates a kind cluster and runs test-lib, test-tier1, and test-mocks. It also runs weekly to catch upstream drift.
 
 ## Architecture
 
@@ -41,13 +55,16 @@ CI (`.github/workflows/labs.yml`) runs lint, questions-check, test-render, test-
 - **`tools/test-lab.sh`** proves, per part: verify fails on the untouched lab and after reset (non-vacuous checks), setup is idempotent, verify is read-only (normalized namespace snapshot via `snapshot-state.sh`/`snapshot-normalize.py` must match before/after), every task fails on its own (`LAB_ONLY_TASK`) on the untouched lab and after reset, verify passes after solve, text tasks and checks match one to one, step-by-step labs pass `make check` for every task in order, and sentinel namespace/ConfigMap/ClusterRole survive with the same UIDs. Run `make test-harness` whenever `tools/` changes.
 - **`tools/step.sh`** is the KodeKloud-style runner. It reads tasks from the chapter text itself: `### Task <id>: ...` headings in `## Hands-on lab` (or `#### Task` under `### Part <part>: ...` for multi-part labs). The Nth heading is `check N` in `verify.sh`; heading ids like `A1` are labels only. Progress lives in `lab/.state/step[-<part>]`. If the headings are `Question N | ...` instead, the lab is exam style: `make lab` prints a banner and `make check` refuses. Mock exams (`mock-exams/<name>/<name>.md`, `## Question` headings) are always exam style.
 - **Tier 2 (`envs/vagrant`)** is three VirtualBox VMs (`cp1`, `node1`, `node2`) built with kubeadm by a host driver (`kbook-vm.ps1` on Windows, `kbook-vm.sh` elsewhere: `build`, `restore <snapshot>`, `ssh`). Snapshots: `prereqs` (tools, no cluster), `cluster` (K8S_VERSION), `cluster-prev` (K8S_PREV_VERSION). Readers and Tier 2 labs run on `cp1` from `/kbook` with context `kbook-vm`; `require_snapshot` checks `/etc/kbook/snapshot`, and `make reset` on a Tier 2 lab only prints the host restore command. CI cannot run it: verify with `make test-tier2-env` on `cp1`. `make cluster-pause`/`cluster-resume` free the RAM the kind cluster holds.
-- **Questions** live in each chapter's `questions.yaml` (types `mcq` and `task`, exam tags limited to KCNA/KCSA/CKAD/CKA/CKS) and are rendered between `<!-- QUESTIONS:START -->` / `<!-- QUESTIONS:END -->` in the chapter file. Edit the YAML, then `make questions`; never hand-edit the rendered block.
+- **Questions** live in each chapter's `questions.yaml` (types `mcq` and `task`, exam tags limited to KCNA/KCSA/CKAD/CKA/CKS). `tools/render-questions.py` renders them between `<!-- QUESTIONS:START -->` / `<!-- QUESTIONS:END -->` in the chapter file. Edit the YAML, then `make questions`; never hand-edit the rendered block. `make questions-check` fails when a chapter file is stale.
+- **Step runner and checks stay in one-to-one order.** `tools/step.sh` builds its task list from the `### Task N` headings in the chapter text, and `check N` in `verify.sh` must be the same task. Adding, removing, or reordering a task means changing both.
+- **Snapshots ignore CNI noise.** The read-only check compares a normalized namespace snapshot (`snapshot-state.sh`, `snapshot-normalize.py`). The normalizer drops the Calico `cni.projectcalico.org/` annotations, so a CNI change does not look like a lab change.
+- **Harness sandbox.** `tools/test-harness.sh` copies the repo into a sandbox and runs the lab framework against `tools/testdata/fake-kubectl.py`, so the loop's guarantees are tested without a cluster. Its copy must not carry a reader's `lab/.state/` (it is deleted from the copy).
 
 ### Chapter layout
 
 `chapters/NN-slug/NN-slug.md` (never `README.md`), `questions.yaml`, optional `manifests/`, and `lab/` with `lab.env`, `setup.sh`, `reset.sh`, `verify.sh`, `solve.sh`, optional `teardown.sh`, `solutions.md`. Copy `chapters/04-pods/` as the single-part template; `chapters/03-kubectl-fluency/` is the multi-part reference (thin dispatchers → `lab/common.sh` → `lab/parts/<part>.sh` defining `part_setup`/`part_verify`/`part_solve`/`part_teardown`). Concept-only chapters (e.g. 01) have no `lab/` and are skipped by `test-tier1`.
 
-A mock exam (`mock-exams/<name>/`) has the same layout, with the questions in `<name>.md`. Its `lab.env` adds `EXAM_MINUTES` and `EXAM_PASS_PERCENT`, lists all its Namespaces in `LAB_SNAPSHOT_NS`, and lists its own contexts in `LAB_EXTRA_CONTEXTS`; `mock-exams/part1` is the reference.
+A mock exam (`mock-exams/<name>/`) has the same layout, with the questions in `<name>.md`. Its `lab.env` adds `EXAM_MINUTES` and `EXAM_PASS_PERCENT`, lists all its Namespaces in `LAB_SNAPSHOT_NS`, and lists its own contexts in `LAB_EXTRA_CONTEXTS`; `mock-exams/part1` is the reference. `mock-exams/part3` runs on the Tier 2 VMs (snapshot `cluster-prev`) and is tested by hand on `cp1`. After `solve.sh`, the test loop requires every question to pass (`KBOOK_REQUIRE_ALL=1`), not only the pass mark.
 
 ### Lab rules that are easy to break
 
@@ -58,11 +75,11 @@ A mock exam (`mock-exams/<name>/`) has the same layout, with the questions in `<
 - With `pipefail`, never end a pipeline in `grep -q`: capture output first, then `grep -q ... <<<"$out"`.
 - Contexts a lab creates must start with the chapter prefix (`ch03-`).
 
-## Writing conventions (from `docs/style-guide.md` / `docs/chapter-template.md`)
+## Writing conventions
 
-- Second person, present tense; no "simply/just/obviously". Explain why before how.
-- `bash` fences for commands (no prompts), separate `text`/`yaml` fences for output. Show imperative `kubectl` first, then the YAML via `--dry-run=client -o yaml`. Commands must have been run on the pinned version.
-- Official API kind capitalization (Pod, Deployment); "control plane node", never "master". Mermaid diagrams only, under ~15 nodes, with a nearby text description.
-- Exam callouts use exactly `> **Exam tip:** ...` and must never imply real exam content. Questions are original, 10–15 per chapter, every answer explained.
-- Labs: 3–6 tasks in KodeKloud style: `### Task N: Title`, one sentence of goal, then a spec list (`- Name: ...`, `- Image: ...`) of exactly what the check enforces. Lab-wide notes go above the first task (the runner shows everything up to the next heading as part of a task). State the goal, not the command. Exam-style labs use `Question N | Title`, a plain `Task weight: N%` line (no emphasis: markdownlint MD036), and a `Use context:` line instead.
-- Markdownlint allows only `<details>`, `<summary>`, `<br>` HTML; line length is not enforced.
+The full rules are in `docs/style-guide.md` and `docs/chapter-template.md`; read them before writing a chapter. The ones easiest to break:
+
+- Commands in `bash` fences with no prompts; output in separate `text`/`yaml` fences. Commands must have been run on the pinned version.
+- Exam callouts use exactly `> **Exam tip:** ...` and must never imply real exam content. Questions are original, 10–15 per chapter, and every answer is explained.
+- Labs are 3–6 tasks as `### Task N: Title`. Each task states the goal and a spec list of exactly what the check enforces. Lab-wide notes go above the first task. Exam-style labs use `Question N | Title`, a plain `Task weight: N%` line (no emphasis, for MD036), and a `Use context:` line.
+- Markdownlint allows only `<details>`, `<summary>`, and `<br>` HTML; line length is not enforced.
