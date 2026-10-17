@@ -105,8 +105,11 @@ mock-teardown: ## Remove mock exam EXAM and restore your kubectl context
 mock-test: ## Run the full CI loop for mock exam EXAM
 	@bash tools/test-lab.sh "$(EXAM)"
 
-test-mocks: ## Run the CI loop for every mock exam
-	@set -e; for d in mock-exams/*/lab; do bash tools/test-lab.sh "$$(basename "$$(dirname "$$d")")"; done
+test-mocks: ## Run the CI loop for every Tier 1 mock exam (Tier 2 mocks run by hand on cp1)
+	@set -e; for d in mock-exams/*/lab; do \
+	  name="$$(basename "$$(dirname "$$d")")"; \
+	  if grep -qE '^LAB_TIER=2' "$$d/lab.env"; then echo "=== $$name: Tier 2, skipped (run make mock-test EXAM=$$name on cp1) ==="; continue; fi; \
+	  bash tools/test-lab.sh "$$name"; done
 
 questions: ## Render questions.yaml into every chapter file
 	@python3 tools/render-questions.py

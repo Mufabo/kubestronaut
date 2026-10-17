@@ -229,11 +229,11 @@ Estimates assume one author working part-time; adjust for your pace and any co-a
 
 ### Phase 2: Part III (~8 weeks)
 
-*Status (2026-10-15): 17 to 28 are drafted and tested (18 to 20 and 27 by hand on the VMs). Missing: the Part III mock exam.*
+*Status (2026-10-15): 17 to 28 are drafted and tested (18 to 20 and 27 by hand on the VMs). The Part III mock exam (on the VMs) is done; Part III is complete apart from outside review.*
 
 - [x] Tier 2 environment built first: Vagrant config, staged build, snapshot-based reset (`envs/vagrant`, verified by hand 2026-10-12 with `make test-tier2-env` on all three snapshots)
 - [x] Chapters 17 to 28
-- [ ] Part III mock exam
+- [x] Part III mock exam (`mock-exams/part3`, on the Tier 2 VMs; verified by hand 2026-10-15)
 - **Exit criterion:** a full kubeadm cluster can be rebuilt from scratch, upgraded, and restored from an etcd backup by following the book alone.
 
 ### Phase 3: Part IV (~8 weeks)
@@ -281,7 +281,7 @@ Estimates assume one author working part-time; adjust for your pace and any co-a
 
 1. ~~Decide the Kubernetes version~~ Decided 2026-10-15: stay on v1.35. The Linux Foundation lists the CKA as based on v1.35 and moves the exam to a new minor release within about 4 to 8 weeks of its release, so check again before the beta (upstream stable is v1.37.1, and the CKAD curriculum file is already v1.37). A move means re-running every chapter's captured output.
 2. ~~Finish Part III on the VMs~~ Done 2026-10-15: Chapters 18, 19, 20, and 27.
-3. Write the Part III mock exam.
+3. ~~Write the Part III mock exam~~ Done 2026-10-15 (`mock-exams/part3`).
 4. Finish Part IV: 29, 30, 32, 33, 35. Close the "Minimize base image footprint" gap in 34 (or 16).
 5. Build the Tier 3 devcontainer, so readers without the hardware for Tier 2 have a path.
 6. Find the first outside reader, starting with the pilot chapter (04).

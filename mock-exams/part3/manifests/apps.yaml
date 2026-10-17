@@ -1,0 +1,91 @@
+# Question 13: the Deployment the HPA scales (it sets a CPU request).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+  labels:
+    app: web
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: web
+  template:
+    metadata:
+      labels:
+        app: web
+    spec:
+      containers:
+        - name: web
+          image: nginx:1.27
+          resources:
+            requests:
+              cpu: 50m
+---
+# Question 14: shop runs, but its Service sends traffic to the wrong port.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: shop
+  labels:
+    app: shop
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: shop
+  template:
+    metadata:
+      labels:
+        app: shop
+    spec:
+      containers:
+        - name: shop
+          image: nginx:1.27
+          ports:
+            - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: shop
+spec:
+  selector:
+    app: shop
+  ports:
+    - port: 80
+      targetPort: 8080
+---
+# Question 14: the client the check uses.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: probe
+  labels:
+    app: probe
+spec:
+  containers:
+    - name: probe
+      image: busybox:1.36
+      command: ["sleep", "infinity"]
+---
+# Question 5: an image tag that does not exist.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: report
+  labels:
+    app: report
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: report
+  template:
+    metadata:
+      labels:
+        app: report
+    spec:
+      containers:
+        - name: report
+          image: nginx:1.27-reprot

@@ -47,7 +47,10 @@ node_ready() { [[ "$(kubectl get node "$1" -o jsonpath='{.status.conditions[?(@.
 
 # Task 1: kubeadm first, then the control plane
 upgrade_packages cp1 kubeadm
-sudo kubeadm upgrade apply -y "$K8S_VERSION" >/dev/null
+# Its preflight runs a health-check Job that must finish in 15 seconds, which a
+# busy one-CPU node can miss. It fails before changing anything, so retry it.
+upgrade_apply_once() { sudo kubeadm upgrade apply -y "$K8S_VERSION" >/dev/null 2>&1; }
+wait_for "kubeadm upgrade apply ${K8S_VERSION}" 1800 upgrade_apply_once
 
 # Task 2: the kubelet and kubectl on cp1
 drain cp1

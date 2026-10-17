@@ -9,6 +9,7 @@ question counts when everything it asks for is right.
 | --- | --- | --- | --- | --- |
 | [`part1`](part1/part1.md) | Part I (Chapters 02 to 06), CKAD/CKA style | 18 | 120 min | 66% |
 | [`part2`](part2/part2.md) | Part II (Chapters 07 to 16), CKAD/CKA style | 14 | 120 min | 66% |
+| [`part3`](part3/part3.md) | Part III (Chapters 17 to 28), CKA style, on the Tier 2 VMs | 16 | 120 min | 66% |
 
 The full CKAD, CKA, and CKS simulators (and the KCNA and KCSA question banks)
 come with Part V; see `ROADMAP.md`.
@@ -21,6 +22,10 @@ make mock-reset EXAM=part1         # start over
 make mock-solve EXAM=part1         # reference solution (spoilers!)
 make mock-teardown EXAM=part1      # remove it and restore your kubectl settings
 ```
+
+`part3` runs on `cp1` of the Tier 2 VMs instead of the kind cluster, from the
+`cluster-prev` snapshot; its question file explains the setup. To start it over,
+restore that snapshot on the host.
 
 Each exam's questions are in `<name>/<name>.md` and its worked solutions in
 `<name>/lab/solutions.md`. Read the solutions only after you have scored.

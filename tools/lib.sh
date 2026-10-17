@@ -325,6 +325,11 @@ finish_checks() {
       return 2
     fi
     printf 'Score: %d%% (%d of %d questions)\n' "$WEIGHT_EARNED" "$CHECKS_PASSED" "$total"
+    # The test loop sets this: a reference solution must answer every question,
+    # not just reach the pass mark.
+    if [[ "${KBOOK_REQUIRE_ALL:-0}" == 1 ]] && ((CHECKS_FAILED > 0)); then
+      printf '%s\n' "${C_RED}NOT ALL QUESTIONS PASSED${C_RST} (required by the test loop)"; return 1
+    fi
     if [[ -n "${KBOOK_PASS_PERCENT:-}" ]]; then
       if ((WEIGHT_EARNED >= KBOOK_PASS_PERCENT)); then
         printf '%s\n' "${C_GRN}PASSED${C_RST} (pass mark ${KBOOK_PASS_PERCENT}%)"; return 0

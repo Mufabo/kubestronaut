@@ -1,0 +1,48 @@
+# Question 7: db, a client that must reach it, and one that must not.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: db
+  labels:
+    app: db
+spec:
+  containers:
+    - name: db
+      image: nginx:1.27
+      ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: db
+spec:
+  selector:
+    app: db
+  ports:
+    - port: 80
+      targetPort: 80
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: api
+  labels:
+    app: api
+spec:
+  containers:
+    - name: api
+      image: busybox:1.36
+      command: ["sleep", "infinity"]
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: other
+  labels:
+    app: other
+spec:
+  containers:
+    - name: other
+      image: busybox:1.36
+      command: ["sleep", "infinity"]

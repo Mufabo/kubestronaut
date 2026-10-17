@@ -81,7 +81,9 @@ run_verify() {
   if [[ -n "$namespaces" ]]; then
     before="$(snapshot)" || fail "could not snapshot namespace(s) '${namespaces}'"
   fi
-  run "$ch" verify "$part" || rc=$?
+  # When verify must pass, every question of an exam-style lab must pass too.
+  if [[ "$expect" == pass ]]; then KBOOK_REQUIRE_ALL=1 run "$ch" verify "$part" || rc=$?
+  else run "$ch" verify "$part" || rc=$?; fi
   if [[ -n "$namespaces" ]]; then
     after="$(snapshot)" || fail "could not snapshot namespace(s) '${namespaces}'"
     if [[ "$before" != "$after" ]]; then

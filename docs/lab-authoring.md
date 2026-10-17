@@ -119,6 +119,11 @@ the scripts, `manifests/` the seeds), so every tool works on it by name:
   context per question. List every Namespace in `LAB_SNAPSHOT_NS`.
 - Cover only chapters that exist. Aim to be harder and more hurried than the
   real exam, as killer.sh is, and randomize every value a reader must find.
+- A mock exam may run on the Tier 2 VMs (`mock-exams/part3`, from the
+  `cluster-prev` snapshot) when the Part it closes needs real nodes: upgrades,
+  etcd, kubelets, static Pods. It follows the Tier 2 rules below as well;
+  `make test-mocks` skips it, so test it by hand on `cp1` with
+  `make mock-test EXAM=<name>`.
 
 ## Step by step (KodeKloud style)
 
@@ -186,7 +191,7 @@ finish_checks
 1. `verify.sh` fails on the untouched lab, and after `reset`; so does every task on its own (`LAB_ONLY_TASK=<id>`).
 2. `setup.sh` is idempotent (run twice in a row).
 3. `verify.sh` is read-only: a normalized snapshot of the lab namespace(s) is identical before and after every verify run.
-4. `verify.sh` passes after `solve.sh`. The tasks in the text and the checks match one to one (no check beyond the last task), and for step-by-step labs `make check` passes every task in order, ending with the lab complete.
+4. `verify.sh` passes after `solve.sh`, and for exam-style labs every question passes, not just enough for the pass mark (the loop sets `KBOOK_REQUIRE_ALL=1`). The tasks in the text and the checks match one to one (no check beyond the last task), and for step-by-step labs `make check` passes every task in order, ending with the lab complete.
 5. Unrelated cluster state survives: a sentinel namespace, ConfigMap, and ClusterRole created before the run must still exist with the same UIDs after every part.
 
 `make test-harness` tests these guarantees themselves against a fake `kubectl` (it deliberately feeds the loop broken labs and unsafe clusters and checks that they are caught). Run it whenever `tools/` changes. `make test-lib` covers the kubeconfig helpers and `make test-render` the question validator.

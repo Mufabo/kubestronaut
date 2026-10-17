@@ -158,6 +158,8 @@ expect "weighted questions print a score" nonzero "Score: 60% (1 of 2 questions)
   bash -c 'source tools/lib.sh; check_weighted 1 60 A h true; check_weighted 2 40 B h false; finish_checks'
 expect "a pass mark lets a mock exam pass without every question" 0 "PASSED (pass mark 60%)" -- \
   env KBOOK_PASS_PERCENT=60 bash -c 'source tools/lib.sh; check_weighted 1 60 A h true; check_weighted 2 40 B h false; finish_checks'
+expect "the test loop requires every question, even above the pass mark" nonzero "NOT ALL QUESTIONS PASSED" -- \
+  env KBOOK_PASS_PERCENT=60 KBOOK_REQUIRE_ALL=1 bash -c 'source tools/lib.sh; check_weighted 1 60 A h true; check_weighted 2 40 B h false; finish_checks'
 expect "below the pass mark a mock exam fails" nonzero "NOT PASSED" -- \
   env KBOOK_PASS_PERCENT=66 bash -c 'source tools/lib.sh; check_weighted 1 60 A h true; check_weighted 2 40 B h false; finish_checks'
 expect "weights that do not add up to 100 are an error" nonzero "add up to 90%" -- \

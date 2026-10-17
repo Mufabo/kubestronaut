@@ -113,6 +113,11 @@ sudo kubeadm upgrade apply -y v1.35.0
 [upgrade] Now please proceed with upgrading the rest of the nodes by following the right order.
 ```
 
+If it stops in its preflight with `[ERROR CreateJob]: Job
+"upgrade-health-check-..." ... did not complete in 15s` instead, the cluster was
+too busy to run kubeadm's health-check Job in time (the lab VMs have one CPU
+each). Nothing has changed yet; run the same command again.
+
 The whole run takes a few minutes. One `E1015 ... request canceled` line in the
 middle is normal: it appears while etcd restarts. The old manifests are backed
 up under `/etc/kubernetes/tmp/kubeadm-backup-manifests-*`.
