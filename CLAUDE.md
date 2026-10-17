@@ -43,6 +43,13 @@ bash tools/test-lib.sh             # kubeconfig helpers (needs kubectl, no clust
 bash tools/test-shell.sh           # envs/shell (needs no cluster)
 ```
 
+Tier 2 labs (Chapters 18, 19, 20, 27) and `mock-exams/part3` run on the VMs, never in CI and never in `test-tier1`/`test-mocks`. Test one by hand: `make cluster-pause` in WSL (frees RAM), restore the lab's `LAB_SNAPSHOT` from the host, then run the loop on `cp1`. `test-lab.sh` checks the snapshot and skips the reset phase, so restore again before every run.
+
+```powershell
+.\envs\vagrant\kbook-vm.ps1 restore cluster-prev                          # host; the lab's LAB_SNAPSHOT
+cd envs\vagrant; vagrant ssh cp1 -c "cd /kbook && make test CH=19"        # or: make mock-test EXAM=part3
+```
+
 No cluster needed: `make lint`, `make questions-check`, `make test-render`, `make test-harness`, `make test-shell`, `make test-lib`, `make test-examples`. Local tools for these: bash, make, shellcheck, yamllint, `markdownlint-cli2` at the version pinned in `versions.env`, pinned `jq` and `yq`, Python 3 with `tools/requirements.txt` (PyYAML), and vim. Labs and `make test*` on a cluster also need docker, kind, and kubectl.
 
 CI (`.github/workflows/labs.yml`) installs the same pinned tools, runs lint, questions-check, test-render, test-harness, test-shell, test-examples, then creates a kind cluster and runs test-lib, test-tier1, and test-mocks. It also runs weekly to catch upstream drift.
@@ -62,7 +69,9 @@ CI (`.github/workflows/labs.yml`) installs the same pinned tools, runs lint, que
 
 ### Chapter layout
 
-`chapters/NN-slug/NN-slug.md` (never `README.md`), `questions.yaml`, optional `manifests/`, and `lab/` with `lab.env`, `setup.sh`, `reset.sh`, `verify.sh`, `solve.sh`, optional `teardown.sh`, `solutions.md`. Copy `chapters/04-pods/` as the single-part template; `chapters/03-kubectl-fluency/` is the multi-part reference (thin dispatchers → `lab/common.sh` → `lab/parts/<part>.sh` defining `part_setup`/`part_verify`/`part_solve`/`part_teardown`). Concept-only chapters (e.g. 01) have no `lab/` and are skipped by `test-tier1`.
+`chapters/NN-slug/NN-slug.md` (never `README.md`), `questions.yaml`, optional `manifests/`, and `lab/` with `lab.env`, `setup.sh`, `reset.sh`, `verify.sh`, `solve.sh`, optional `teardown.sh`, `solutions.md`. Copy `chapters/04-pods/` as the single-part template; `chapters/03-kubectl-fluency/` is the multi-part reference (thin dispatchers → `lab/common.sh` → `lab/parts/<part>.sh` defining `part_setup`/`part_verify`/`part_solve`/`part_teardown`). Concept-only chapters (e.g. 01) have no `lab/` and are skipped by `test-tier1`. Tier 2 labs (`LAB_TIER=2`, `LAB_SNAPSHOT`, `LAB_CONTEXT=kbook-vm`, `LAB_CLUSTER_NAME=kbook-vm` in `lab.env`) have no `reset.sh`; their `setup.sh` calls `require_snapshot` and refuses a cluster that has already been changed, and helpers they share live in `lab/common.sh` (Chapter 20 and 27 are the references; Chapter 18 starts from `prereqs`, with no cluster at all).
+
+Captured command output for Tier 2 chapters comes from scratch scripts in `envs/vagrant/.state/` (git-ignored, mounted on `cp1` at `/kbook/envs/vagrant/.state/`), run with `vagrant ssh cp1 -c "bash /kbook/envs/vagrant/.state/<script>.sh"`. From PowerShell, put multi-command or quoted work in such a script rather than inline: PowerShell 5.1 rejects `&&` and mangles nested quotes.
 
 A mock exam (`mock-exams/<name>/`) has the same layout, with the questions in `<name>.md`. Its `lab.env` adds `EXAM_MINUTES` and `EXAM_PASS_PERCENT`, lists all its Namespaces in `LAB_SNAPSHOT_NS`, and lists its own contexts in `LAB_EXTRA_CONTEXTS`; `mock-exams/part1` is the reference. `mock-exams/part3` runs on the Tier 2 VMs (snapshot `cluster-prev`) and is tested by hand on `cp1`. After `solve.sh`, the test loop requires every question to pass (`KBOOK_REQUIRE_ALL=1`), not only the pass mark.
 
