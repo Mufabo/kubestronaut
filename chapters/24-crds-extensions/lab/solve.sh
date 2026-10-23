@@ -71,3 +71,30 @@ kubectl -n "$LAB_NS" get backups.ch24.example.com -o name > "$LAB_ANSWER_NAMES"
 
 # Task 5: the runtime name is the part before :// in the node's runtime version
 kubectl get node "${CLUSTER_NAME}-worker" -o jsonpath='{.status.nodeInfo.containerRuntimeVersion}' | sed 's#://.*##' > "$LAB_ANSWER_CRI"
+
+# Task 6: the operator first, then what it should manage
+helm repo add jetstack https://charts.jetstack.io --force-update >/dev/null
+helm install "$CM_RELEASE" jetstack/cert-manager --version "$CERT_MANAGER_VERSION" \
+  --namespace "$CM_NS" --create-namespace \
+  --set crds.enabled=true --set global.leaderElection.namespace="$CM_NS" --wait --timeout 5m >/dev/null
+kubectl -n "$LAB_NS" apply -f - >/dev/null <<'YAML'
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: selfsigned
+spec:
+  selfSigned: {}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: site
+spec:
+  secretName: site-tls
+  dnsNames:
+    - site.example.test
+  issuerRef:
+    kind: Issuer
+    name: selfsigned
+YAML
+kubectl -n "$LAB_NS" wait --for=condition=Ready certificate.cert-manager.io/site --timeout=180s >/dev/null

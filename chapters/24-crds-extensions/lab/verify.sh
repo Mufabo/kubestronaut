@@ -49,6 +49,26 @@ t5() {
   [[ -n "$runtime" ]] && file_is "$LAB_ANSWER_CRI" "$runtime"
 }
 
+# Task 6: cert-manager installed with Helm, and a Certificate it issued
+t6() {
+  local release cert sys_leases own_leases
+  command -v helm >/dev/null 2>&1 || return 1
+  release="$(helm list -n "$CM_NS" -f "^${CM_RELEASE}\$" -o json 2>/dev/null)" &&
+  [[ "$release" == *"\"chart\":\"cert-manager-${CERT_MANAGER_VERSION}\""* && "$release" == *'"status":"deployed"'* ]] &&
+  sys_leases="$(kubectl -n kube-system get leases -o name 2>/dev/null)" &&
+  own_leases="$(kubectl -n "$CM_NS" get leases -o name 2>/dev/null)" &&
+  ! grep -q cert-manager <<<"$sys_leases" &&
+  grep -q cert-manager <<<"$own_leases" &&
+  [[ "$(jp issuer.cert-manager.io/selfsigned '{.spec.selfSigned}')" == "{}" ]] &&
+  [[ "$(jp certificate.cert-manager.io/site '{.spec.secretName} {.spec.dnsNames[0]} {.spec.issuerRef.name}')" == "site-tls site.example.test selfsigned" ]] &&
+  [[ "$(jp certificate.cert-manager.io/site '{.status.conditions[?(@.type=="Ready")].status}')" == True ]] &&
+  [[ "$(jp secret/site-tls '{.type}')" == kubernetes.io/tls ]] &&
+  # made by the operator, not by hand: cert-manager annotates the Secrets it issues
+  [[ "$(jp secret/site-tls '{.metadata.annotations.cert-manager\.io/certificate-name}')" == site ]] &&
+  cert="$(jp secret/site-tls '{.data.tls\.crt}' | base64 -d 2>/dev/null)" &&
+  [[ "$(openssl x509 -noout -ext subjectAltName <<<"$cert" 2>/dev/null)" == *"DNS:site.example.test"* ]]
+}
+
 check 1 "CRD ${LAB_CRD}: group ch24.example.com, kind Backup, namespaced, and Established" \
   "kubectl apply the CRD, then kubectl wait --for=condition=Established" t1
 check 2 "Backup nightly exists in ${LAB_NS} with schedule '0 2 * * *' and target db" \
@@ -59,5 +79,8 @@ check 4 "${LAB_ANSWER_NAMES} lists the Backup objects by kind and name" \
   "kubectl get backups.ch24.example.com -o name" t4
 check 5 "${LAB_ANSWER_CRI} names the container runtime of ${CLUSTER_NAME}-worker (the CRI)" \
   "the runtime is in .status.nodeInfo.containerRuntimeVersion, before the ://" t5
+
+check 6 "Helm release cert-manager (${CERT_MANAGER_VERSION}) in ${CM_NS}, leases there; Certificate site (site.example.test, Issuer selfsigned) Ready, and the operator issued site-tls" \
+  "--set crds.enabled=true --set global.leaderElection.namespace=${CM_NS}; then an Issuer with selfSigned: {} and a Certificate that names it" t6
 
 finish_checks

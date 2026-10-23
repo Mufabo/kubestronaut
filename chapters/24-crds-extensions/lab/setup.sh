@@ -5,9 +5,12 @@ here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${here}/../../../tools/lib.sh"
 # shellcheck source=/dev/null
 source "${here}/lab.env"
+# shellcheck source=/dev/null
+source "${here}/common.sh"
 
 require_lab_cluster
 lab_teardown_ns "$LAB_NS"
+remove_operator
 # The CRD is cluster-scoped: remove the leftovers of a previous run. Deleting it
 # also deletes every custom object of that kind.
 kubectl delete crd "$LAB_CRD" --ignore-not-found --wait=true >/dev/null

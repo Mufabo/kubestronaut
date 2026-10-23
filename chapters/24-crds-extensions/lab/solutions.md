@@ -95,6 +95,54 @@ kubectl get node kbook-worker -o jsonpath='{.status.nodeInfo.containerRuntimeVer
 The field reads `containerd://2.2.0`. The part before `://` is the runtime's name,
 `containerd`, which is what the CRI in this cluster is.
 
+## Task 6: cert-manager issues `site-tls`
+
+```bash
+helm repo add jetstack https://charts.jetstack.io
+helm repo update jetstack
+helm install cert-manager jetstack/cert-manager --version v1.21.2 \
+  --namespace ch24-cert-manager --create-namespace \
+  --set crds.enabled=true --set global.leaderElection.namespace=ch24-cert-manager \
+  --wait --timeout 5m
+kubectl api-resources --api-group=cert-manager.io
+```
+
+```yaml
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: selfsigned
+  namespace: ch24-crd
+spec:
+  selfSigned: {}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: site
+  namespace: ch24-crd
+spec:
+  secretName: site-tls
+  dnsNames:
+    - site.example.test
+  issuerRef:
+    kind: Issuer
+    name: selfsigned
+```
+
+```bash
+kubectl apply -f site.yaml
+kubectl -n ch24-crd wait --for=condition=Ready certificate/site --timeout=120s
+kubectl -n ch24-crd get secret site-tls
+kubectl -n ch24-crd describe certificate site
+```
+
+You write the `Issuer` and the `Certificate`; the operator writes the Secret, and
+its events show the private key and the `CertificateRequest` it used. Without
+`crds.enabled=true`, the chart installs no CRDs, and the `Issuer` is refused with
+"no matches for kind". Without the leader-election setting, the operator keeps
+its Leases in `kube-system`.
+
 ## Why these checks accept any correct method
 
 The checks read what the API server stores: the CRD's group, kind, scope and

@@ -98,7 +98,7 @@ The KCNA curriculum lists topics, not tasks, so each row is broad. Chapters
 | Cluster Architecture, Installation and Configuration | Implement and configure a highly-available control plane | 18 | | ch18-q08, q09 | partly (gap: concepts and flags only; a lab needs a load balancer and more control plane nodes than Tier 2 has) |
 | Cluster Architecture, Installation and Configuration | Use Helm and Kustomize to install cluster components | 12, 14 | 12/T6; 14/T1–T4 | ch12-q13; ch14-q01, q06, q11 | drafted (12 installs the Ingress controller with Helm) |
 | Cluster Architecture, Installation and Configuration | Understand extension interfaces (CNI, CSI, CRI, etc.) | 01, 22, 24 | 21/T1–T2; 22/T5; 24/T5 | ch01-q04, q05; ch22-q01–q03; ch24-q03, q04 | drafted |
-| Cluster Architecture, Installation and Configuration | Understand CRDs, install and configure operators | 24 | 24/T1–T4; P3 Q12 | ch24-q01, q02, q05–q07 | partly (gap: no operator is installed; the controller part is described) |
+| Cluster Architecture, Installation and Configuration | Understand CRDs, install and configure operators | 24 | 24/T1–T4, T6; P3 Q12 | ch24-q01, q02, q05–q07, q12, q13 | drafted (cert-manager installed with Helm and configured through its custom resources) |
 
 ## CKAD
 
@@ -256,7 +256,7 @@ already reflect it.
 
 A review of every KCNA, CKA, and CKAD row after Part III found these bullets
 marked `partly (gap: ...)`: the chapters exist, but no hands-on work covers the
-whole bullet yet. The three CKAD gaps and the two Ingress and Helm gaps were closed the same day.
+whole bullet yet. The three CKAD gaps, the two Ingress and Helm gaps, and the operator gap were closed the same day; only the highly available control plane stays conceptual.
 
 | Exam | Bullet | Planned fix |
 | --- | --- | --- |
@@ -265,7 +265,7 @@ whole bullet yet. The three CKAD gaps and the two Ingress and Helm gaps were clo
 | CKAD | Deployment strategies (blue/green, canary) | Closed 2026-10-23: a blue/green switch (16/T6) and a canary by replica ratio in Chapter 16's walkthrough |
 | CKA | Ingress controllers | Closed 2026-10-23: Traefik installed with Helm at a pinned chart version, and requests routed through it (12/T6) |
 | CKA | Helm and Kustomize to install cluster components | Closed 2026-10-23 by the same install (12/T6) |
-| CKA | CRDs and operators | Install a small operator and let it reconcile a custom resource (Chapter 24) |
+| CKA | CRDs and operators | Closed 2026-10-23: cert-manager installed with Helm, issuing and re-issuing a certificate (24/T6) |
 | CKA | Highly available control plane | Stays conceptual: a real one needs a load balancer and more control plane nodes than the Tier 2 VMs provide |
 
 ## Supporting skills (not curriculum bullets)

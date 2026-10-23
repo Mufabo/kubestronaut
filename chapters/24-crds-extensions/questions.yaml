@@ -166,3 +166,48 @@
     ```
 
     `-o name` prints one resource per line, in the form `caches.perf.example.com`.
+
+- id: ch24-q12
+  type: mcq
+  exams: [CKA]
+  question: "cert-manager is installed, and a Certificate `api` names the Secret `api-tls`. Someone deletes `api-tls`. What happens?"
+  choices:
+    - "Nothing until the Certificate is deleted and created again"
+    - "The operator notices the Secret is missing and issues the certificate again into a new `api-tls`"
+    - "The Certificate is deleted too, by garbage collection"
+    - "The API server refuses the deletion"
+  answer: B
+  explanation: "The Certificate is the desired state; the Secret is actual state the operator maintains. Reconciliation detects the difference and issues the certificate again. That is the operator pattern: a custom resource, and a controller that keeps the cluster in line with it."
+
+- id: ch24-q13
+  type: task
+  exams: [CKA]
+  prompt: "cert-manager is running. In namespace `web`, create a self-signed `Issuer` named `local` and a `Certificate` named `portal` for `portal.example.test`, stored in the Secret `portal-tls`. Show that the operator issued it."
+  solution: |
+    ```bash
+    cat <<'YAML' | kubectl -n web apply -f -
+    apiVersion: cert-manager.io/v1
+    kind: Issuer
+    metadata:
+      name: local
+    spec:
+      selfSigned: {}
+    ---
+    apiVersion: cert-manager.io/v1
+    kind: Certificate
+    metadata:
+      name: portal
+    spec:
+      secretName: portal-tls
+      dnsNames:
+        - portal.example.test
+      issuerRef:
+        kind: Issuer
+        name: local
+    YAML
+    kubectl -n web wait --for=condition=Ready certificate/portal --timeout=120s
+    kubectl -n web get certificate,secret
+    kubectl -n web describe certificate portal
+    ```
+
+    `kubectl explain certificate.spec` lists the fields, served by the operator's CRD. The Secret appears without anyone creating it, and the Certificate's events name the `CertificateRequest` the operator made.

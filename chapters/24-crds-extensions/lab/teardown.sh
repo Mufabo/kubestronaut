@@ -8,9 +8,12 @@ here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${here}/../../../tools/lib.sh"
 # shellcheck source=/dev/null
 source "${here}/lab.env"
+# shellcheck source=/dev/null
+source "${here}/common.sh"
 
 require_lab_cluster
 lab_teardown_ns "$LAB_NS"
+remove_operator
 kubectl delete crd "$LAB_CRD" --ignore-not-found --wait=true >/dev/null
 rm -f "$LAB_ANSWER_VALIDATION" "$LAB_ANSWER_NAMES" "$LAB_ANSWER_CRI"
 lab_restore_kubectx "${here}/.state/kubectx"

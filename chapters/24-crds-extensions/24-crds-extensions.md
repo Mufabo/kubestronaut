@@ -13,6 +13,7 @@ After this chapter you can:
 - Explain what a CustomResourceDefinition (CRD) adds to the API, and why a custom object is stored and served like a built-in one
 - Write a CRD with a group, versions, a scope, and an OpenAPI schema, and create custom objects that the schema accepts or refuses
 - Describe the operator pattern: a CRD for the desired state, and a controller that reconciles the cluster toward it
+- Install an operator with Helm, configure it through its own custom resources, and watch it reconcile
 - Name the three extension interfaces that let Kubernetes work with different runtimes, networks, and storage (CRI, CNI, CSI), and find each one on a running cluster
 - Use `kubectl api-resources` and `kubectl explain` to discover custom kinds and their fields
 - Recognize a CRD's versions and their storage version, and explain what a version change requires
@@ -106,6 +107,19 @@ and repeat. The only new part is that the desired state is a type you defined.
 An operator therefore has two parts you can check separately: the CRD, which the
 API server enforces, and the controller, which must be running for the object to
 do anything. A custom object with no controller is valid and inert.
+
+Real operators are installed like any cluster component, usually with Helm, and
+bring several CRDs at once. You then configure them through their custom
+resources, not through flags. **cert-manager** is a good first one: an `Issuer`
+says where certificates come from, and a `Certificate` says which certificate you
+want and in which Secret to keep it. The operator does the rest, and renews the
+certificate before it expires. Two details are typical of operators:
+
+- Their charts keep the CRDs when the release is uninstalled, because deleting a
+  CRD deletes every object of its kind. Removing the CRDs is a separate,
+  deliberate step.
+- Their controllers use leader election, with Leases in a Namespace you can
+  choose. Keep them in the operator's own Namespace rather than `kube-system`.
 
 ### The three extension interfaces
 
@@ -284,6 +298,172 @@ customresourcedefinition.apiextensions.k8s.io "widgets.demo.example.com" deleted
 
 Deleting a CRD deletes every object of its kind, so check first that no one needs them.
 
+### Install an operator and watch it reconcile
+
+Install cert-manager from its chart, with its CRDs, and its leader election in its
+own Namespace:
+
+```bash
+helm repo add jetstack https://charts.jetstack.io
+helm search repo jetstack/cert-manager --version v1.21.2
+helm install cert-manager jetstack/cert-manager --version v1.21.2 --namespace ch24-demo-cm --create-namespace --set crds.enabled=true --set global.leaderElection.namespace=ch24-demo-cm --wait --timeout 5m
+```
+
+```text
+"jetstack" has been added to your repositories
+NAME                 	CHART VERSION	APP VERSION	DESCRIPTION
+jetstack/cert-manager	v1.21.2      	v1.21.2    	A Helm chart for cert-manager
+NAME: cert-manager
+LAST DEPLOYED: Fri Oct 23 15:47:52 2026
+NAMESPACE: ch24-demo-cm
+STATUS: deployed
+REVISION: 1
+TEST SUITE: None
+NOTES:
+cert-manager v1.21.2 has been deployed successfully!
+...
+```
+
+Three controllers run, and six CRDs are new. The API now serves the operator's kinds:
+
+```bash
+kubectl -n ch24-demo-cm get pods
+kubectl api-resources --api-group=cert-manager.io
+```
+
+```text
+NAME                                       READY   STATUS    RESTARTS   AGE
+cert-manager-cainjector-67758b87f7-8zptj   1/1     Running   0          26s
+cert-manager-d9f58588f-g58j2               1/1     Running   0          26s
+cert-manager-webhook-68877cb8f5-kgldl      1/1     Running   0          26s
+NAME                  SHORTNAMES   APIVERSION           NAMESPACED   KIND
+certificaterequests   cr,crs       cert-manager.io/v1   true         CertificateRequest
+certificates          cert,certs   cert-manager.io/v1   true         Certificate
+clusterissuers        ciss         cert-manager.io/v1   false        ClusterIssuer
+issuers               iss          cert-manager.io/v1   true         Issuer
+```
+
+Declare what you want: an `Issuer` that signs its own certificates, and a
+`Certificate` for one host, kept in the Secret `demo-tls`:
+
+```yaml
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: selfsigned
+spec:
+  selfSigned: {}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: demo
+spec:
+  secretName: demo-tls
+  dnsNames:
+    - demo.example.test
+  issuerRef:
+    kind: Issuer
+    name: selfsigned
+```
+
+```bash
+kubectl create namespace ch24-demo
+kubectl -n ch24-demo apply -f cert.yaml
+kubectl -n ch24-demo wait --for=condition=Ready certificate/demo --timeout=120s
+kubectl -n ch24-demo get issuer,certificate
+kubectl -n ch24-demo get secret demo-tls
+kubectl -n ch24-demo get secret demo-tls -o jsonpath='{.data.tls\.crt}' | base64 -d | openssl x509 -noout -subject -ext subjectAltName -enddate
+```
+
+```text
+namespace/ch24-demo created
+issuer.cert-manager.io/selfsigned created
+certificate.cert-manager.io/demo created
+certificate.cert-manager.io/demo condition met
+NAME                                READY   AGE
+issuer.cert-manager.io/selfsigned   True    1s
+
+NAME                               READY   SECRET     AGE
+certificate.cert-manager.io/demo   True    demo-tls   1s
+NAME       TYPE                DATA   AGE
+demo-tls   kubernetes.io/tls   3      1s
+subject=
+X509v3 Subject Alternative Name: critical
+    DNS:demo.example.test
+notAfter=Jan 21 13:48:19 2027 GMT
+```
+
+Nobody created the Secret by hand: the operator did, and its events show how,
+through a private key and a `CertificateRequest`:
+
+```bash
+kubectl -n ch24-demo describe certificate demo | sed -n "/^Events:/,\$p"
+```
+
+```text
+Events:
+  Type    Reason     Age   From                                       Message
+  ----    ------     ----  ----                                       -------
+  Normal  Issuing    1s    cert-manager-certificates-trigger          Issuing certificate as Secret does not exist
+  Normal  Generated  1s    cert-manager-certificates-key-manager      Stored new private key in temporary Secret resource "demo-xbw6g"
+  Normal  Requested  1s    cert-manager-certificates-request-manager  Created new CertificateRequest resource "demo-1"
+  Normal  Issuing    1s    cert-manager-certificates-issuing          The certificate has been successfully issued
+```
+
+Now take the actual state away from the desired one, and let the operator put it
+back:
+
+```bash
+kubectl -n ch24-demo delete secret demo-tls
+sleep 5; kubectl -n ch24-demo get secret demo-tls
+```
+
+```text
+secret "demo-tls" deleted from ch24-demo namespace
+NAME       TYPE                DATA   AGE
+demo-tls   kubernetes.io/tls   3      5s
+```
+
+A new Secret, five seconds old, and a second `CertificateRequest`, `demo-2`, in
+the events. That is reconciliation: the desired state is the `Certificate`, and
+the Secret is kept in line with it.
+
+The Leases for leader election are in the operator's Namespace, as configured:
+
+```bash
+kubectl get leases -n kube-system | grep -c cert-manager
+kubectl get leases -n ch24-demo-cm
+```
+
+```text
+0
+NAME                                      HOLDER                                                                          AGE
+cert-manager-cainjector-leader-election   cert-manager-cainjector-67758b87f7-8zptj_77c4f9ad-5706-40e5-8eae-e5ddf8489f71   26s
+cert-manager-controller                   cert-manager-d9f58588f-g58j2-external-cert-manager-controller                   19s
+```
+
+Uninstall it before the lab, which installs its own release. Helm keeps the CRDs:
+
+```bash
+helm uninstall cert-manager -n ch24-demo-cm
+```
+
+```text
+These resources were kept due to the resource policy:
+[CustomResourceDefinition] challenges.acme.cert-manager.io
+[CustomResourceDefinition] orders.acme.cert-manager.io
+[CustomResourceDefinition] certificaterequests.cert-manager.io
+[CustomResourceDefinition] certificates.cert-manager.io
+[CustomResourceDefinition] clusterissuers.cert-manager.io
+[CustomResourceDefinition] issuers.cert-manager.io
+
+release "cert-manager" uninstalled
+```
+
+Remove the demo Namespaces with `kubectl delete namespace ch24-demo ch24-demo-cm`.
+The lab's setup removes the kept CRDs, so the lab starts without them.
+
 ## Hands-on lab
 
 The lab works like a KodeKloud lab: one task at a time, a check after each, and
@@ -301,7 +481,10 @@ Everything happens in the Namespace `ch24-crd`: use `-n ch24-crd` on every comma
 or run `make use-namespace CH=24` once. The setup creates the namespace only. The
 CRD `backups.ch24.example.com` does not exist at the start, and Task 1 creates it.
 Tasks 2 to 4 depend on it. Task 5 is independent. The lab removes the CRD at
-reset and teardown, which also removes its objects.
+reset and teardown, which also removes its objects. Task 6 installs cert-manager
+with Helm into the Namespace `ch24-cert-manager`; reset and teardown uninstall it
+and remove its CRDs. It needs `helm` (Chapter 14) and access to
+`https://charts.jetstack.io`.
 
 Full solutions are in [`lab/solutions.md`](lab/solutions.md).
 
@@ -345,6 +528,16 @@ Write only the runtime's name, not its version.
 
 - File `/tmp/ch24-cri.txt` holds the runtime name, such as `containerd`
 
+### Task 6: Let an operator issue a certificate
+
+Install cert-manager, then have it issue a self-signed certificate into a Secret.
+
+- Helm release `cert-manager` in a new Namespace `ch24-cert-manager`, from the chart `jetstack/cert-manager` version `v1.21.2` (repository `https://charts.jetstack.io`), with its CRDs
+- Its leader election uses the Namespace `ch24-cert-manager`: no cert-manager Leases in `kube-system`
+- In `ch24-crd`: an `Issuer` named `selfsigned` that signs its own certificates
+- In `ch24-crd`: a `Certificate` named `site` for the DNS name `site.example.test`, issued by `selfsigned` into the Secret `site-tls`
+- The Certificate is `Ready`, and the operator created `site-tls` (type `kubernetes.io/tls`) with that name in the certificate
+
 ## Exam tips
 
 > **Exam tip:** `kubectl explain KIND.FIELD --api-version=GROUP/VERSION` is the fastest way to write a custom resource correctly. It shows the same schema the server enforces, including the required fields.
@@ -362,6 +555,8 @@ Write only the runtime's name, not its version.
 - Confusing the three interfaces: the runtime is CRI, the network plugin is CNI, and the storage driver is CSI.
 - Trusting a schema without testing it. A server-side dry run shows whether it accepts an object before anything is stored.
 - Changing a CRD's storage version without a conversion plan. Existing objects are read through conversion, and a missing conversion breaks them.
+- Creating an operator's Secret or Deployment by hand. Declare the custom resource and let the operator create and keep them.
+- Expecting `helm uninstall` to remove an operator's CRDs. Charts keep them on purpose; delete them only when no object of their kinds is needed.
 
 <!-- QUESTIONS:START -->
 
@@ -423,6 +618,15 @@ Write only the runtime's name, not its version.
 **10. (Task)** `CKA` Write the name of the storage version of the CRD `caches.perf.example.com` into `/tmp/ch24-q10.txt`, and nothing else.
 
 **11. (Task)** `CKA` List the resources that the group `perf.example.com` provides, by their names, with `kubectl api-resources`, and write them to `/tmp/ch24-q11.txt`.
+
+**12.** `CKA` cert-manager is installed, and a Certificate `api` names the Secret `api-tls`. Someone deletes `api-tls`. What happens?
+
+- **A.** Nothing until the Certificate is deleted and created again
+- **B.** The operator notices the Secret is missing and issues the certificate again into a new `api-tls`
+- **C.** The Certificate is deleted too, by garbage collection
+- **D.** The API server refuses the deletion
+
+**13. (Task)** `CKA` cert-manager is running. In namespace `web`, create a self-signed `Issuer` named `local` and a `Certificate` named `portal` for `portal.example.test`, stored in the Secret `portal-tls`. Show that the operator issued it.
 
 <details>
 <summary>Answers</summary>
@@ -513,6 +717,38 @@ cat /tmp/ch24-q11.txt
 ```
 
 `-o name` prints one resource per line, in the form `caches.perf.example.com`.
+
+**12. B.** The Certificate is the desired state; the Secret is actual state the operator maintains. Reconciliation detects the difference and issues the certificate again. That is the operator pattern: a custom resource, and a controller that keeps the cluster in line with it.
+
+**13.**
+
+```bash
+cat <<'YAML' | kubectl -n web apply -f -
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: local
+spec:
+  selfSigned: {}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: portal
+spec:
+  secretName: portal-tls
+  dnsNames:
+    - portal.example.test
+  issuerRef:
+    kind: Issuer
+    name: local
+YAML
+kubectl -n web wait --for=condition=Ready certificate/portal --timeout=120s
+kubectl -n web get certificate,secret
+kubectl -n web describe certificate portal
+```
+
+`kubectl explain certificate.spec` lists the fields, served by the operator's CRD. The Secret appears without anyone creating it, and the Certificate's events name the `CertificateRequest` the operator made.
 
 </details>
 
