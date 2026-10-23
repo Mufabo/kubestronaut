@@ -89,14 +89,14 @@ The KCNA curriculum lists topics, not tasks, so each row is broad. Chapters
 | Servicing and Networking | Define and enforce Network Policies | 21, 36 | 21/T3–T4; 36/T1–T3; P3 Q7 | ch21-q03–q06, q08, q09; ch36-q01–q05, q10, q11 | drafted |
 | Servicing and Networking | Use ClusterIP, NodePort, LoadBalancer service types and endpoints | 03, 11 | 03/b2 C5; 11/T1–T2; P1 Q11 | ch11-q01–q03, q08; LoadBalancer described only | drafted |
 | Servicing and Networking | Use the Gateway API to manage Ingress traffic | 12 | 12/T4–T5 | ch12-q05, q07, q10, q11 | drafted (checked against the API server; no controller runs) |
-| Servicing and Networking | Know how to use Ingress controllers and Ingress resources | 12 | 12/T1–T3 | ch12-q02–q04, q08 | partly (gap: no Ingress controller is installed, so no request goes through one) |
+| Servicing and Networking | Know how to use Ingress controllers and Ingress resources | 12 | 12/T1–T3, T6 | ch12-q02–q04, q08, q12, q13 | drafted (Traefik installed with Helm; requests sent through it) |
 | Servicing and Networking | Understand and use CoreDNS | 11, 21 | 11/T3–T4; 21/T2 | ch11-q05–q07; ch21-q07, q11 | drafted |
 | Cluster Architecture, Installation and Configuration | Manage role based access control (RBAC) | 03, 23 | 03/b3; 23/T1–T2, T5; P3 Q10, Q11 | ch03-q05, q14; ch23-q02–q04, q06, q07 | drafted |
 | Cluster Architecture, Installation and Configuration | Prepare underlying infrastructure for installing a Kubernetes cluster | 18 | 18 walkthrough (prepared on the `prereqs` snapshot) | ch18-q03, q04, q05, q13 | drafted (the reader inspects the preparation; `bootstrap-os.sh` and `bootstrap-tools.sh` script it) |
 | Cluster Architecture, Installation and Configuration | Create and manage Kubernetes clusters using kubeadm | 18 | 18/T1–T5; P3 Q3 | ch18-q01, q02, q06, q07, q10–q12, q14 | drafted (verified by hand on the Tier 2 VMs) |
 | Cluster Architecture, Installation and Configuration | Manage the lifecycle of Kubernetes clusters | 19, 20 | 19/T1–T5; 20/T1–T4; P3 Q4, Q6 | ch19-q01–q09, q11–q13; ch20-q01–q12 | drafted |
 | Cluster Architecture, Installation and Configuration | Implement and configure a highly-available control plane | 18 | | ch18-q08, q09 | partly (gap: concepts and flags only; a lab needs a load balancer and more control plane nodes than Tier 2 has) |
-| Cluster Architecture, Installation and Configuration | Use Helm and Kustomize to install cluster components | 14 | 14/T1–T4 | ch14-q01, q06, q11 | partly (gap: 14 installs an application chart, not a cluster component) |
+| Cluster Architecture, Installation and Configuration | Use Helm and Kustomize to install cluster components | 12, 14 | 12/T6; 14/T1–T4 | ch12-q13; ch14-q01, q06, q11 | drafted (12 installs the Ingress controller with Helm) |
 | Cluster Architecture, Installation and Configuration | Understand extension interfaces (CNI, CSI, CRI, etc.) | 01, 22, 24 | 21/T1–T2; 22/T5; 24/T5 | ch01-q04, q05; ch22-q01–q03; ch24-q03, q04 | drafted |
 | Cluster Architecture, Installation and Configuration | Understand CRDs, install and configure operators | 24 | 24/T1–T4; P3 Q12 | ch24-q01, q02, q05–q07 | partly (gap: no operator is installed; the controller part is described) |
 
@@ -256,15 +256,15 @@ already reflect it.
 
 A review of every KCNA, CKA, and CKAD row after Part III found these bullets
 marked `partly (gap: ...)`: the chapters exist, but no hands-on work covers the
-whole bullet yet. The three CKAD gaps were closed the same day.
+whole bullet yet. The three CKAD gaps and the two Ingress and Helm gaps were closed the same day.
 
 | Exam | Bullet | Planned fix |
 | --- | --- | --- |
 | CKAD | Choose and use the right workload resource | Closed 2026-10-23: a StatefulSet with a claim per replica (13/T6) and a DaemonSet node agent (09/T6) |
 | CKAD | Requests, limits, quotas | Closed 2026-10-23: a ResourceQuota and a LimitRange, and a Pod that runs with its defaults (10/T6) |
 | CKAD | Deployment strategies (blue/green, canary) | Closed 2026-10-23: a blue/green switch (16/T6) and a canary by replica ratio in Chapter 16's walkthrough |
-| CKA | Ingress controllers | Install an Ingress controller with Helm and send real requests through it (Chapter 12, or a new lab) |
-| CKA | Helm and Kustomize to install cluster components | The same install closes this one: a cluster component installed from a chart |
+| CKA | Ingress controllers | Closed 2026-10-23: Traefik installed with Helm at a pinned chart version, and requests routed through it (12/T6) |
+| CKA | Helm and Kustomize to install cluster components | Closed 2026-10-23 by the same install (12/T6) |
 | CKA | CRDs and operators | Install a small operator and let it reconcile a custom resource (Chapter 24) |
 | CKA | Highly available control plane | Stays conceptual: a real one needs a load balancer and more control plane nodes than the Tier 2 VMs provide |
 

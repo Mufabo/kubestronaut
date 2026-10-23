@@ -5,6 +5,8 @@ here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${here}/../../../tools/lib.sh"
 # shellcheck source=/dev/null
 source "${here}/lab.env"
+# shellcheck source=/dev/null
+source "${here}/common.sh"
 
 require_lab_cluster
 
@@ -13,6 +15,7 @@ require_lab_cluster
 kubectl apply --server-side -f "https://github.com/kubernetes-sigs/gateway-api/releases/download/${GATEWAY_API_VERSION}/standard-install.yaml" >/dev/null
 
 lab_teardown_ns "$LAB_NS"
+remove_controller
 # Cluster-scoped leftovers from a previous run.
 kubectl delete gatewayclass "$LAB_GATEWAYCLASS" --ignore-not-found >/dev/null
 lab_create_ns "$LAB_NS"
@@ -34,5 +37,10 @@ metadata:
 spec:
   controllerName: example.com/edge-controller
 YAML
+
+# Task 6: a backend that answers, and a client to send requests from.
+k apply -f "${here}/../manifests/web.yaml" >/dev/null
+k rollout status deployment/web --timeout=180s >/dev/null
+wait_for "pod client Running" 180 pod_phase_is "$LAB_NS" client Running
 
 info "Lab ready. Namespace: ${LAB_NS} (use -n ${LAB_NS}, or run: make use-namespace CH=12)"

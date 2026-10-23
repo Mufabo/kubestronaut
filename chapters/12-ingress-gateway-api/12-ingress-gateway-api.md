@@ -16,6 +16,7 @@ After this chapter you can:
 - Describe the three Gateway API resources (GatewayClass, Gateway, HTTPRoute), and which team owns each one
 - Create a TLS Secret from a certificate and key, and reference it from an Ingress or a Gateway
 - Read the status conditions that a controller writes, and recognize when no controller is running
+- Install an Ingress controller with Helm at a pinned chart version, and send requests through it
 
 ## Concepts
 
@@ -109,6 +110,14 @@ documentation for the `IngressClass` name and its annotations. Controller-specif
 features, such as rewriting paths or limiting request sizes, are usually set with
 annotations, and those differ between controllers. The Kubernetes fields in this
 chapter do not.
+
+Controllers are cluster components, and they are usually installed with Helm
+(Chapter 14): a chart from the project's repository, at a pinned version, with a
+few values set for the cluster. This chapter uses **Traefik**, which is
+maintained, has a Helm chart, and implements both Ingress and the Gateway API.
+Its chart creates an IngressClass named `traefik`, by default marked as the
+cluster's **default class**: an Ingress without `ingressClassName` is then
+handled by Traefik too. Turn that off unless it is what you want.
 
 ### The Gateway API
 
@@ -329,6 +338,112 @@ accepted the Gateway, so it has no address and is not programmed. The YAML is
 valid, because the API server accepted it. With a real controller for the
 class, these conditions would move to `True`.
 
+### Install a controller with Helm and route through it
+
+Install Traefik from its chart repository into a Namespace of its own. Pin the
+chart version, and check two defaults before you install: the chart creates a
+`LoadBalancer` Service, which stays `<pending>` on kind, and it makes its
+IngressClass the cluster default:
+
+```bash
+helm repo add traefik https://traefik.github.io/charts
+helm repo update traefik
+helm search repo traefik/traefik --version 41.7.1
+helm show values traefik/traefik --version 41.7.1 | grep -n -A3 "^ingressClass:"
+```
+
+```text
+"traefik" has been added to your repositories
+Hang tight while we grab the latest from your chart repositories...
+...Successfully got an update from the "traefik" chart repository
+Update Complete. ⎈Happy Helming!⎈
+NAME           	CHART VERSION	APP VERSION	DESCRIPTION
+traefik/traefik	41.7.1       	v3.7.14    	A Traefik based Kubernetes ingress controller
+126:ingressClass:  # @schema additionalProperties: false
+127-  # -- Create a default IngressClass for Traefik
+128-  enabled: true
+129-  isDefaultClass: true
+```
+
+The Service type is under `service.spec.type` in this chart. A wrong key, such as
+`service.type`, is accepted without an error and changes nothing; a first run
+of this walkthrough with that key still got a `LoadBalancer` Service. So check
+what the release really received with `helm get values`:
+
+```bash
+helm install traefik traefik/traefik --version 41.7.1 --namespace ch12-demo-traefik --create-namespace --set service.spec.type=ClusterIP --set ingressClass.isDefaultClass=false
+kubectl -n ch12-demo-traefik rollout status deployment/traefik --timeout=180s
+helm get values traefik -n ch12-demo-traefik
+kubectl -n ch12-demo-traefik get pods,services
+kubectl get ingressclass
+```
+
+```text
+NAME: traefik
+LAST DEPLOYED: Fri Oct 23 15:39:29 2026
+NAMESPACE: ch12-demo-traefik
+STATUS: deployed
+REVISION: 1
+TEST SUITE: None
+NOTES:
+traefik with docker.io/traefik:v3.7.14 has been deployed successfully on ch12-demo-traefik namespace!
+Waiting for deployment "traefik" rollout to finish: 0 of 1 updated replicas are available...
+deployment "traefik" successfully rolled out
+USER-SUPPLIED VALUES:
+ingressClass:
+  isDefaultClass: false
+service:
+  spec:
+    type: ClusterIP
+NAME                           READY   STATUS    RESTARTS   AGE
+pod/traefik-5df8d67554-4b6n5   1/1     Running   0          4s
+
+NAME              TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)          AGE
+service/traefik   ClusterIP   10.96.246.77   <none>        80/TCP,443/TCP   4s
+NAME      CONTROLLER                      PARAMETERS   AGE
+traefik   traefik.io/ingress-controller   <none>       4s
+```
+
+To have something to route to, create a Namespace `ch12-demo` with a small web
+server, `web`, that answers `hello from web` (a busybox `httpd`, as in Chapter
+16's blue/green walkthrough), a Service `web` on port 80, and a Pod `client`
+(`kubectl -n ch12-demo run client --image=busybox:1.36 -- sleep 3600`). Then an
+Ingress with the class `traefik`, and a request through the controller's
+Service with the right `Host` header, and one with a host no rule matches:
+
+```bash
+kubectl -n ch12-demo create ingress web --class=traefik --rule="web.example.test/*=web:80"
+kubectl -n ch12-demo exec client -- wget -qO- --header "Host: web.example.test" http://traefik.ch12-demo-traefik.svc.cluster.local
+kubectl -n ch12-demo exec client -- wget -qO- --header "Host: other.example.test" http://traefik.ch12-demo-traefik.svc.cluster.local
+```
+
+```text
+ingress.networking.k8s.io/web created
+hello from web
+wget: server returned error: HTTP/1.1 404 Not Found
+command terminated with exit code 1
+```
+
+The controller routes by host: a request for a host no rule names gets a 404
+from Traefik itself. Uninstall the demo before the lab, because the lab installs
+its own release, and two releases cannot both own the IngressClass `traefik`.
+`helm uninstall` removes the IngressClass but leaves the chart's CRDs:
+
+```bash
+helm uninstall traefik -n ch12-demo-traefik
+kubectl get ingressclass
+kubectl get crd -o name | grep -c traefik.io
+```
+
+```text
+release "traefik" uninstalled
+No resources found
+25
+```
+
+Then remove the two demo Namespaces with
+`kubectl delete namespace ch12-demo ch12-demo-traefik`.
+
 ## Hands-on lab
 
 The lab works like a KodeKloud lab: one task at a time, a check after each, and
@@ -345,9 +460,12 @@ make verify CH=12    # check every task at once
 Everything happens in the Namespace `ch12-edge`: use `-n ch12-edge` on every
 command, or run `make use-namespace CH=12` once. The setup installs the pinned
 Gateway API CRDs, creates three Services (`shop`, `docs`, and `api`), and
-creates the GatewayClass `ch12-edge-class`. The lab checks the objects the API
-server stores. It does not run a controller, so it cannot test traffic. The
-Services have no Pods behind them, which is fine for the checks.
+creates the GatewayClass `ch12-edge-class`. Tasks 1 to 5 check the objects the
+API server stores: no controller runs for them, and the Services `shop`, `docs`,
+and `api` have no Pods. Task 6 is different: you install a real controller, and
+the check sends requests through it. For that, the setup also creates a Deployment
+and Service `web` that answer `hello from web`, and a Pod `client`. Task 6 needs
+`helm` (Chapter 14) and access to `https://traefik.github.io/charts`.
 
 Full solutions are in [`lab/solutions.md`](lab/solutions.md).
 
@@ -405,11 +523,23 @@ Create an HTTPRoute with the following specification.
 - Match: path prefix `/`
 - Backend: Service `shop`, port `80`
 
+### Task 6: Install a controller and route through it
+
+Install the Traefik Ingress controller with Helm, then send `web.example.test`
+through it to the Service `web`.
+
+- Helm release `traefik` in a new Namespace `ch12-traefik`, from the chart `traefik/traefik` version `41.7.1` (repository `https://traefik.github.io/charts`)
+- The controller's Service is of type `ClusterIP`, and its IngressClass `traefik` is not the cluster default
+- Ingress `web` in `ch12-edge`: class `traefik`, host `web.example.test`, path `/` with path type `Prefix`, backend Service `web`, port `80`
+- From the Pod `client`, a request to `http://traefik.ch12-traefik.svc.cluster.local` with the header `Host: web.example.test` returns `hello from web`
+
 ## Exam tips
 
 > **Exam tip:** `kubectl create ingress NAME --class=CLASS --rule="HOST/PATH=SERVICE:PORT"` writes the whole Ingress for you. Add `*` to the path for a `Prefix` match, and leave it off for `Exact`. The TLS block is not part of that command, so add it to the YAML from `--dry-run=client -o yaml`.
 >
 > **Exam tip:** `kubectl create secret tls NAME --cert=FILE --key=FILE` creates the Secret with the right type and keys. Use it instead of `generic`, because the Ingress's TLS block needs a `kubernetes.io/tls` Secret.
+>
+> **Exam tip:** After `helm install`, read `helm get values RELEASE -n NAMESPACE` and the objects themselves. A misspelled value key is usually ignored, not rejected, so the install "works" with the chart's default instead of your setting.
 >
 > **Exam tip:** If an Ingress or an HTTPRoute does nothing, check the class or the parent first. An Ingress with a class no controller handles, or an HTTPRoute whose `parentRefs` names a missing Gateway, is accepted by the API server and silently ignored.
 
@@ -421,6 +551,7 @@ Create an HTTPRoute with the following specification.
 - Using the container's port in an Ingress backend. The backend names the Service, and the Service's port is the one to use.
 - Forgetting that a Gateway's listener holds the hostname and the port. The HTTPRoute only narrows what the Gateway already accepts.
 - Reading `Unknown` in a status condition as a failure. It means no controller has evaluated the object yet.
+- Installing a controller whose IngressClass is the cluster default without meaning to. Every Ingress without a class is then served by it.
 
 <!-- QUESTIONS:START -->
 
@@ -482,6 +613,15 @@ Create an HTTPRoute with the following specification.
 **10. (Task)** `CKAD` In namespace `prod`, create a Gateway named `public` that uses the GatewayClass `standard`. It has one listener named `web`, protocol `HTTP`, port `80`, and hostname `*.prod.example.test`. Show the Gateway's class and listener name.
 
 **11. (Task)** `CKAD` In namespace `prod`, create an HTTPRoute named `web-route` attached to the Gateway `public`. It matches hostname `web.prod.example.test` and path prefix `/app`, and sends the traffic to the Service `web` on port `80`. Show the route's parent and backend.
+
+**12.** `CKA` `CKAD` You install an Ingress controller whose chart makes its IngressClass the cluster default. What happens to an existing Ingress that has no `ingressClassName`?
+
+- **A.** Nothing; Ingresses without a class are never served
+- **B.** The new controller starts serving it, because the default class applies to Ingresses that name none
+- **C.** The API server rejects the Ingress until a class is set
+- **D.** It is served by every controller in the cluster
+
+**13. (Task)** `CKA` Install the chart `traefik/traefik` at version `41.7.1` as the release `edge` in the new Namespace `edge-system`, with a `ClusterIP` Service, and show the values the release received.
 
 <details>
 <summary>Answers</summary>
@@ -565,6 +705,21 @@ kubectl -n prod get httproute web-route -o jsonpath='{.spec.parentRefs[0].name}{
 ```
 
 `parentRefs` names the Gateway the route attaches to. The backend's `port` is the Service port.
+
+**12. B.** An IngressClass annotated `ingressclass.kubernetes.io/is-default-class: "true"` is the class for every Ingress without `ingressClassName`. Turn the default off in the chart's values unless you want that.
+
+**13.**
+
+```bash
+helm repo add traefik https://traefik.github.io/charts
+helm repo update traefik
+helm install edge traefik/traefik --version 41.7.1 -n edge-system --create-namespace \
+  --set service.spec.type=ClusterIP
+helm get values edge -n edge-system
+kubectl -n edge-system get service
+```
+
+`helm show values traefik/traefik --version 41.7.1` shows the chart's keys before you install; in this chart the Service type is `service.spec.type`. `helm get values` shows what the release received, and `kubectl get service` shows the result. A misspelled key is ignored, not rejected, so check both.
 
 </details>
 

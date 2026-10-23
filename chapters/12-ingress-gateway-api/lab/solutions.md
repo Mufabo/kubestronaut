@@ -126,6 +126,34 @@ spec:
 YAML
 ```
 
+## Task 6: Traefik, and `web` through it
+
+```bash
+helm repo add traefik https://traefik.github.io/charts
+helm repo update traefik
+helm show values traefik/traefik --version 41.7.1 | less     # find service.spec.type and ingressClass
+helm install traefik traefik/traefik --version 41.7.1 \
+  --namespace ch12-traefik --create-namespace \
+  --set service.spec.type=ClusterIP --set ingressClass.isDefaultClass=false
+kubectl -n ch12-traefik rollout status deployment/traefik
+helm get values traefik -n ch12-traefik
+kubectl -n ch12-traefik get service traefik
+kubectl get ingressclass traefik -o yaml | grep is-default-class
+
+kubectl -n ch12-edge create ingress web --class=traefik --rule="web.example.test/*=web:80"
+kubectl -n ch12-edge exec client -- wget -qO- --header "Host: web.example.test" http://traefik.ch12-traefik.svc.cluster.local
+```
+
+The last command prints `hello from web`. A request without the `Host` header, or
+with another host, gets Traefik's own 404: the controller routes by host, as the
+Ingress rule says.
+
+Two traps. The chart's Service type is `service.spec.type`; `--set
+service.type=ClusterIP` is accepted and ignored, so the Service stays
+`LoadBalancer`. And the chart marks its IngressClass as the cluster default
+unless you turn that off, which would make Traefik serve the Ingress `api` from
+Task 3 too, because it names no class.
+
 ## Why these checks accept any correct method
 
 Each check reads the object the API server stores: the Ingress's class, host,

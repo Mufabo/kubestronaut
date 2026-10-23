@@ -99,3 +99,14 @@ spec:
         - name: shop
           port: 80
 YAML
+
+# Task 6: the controller, then the Ingress, then wait for real traffic
+helm repo add traefik https://traefik.github.io/charts --force-update >/dev/null
+helm install "$CONTROLLER_RELEASE" traefik/traefik --version "$TRAEFIK_CHART_VERSION" \
+  --namespace "$CONTROLLER_NS" --create-namespace \
+  --set service.spec.type=ClusterIP --set ingressClass.isDefaultClass=false --wait --timeout 5m >/dev/null
+k create ingress web --class=traefik --rule="web.example.test/*=web:80" >/dev/null
+routes() {
+  [[ "$(k exec client -- wget -q -T 5 -O - --header "Host: web.example.test" "http://traefik.${CONTROLLER_NS}.svc.cluster.local" 2>/dev/null)" == "hello from web" ]]
+}
+wait_for "web.example.test answered through Traefik" 180 routes
