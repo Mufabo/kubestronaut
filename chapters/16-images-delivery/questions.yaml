@@ -145,3 +145,28 @@
 
     `rollingUpdate: null` removes the field, because `Recreate` does not take it.
     Expect a gap in service while the old Pods stop and the new ones start.
+
+- id: ch16-q12
+  type: mcq
+  exams: [CKAD]
+  question: "A Service selects `app=api`. The Deployment `api-v1` runs 4 Pods labelled `app=api`, and you add `api-v2` with 1 Pod labelled `app=api`. Roughly what share of requests reaches v2?"
+  choices:
+    - "None, until the Service is changed"
+    - "About 20%, one Pod in five"
+    - "50%, one Deployment in two"
+    - "100%, because the newest Pods are preferred"
+  answer: B
+  explanation: "The Service spreads connections over all ready Pods it selects, regardless of which Deployment owns them. One Pod in five gets about a fifth of the traffic. That is a canary by replica ratio; exact weights need a traffic-splitting controller or the Gateway API."
+
+- id: ch16-q13
+  type: task
+  exams: [CKAD]
+  prompt: "In namespace `shop`, the Service `checkout` selects `app=checkout, track=stable`. A new version runs as the Deployment `checkout-next`, whose Pods are labelled `app=checkout, track=next`. Send all traffic to the new version, keep the old Pods running, and show which Pods the Service now uses."
+  solution: |
+    ```bash
+    kubectl -n shop patch service checkout -p '{"spec":{"selector":{"track":"next"}}}'
+    kubectl -n shop get endpointslices -l kubernetes.io/service-name=checkout -o wide
+    kubectl -n shop get pods -l app=checkout -L track -o wide
+    ```
+
+    A merge patch changes only `track` and keeps `app`. Compare the EndpointSlice's addresses with the Pod IPs: they must be the `track=next` Pods. Rolling back is the same patch with `stable`; the old Pods never stopped.

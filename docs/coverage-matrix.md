@@ -113,10 +113,10 @@ The KCNA curriculum lists topics, not tasks, so each row is broad. Chapters
 | Domain | Bullet (verbatim) | Chapter | Lab | Questions | Status |
 | --- | --- | --- | --- | --- | --- |
 | Application Design and Build | Define, build and modify container images | 01, 16 | 16/T1 | ch01-q05; ch16-q01–q03 | drafted |
-| Application Design and Build | Choose and use the right workload resource (Deployment, DaemonSet, CronJob, etc.) | 05, 08 | 05/T1; 08/T1–T5 | ch05-q09, ch08-q01–q07 | partly (gap: DaemonSet and StatefulSet are described in 05, but no lab creates one) |
+| Application Design and Build | Choose and use the right workload resource (Deployment, DaemonSet, CronJob, etc.) | 05, 08, 09, 13 | 05/T1; 08/T1–T5; 09/T6; 13/T6 | ch05-q09, ch08-q01–q07; ch09-q12, q13; ch13-q12, q13 | drafted |
 | Application Design and Build | Understand multi-container Pod design patterns (e.g. sidecar, init and others) | 04, 09 | 09/T1–T5; P1 Q10 | ch04-q02, ch09-q01–q11 | drafted |
 | Application Design and Build | Utilize persistent and ephemeral volumes | 13 | 13/T1–T2, T4 | ch13-q01, q06, q09 | drafted |
-| Application Deployment | Use Kubernetes primitives to implement common deployment strategies (e.g. blue/green or canary) | 05, 16 | 05/T5; 16/T3–T4 | ch05-q06, q13; ch16-q07, q10, q11 | partly (gap: 16 describes blue/green and canary, but no task does one) |
+| Application Deployment | Use Kubernetes primitives to implement common deployment strategies (e.g. blue/green or canary) | 05, 16 | 05/T5; 16/T3–T4, T6 | ch05-q06, q13; ch16-q07, q10–q13 | drafted (blue/green in the lab; canary by replica ratio in the walkthrough) |
 | Application Deployment | Understand Deployments and how to perform rolling updates | 05 | 05/T1-T6; P1 Q15-Q17 | ch05-q04..q08, q10..q14 | drafted |
 | Application Deployment | Use the Helm package manager to deploy existing packages | 14 | 14/T1–T3, T5 | ch14-q02–q04, q08–q10 | drafted |
 | Application Deployment | Kustomize | 14 | 14/T4 | ch14-q05, q06, q11 | drafted |
@@ -127,7 +127,7 @@ The KCNA curriculum lists topics, not tasks, so each row is broad. Chapters
 | Application Observability and Maintenance | Debugging in Kubernetes | 04, 15, 26 | 04/T2; 15/T1–T2; 26/T1–T5; P1 Q3, Q6 | ch04-q03, q11; ch15-q03, q08, q09; ch26-q01, q05, q07, q10 | drafted |
 | Application Environment, Configuration and Security | Discover and use resources that extend Kubernetes (CRD, Operators) | 03, 24 | 03/a A6; 24/T2–T4; P1 Q12 | ch03-q12; ch24-q06, q07 | drafted |
 | Application Environment, Configuration and Security | Understand authentication, authorization and admission control | 03, 23, 31 | 03/b3; 23/T1–T5; 31/T1–T4 | ch03-q05, q14; ch23-q01, q06; ch31-q01–q04, q06, q10 | drafted |
-| Application Environment, Configuration and Security | Understand requests, limits, quotas | 04, 10 | 04/T4; 10/T3–T4; P1 Q5 | ch04-q07, q09; ch10-q04, q05 | partly (gap: ResourceQuota and LimitRange are only mentioned; no lab sets one) |
+| Application Environment, Configuration and Security | Understand requests, limits, quotas | 04, 10 | 04/T4; 10/T3–T4, T6; P1 Q5 | ch04-q07, q09; ch10-q04, q05, q12, q13 | drafted |
 | Application Environment, Configuration and Security | Define resource requirements | 04, 10 | 04/T4; 10/T3–T4; P1 Q5 | ch04-q07, q09; ch10-q03, q04, q09, q10 | drafted |
 | Application Environment, Configuration and Security | Understand ConfigMaps | 03, 07 | 03/b2 C1; 07/T1, T3–T5; P1 Q11 | ch07-q02, q03, q06, q08 | drafted |
 | Application Environment, Configuration and Security | Create & consume Secrets | 03, 07 | 03/b2 C2; 07/T2–T5; P1 Q11 | ch07-q01, q05, q09, q11 | drafted |
@@ -256,13 +256,13 @@ already reflect it.
 
 A review of every KCNA, CKA, and CKAD row after Part III found these bullets
 marked `partly (gap: ...)`: the chapters exist, but no hands-on work covers the
-whole bullet yet.
+whole bullet yet. The three CKAD gaps were closed the same day.
 
 | Exam | Bullet | Planned fix |
 | --- | --- | --- |
-| CKAD | Choose and use the right workload resource | Tasks that create a StatefulSet (with a headless Service and volume claim templates) and a DaemonSet, in Chapter 05 or 08 |
-| CKAD | Requests, limits, quotas | A ResourceQuota and a LimitRange in Chapter 10's lab, including a Pod they reject |
-| CKAD | Deployment strategies (blue/green, canary) | A blue/green switch and a canary by replica ratio behind one Service, in Chapter 16 |
+| CKAD | Choose and use the right workload resource | Closed 2026-10-23: a StatefulSet with a claim per replica (13/T6) and a DaemonSet node agent (09/T6) |
+| CKAD | Requests, limits, quotas | Closed 2026-10-23: a ResourceQuota and a LimitRange, and a Pod that runs with its defaults (10/T6) |
+| CKAD | Deployment strategies (blue/green, canary) | Closed 2026-10-23: a blue/green switch (16/T6) and a canary by replica ratio in Chapter 16's walkthrough |
 | CKA | Ingress controllers | Install an Ingress controller with Helm and send real requests through it (Chapter 12, or a new lab) |
 | CKA | Helm and Kustomize to install cluster components | The same install closes this one: a cluster component installed from a chart |
 | CKA | CRDs and operators | Install a small operator and let it reconcile a custom resource (Chapter 24) |

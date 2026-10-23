@@ -11,6 +11,17 @@ k() { kubectl -n "$LAB_NS" "$@"; }
 # jp <resource> <jsonpath>
 jp() { k get "$1" -o "jsonpath=$2" 2>/dev/null; }
 
+# Task 6: the Service sends traffic to green, and both colours keep running
+t6() {
+  local _
+  [[ "$(jp service/shop '{.spec.selector.app} {.spec.selector.version} {.spec.ports[0].port}')" == "shop green 80" ]] &&
+  [[ "$(jp deployment/shop-blue '{.status.readyReplicas}')" == 2 ]] &&
+  [[ "$(jp deployment/shop-green '{.status.readyReplicas}')" == 2 ]] &&
+  for _ in 1 2 3 4; do
+    [[ "$(k exec client -- wget -q -T 3 -O - http://shop 2>/dev/null)" == green ]] || return 1
+  done
+}
+
 t1() {
   # the image is on the worker node (kind load puts it on every node)
   local out rows
@@ -53,5 +64,8 @@ check 4 "Deployment app uses RollingUpdate with maxUnavailable 0 and maxSurge 1"
   "the strategy fields are under spec.strategy.rollingUpdate" t4
 check 5 "Secret regcred is dockerconfigjson, and Pod private-app pulls registry.example.test/team/app:1.0 with it" \
   "create the Secret with kubectl create secret docker-registry; the Pod cannot start without the registry" t5
+
+check 6 "Service shop selects app=shop, version=green on port 80; client gets green from http://shop; shop-blue and shop-green keep 2 ready replicas each" \
+  "kubectl patch service shop -p '{\"spec\":{\"selector\":{\"version\":\"green\"}}}', then confirm it in the EndpointSlices" t6
 
 finish_checks

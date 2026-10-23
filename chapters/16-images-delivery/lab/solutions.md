@@ -86,6 +86,20 @@ YAML
 The Pod stays in `ImagePullBackOff`, because the registry does not exist. The
 check reads its specification, which is correct.
 
+## Task 6: switch `shop` from blue to green
+
+```bash
+kubectl get pods -l app=shop -L version
+kubectl patch service shop -p '{"spec":{"selector":{"version":"green"}}}'
+kubectl get endpointslices -l kubernetes.io/service-name=shop -o wide
+kubectl exec client -- wget -qO- http://shop
+```
+
+The patch merges into the selector, so `app: shop` stays and only `version`
+changes. The EndpointSlice lists the green Pods once the switch has taken
+effect; the request then answers `green`. To roll back, patch `version` back to
+`blue`. The blue Pods are still running, so nothing has to start.
+
 ## Why these checks accept any correct method
 
 The checks read what is stored and running: the image on the worker node, the

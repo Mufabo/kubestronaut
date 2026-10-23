@@ -62,3 +62,8 @@ spec:
     - name: app
       image: registry.example.test/team/app:1.0
 YAML
+
+# Task 6: switch the selector, and wait until the client really gets green
+k patch service shop -p '{"spec":{"selector":{"version":"green"}}}' >/dev/null
+serves_green() { [[ "$(k exec client -- wget -q -T 3 -O - http://shop 2>/dev/null)" == green ]]; }
+wait_for "shop answers green" 120 serves_green

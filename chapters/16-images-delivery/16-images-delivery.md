@@ -16,6 +16,7 @@ After this chapter you can:
 - Reference a private registry with an image pull secret, and explain why a Pod with a missing image is stuck in `ImagePullBackOff`
 - Describe a delivery pipeline in CI and CD terms, and the difference between push and pull (GitOps) deployment
 - Configure a `RollingUpdate` with `maxSurge` and `maxUnavailable`, or a `Recreate` strategy, and say which one a change needs
+- Switch traffic between two Deployments with a Service selector (blue/green), and run a canary next to a stable version
 
 ## Concepts
 
@@ -156,6 +157,10 @@ Two more patterns are built from these pieces, without a special strategy:
   ones behind the same Service, so the share is roughly the fraction of Pods. A
   traffic-splitting controller or a Gateway API implementation gives exact weights.
 
+A selector change is not instant everywhere: the EndpointSlice controller has to
+pick the new Pods, and kube-proxy on every node has to update its rules. Confirm
+a switch in the Service's EndpointSlices before you rely on it.
+
 Chapter 05 covers `kubectl rollout undo`, which returns a Deployment to an older
 revision after a bad change.
 
@@ -272,6 +277,147 @@ pod "demo-missing" deleted
 secret "demo-regcred" deleted
 ```
 
+### Switch from blue to green, and back
+
+Two Deployments of a small web server that answers with its own colour, and a
+Service in front of them that selects blue. Each Pod carries two labels, `app`
+and `version`:
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-blue
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: web
+      version: blue
+  template:
+    metadata:
+      labels:
+        app: web
+        version: blue
+    spec:
+      containers:
+        - name: web
+          image: busybox:1.36
+          command: ["sh", "-c", "mkdir -p /www && echo blue > /www/index.html && httpd -f -p 80 -h /www"]
+          ports:
+            - containerPort: 80
+---
+# web-green is the same with "green" in place of "blue"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web
+spec:
+  selector:
+    app: web
+    version: blue
+  ports:
+    - port: 80
+```
+
+Apply it in a Namespace of its own, `ch16-demo`, with a `client` Pod
+(`kubectl -n ch16-demo run client --image=busybox:1.36 -- sleep 3600`) to send
+requests from. Both versions run side by side:
+
+```bash
+kubectl -n ch16-demo get pods -l app=web -o wide -L version | awk "{print \$1, \$6, \$NF}" | column -t
+```
+
+```text
+NAME                        IP               VERSION
+web-blue-77b7b9c99b-ctfpl   192.168.145.207  blue
+web-blue-77b7b9c99b-gl4cj   192.168.29.146   blue
+web-green-79ff588784-bjtxc  192.168.145.208  green
+web-green-79ff588784-v4nh4  192.168.29.147   green
+```
+
+Switch the Service to green, and confirm it in the EndpointSlice before sending
+traffic:
+
+```bash
+kubectl -n ch16-demo patch service web -p '{"spec":{"selector":{"version":"green"}}}'
+kubectl -n ch16-demo get endpointslices -l kubernetes.io/service-name=web -o jsonpath='{range .items[*].endpoints[*]}{.addresses[0]} {.targetRef.name}{"\n"}{end}'
+kubectl -n ch16-demo exec client -- sh -c "for i in 1 2 3 4; do wget -qO- http://web; done"
+```
+
+```text
+service/web patched
+192.168.29.147 web-green-79ff588784-v4nh4
+192.168.145.208 web-green-79ff588784-bjtxc
+green
+green
+green
+green
+```
+
+The rollback is the same patch, back to blue. The blue Pods never stopped, so
+it takes effect as fast as the switch did:
+
+```bash
+kubectl -n ch16-demo patch service web -p '{"spec":{"selector":{"version":"blue"}}}'
+kubectl -n ch16-demo get endpointslices -l kubernetes.io/service-name=web -o jsonpath='{range .items[*].endpoints[*]}{.addresses[0]} {.targetRef.name}{"\n"}{end}'
+kubectl -n ch16-demo exec client -- sh -c "for i in 1 2 3 4; do wget -qO- http://web; done"
+```
+
+```text
+service/web patched
+192.168.29.146 web-blue-77b7b9c99b-gl4cj
+192.168.145.207 web-blue-77b7b9c99b-ctfpl
+blue
+blue
+blue
+blue
+```
+
+In an earlier run of this walkthrough, the requests sent in the same second as
+the switch back still reached green. The new endpoints had not reached
+kube-proxy yet, which is why the EndpointSlice check comes first.
+
+### Run a canary
+
+A canary is two Deployments behind one Service that selects only `app`, not the
+version: three Pods of `v1` and one of `v2`, built like the blue and green ones
+above. Forty requests through the Service:
+
+```bash
+kubectl -n ch16-demo get pods -l app=api -L version
+kubectl -n ch16-demo exec client -- sh -c "for i in \$(seq 40); do wget -qO- http://api; done | sort | uniq -c"
+```
+
+```text
+NAME                          READY   STATUS    RESTARTS   AGE   VERSION
+api-canary-5b5b8f46b-8v6bb    1/1     Running   0          2s    v2
+api-stable-865c6bdddd-mgdvw   1/1     Running   0          2s    v1
+api-stable-865c6bdddd-p44x4   1/1     Running   0          2s    v1
+api-stable-865c6bdddd-rhvch   1/1     Running   0          2s    v1
+     30 v1
+     10 v2
+```
+
+A quarter of the traffic, from a quarter of the Pods. Move more traffic to the
+canary by changing the replica counts:
+
+```bash
+kubectl -n ch16-demo scale deployment api-canary --replicas=3
+kubectl -n ch16-demo scale deployment api-stable --replicas=1
+kubectl -n ch16-demo exec client -- sh -c "for i in \$(seq 40); do wget -qO- http://api; done | sort | uniq -c"
+```
+
+```text
+deployment.apps/api-canary scaled
+deployment.apps/api-stable scaled
+      9 v1
+     31 v2
+```
+
+Remove the demo with `kubectl delete namespace ch16-demo`.
+
 ## Hands-on lab
 
 The lab works like a KodeKloud lab: one task at a time, a check after each, and
@@ -290,6 +436,9 @@ every command, or run `make use-namespace CH=16` once. You need Docker and the
 `kind` command on your machine. The setup writes a Dockerfile to
 `lab/.state/app`, creates a Deployment `legacy`, and removes the image
 `ch16-app:1.0` from the cluster and from your Docker, so every reset starts without it.
+For Task 6 it also creates two Deployments, `shop-blue` and `shop-green`, whose
+Pods answer with their colour, a Service `shop` that sends traffic to blue, and a
+Pod `client` to send requests from.
 
 Full solutions are in [`lab/solutions.md`](lab/solutions.md).
 
@@ -336,6 +485,15 @@ named `private-app` that pulls `registry.example.test/team/app:1.0` with that Se
 
 The Pod cannot start, because `registry.example.test` does not exist. That is
 expected: the check is about the Pod's specification.
+
+### Task 6: Switch the shop from blue to green
+
+Send all of the Service `shop`'s traffic to the green version, and keep blue
+running so that switching back is instant.
+
+- Service `shop`: selects `app=shop` and `version=green`, still on port `80`
+- Requests from the Pod `client` to `http://shop` are answered with `green`
+- Deployments `shop-blue` and `shop-green` both keep 2 ready replicas
 
 ## Exam tips
 
@@ -416,6 +574,15 @@ expected: the check is about the Pod's specification.
 
 **11. (Task)** `CKAD` In namespace `prod`, change the Deployment `worker` to the `Recreate` strategy, because two versions must never run at once. Wait for the rollout, and show the strategy type.
 
+**12.** `CKAD` A Service selects `app=api`. The Deployment `api-v1` runs 4 Pods labelled `app=api`, and you add `api-v2` with 1 Pod labelled `app=api`. Roughly what share of requests reaches v2?
+
+- **A.** None, until the Service is changed
+- **B.** About 20%, one Pod in five
+- **C.** 50%, one Deployment in two
+- **D.** 100%, because the newest Pods are preferred
+
+**13. (Task)** `CKAD` In namespace `shop`, the Service `checkout` selects `app=checkout, track=stable`. A new version runs as the Deployment `checkout-next`, whose Pods are labelled `app=checkout, track=next`. Send all traffic to the new version, keep the old Pods running, and show which Pods the Service now uses.
+
 <details>
 <summary>Answers</summary>
 
@@ -484,6 +651,18 @@ kubectl -n prod get deployment worker -o jsonpath='{.spec.strategy.type}{"\n"}'
 
 `rollingUpdate: null` removes the field, because `Recreate` does not take it.
 Expect a gap in service while the old Pods stop and the new ones start.
+
+**12. B.** The Service spreads connections over all ready Pods it selects, regardless of which Deployment owns them. One Pod in five gets about a fifth of the traffic. That is a canary by replica ratio; exact weights need a traffic-splitting controller or the Gateway API.
+
+**13.**
+
+```bash
+kubectl -n shop patch service checkout -p '{"spec":{"selector":{"track":"next"}}}'
+kubectl -n shop get endpointslices -l kubernetes.io/service-name=checkout -o wide
+kubectl -n shop get pods -l app=checkout -L track -o wide
+```
+
+A merge patch changes only `track` and keeps `app`. Compare the EndpointSlice's addresses with the Pod IPs: they must be the `track=next` Pods. Rolling back is the same patch with `stable`; the old Pods never stopped.
 
 </details>
 

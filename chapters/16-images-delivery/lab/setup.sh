@@ -35,4 +35,10 @@ DOCKER
 kubectl -n "$LAB_NS" create deployment legacy --image=nginx:1.26 >/dev/null
 kubectl -n "$LAB_NS" rollout status deployment/legacy --timeout=180s >/dev/null
 
+# Task 6: blue and green behind one Service that selects blue, and a client.
+kubectl -n "$LAB_NS" apply -f "${here}/../manifests/shop.yaml" >/dev/null
+kubectl -n "$LAB_NS" rollout status deployment/shop-blue --timeout=180s >/dev/null
+kubectl -n "$LAB_NS" rollout status deployment/shop-green --timeout=180s >/dev/null
+wait_for "pod client Running" 180 pod_phase_is "$LAB_NS" client Running
+
 info "Lab ready. Namespace: ${LAB_NS}. Build context: lab/.state/app"
