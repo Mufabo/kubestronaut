@@ -25,6 +25,8 @@ make questions               # render questions.yaml into chapter files
 make questions-check         # fail if a chapter file is stale vs. its questions.yaml
 make test-harness            # tests the lab framework against tools/testdata/fake-kubectl.py (no cluster)
 make test-render             # unit tests for tools/render-questions.py
+make quiz EXAM=kcna          # timed multiple-choice practice exam (tools/quiz.py); quiz-reset starts over
+make test-quiz               # unit tests for tools/quiz.py, and validates every quiz bank
 make test-lib                # kubeconfig helper tests (needs kubectl, no cluster)
 make test-shell              # envs/shell helpers/vimrc/install
 make test-examples           # every jq/yq example in Chapter 03 against pinned jq/yq
@@ -50,9 +52,9 @@ Tier 2 labs (Chapters 18, 19, 20, 27) and `mock-exams/part3` run on the VMs, nev
 cd envs\vagrant; vagrant ssh cp1 -c "cd /kbook && make test CH=19"        # or: make mock-test EXAM=part3
 ```
 
-No cluster needed: `make lint`, `make questions-check`, `make test-render`, `make test-harness`, `make test-shell`, `make test-lib`, `make test-examples`. Local tools for these: bash, make, shellcheck, yamllint, `markdownlint-cli2` at the version pinned in `versions.env`, pinned `jq` and `yq`, Python 3 with `tools/requirements.txt` (PyYAML), and vim. Labs and `make test*` on a cluster also need docker, kind, and kubectl.
+No cluster needed: `make lint`, `make questions-check`, `make test-render`, `make test-quiz`, `make test-harness`, `make test-shell`, `make test-lib`, `make test-examples`. Local tools for these: bash, make, shellcheck, yamllint, `markdownlint-cli2` at the version pinned in `versions.env`, pinned `jq` and `yq`, Python 3 with `tools/requirements.txt` (PyYAML), and vim. Labs and `make test*` on a cluster also need docker, kind, and kubectl.
 
-CI (`.github/workflows/labs.yml`) installs the same pinned tools, runs lint, questions-check, test-render, test-harness, test-shell, test-examples, then creates a kind cluster and runs test-lib, test-tier1, and test-mocks. It also runs weekly to catch upstream drift.
+CI (`.github/workflows/labs.yml`) installs the same pinned tools, runs lint, questions-check, test-render, test-quiz, test-harness, test-shell, test-examples, then creates a kind cluster and runs test-lib, test-tier1, and test-mocks. It also runs weekly to catch upstream drift.
 
 ## Architecture
 
@@ -73,7 +75,7 @@ CI (`.github/workflows/labs.yml`) installs the same pinned tools, runs lint, que
 
 Captured command output for Tier 2 chapters comes from scratch scripts in `envs/vagrant/.state/` (git-ignored, mounted on `cp1` at `/kbook/envs/vagrant/.state/`), run with `vagrant ssh cp1 -c "bash /kbook/envs/vagrant/.state/<script>.sh"`. From PowerShell, put multi-command or quoted work in such a script rather than inline: PowerShell 5.1 rejects `&&` and mangles nested quotes.
 
-A mock exam (`mock-exams/<name>/`) has the same layout, with the questions in `<name>.md`. Its `lab.env` adds `EXAM_MINUTES` and `EXAM_PASS_PERCENT`, lists all its Namespaces in `LAB_SNAPSHOT_NS`, and lists its own contexts in `LAB_EXTRA_CONTEXTS`; `mock-exams/part1` is the reference. `mock-exams/part3` runs on the Tier 2 VMs (snapshot `cluster-prev`) and is tested by hand on `cp1`. After `solve.sh`, the test loop requires every question to pass (`KBOOK_REQUIRE_ALL=1`), not only the pass mark.
+A mock exam (`mock-exams/<name>/`) has the same layout, with the questions in `<name>.md`. Its `lab.env` adds `EXAM_MINUTES` and `EXAM_PASS_PERCENT`, lists all its Namespaces in `LAB_SNAPSHOT_NS`, and lists its own contexts in `LAB_EXTRA_CONTEXTS`; `mock-exams/part1` is the reference. A multiple-choice practice exam (`mock-exams/kcna`) has no `lab/`: just `questions.yaml` (mcq only, ids `<name>-<domain>-NN`), `quiz.yaml` (time, pass mark, questions per domain, checked by `make test-quiz`), and `<name>.md`, whose question block `make questions` renders. `make quiz EXAM=<name>` runs it, saving the attempt under `/tmp/kbook/<name>/`. `mock-exams/part3` runs on the Tier 2 VMs (snapshot `cluster-prev`) and is tested by hand on `cp1`. After `solve.sh`, the test loop requires every question to pass (`KBOOK_REQUIRE_ALL=1`), not only the pass mark.
 
 ### Lab rules that are easy to break
 

@@ -43,6 +43,8 @@ the book cover everything?".
 
 The KCNA curriculum lists topics, not tasks, so each row is broad. Chapters
 01 to 06 and 28 are the KCNA core; the rest go deeper than the exam needs.
+The KCNA practice exam (`mock-exams/kcna`) covers every domain with the
+curriculum's weights: 26, 17, 10, and 7 of its 60 questions.
 
 | Domain | Bullet (verbatim) | Chapter | Lab | Questions | Status |
 | --- | --- | --- | --- | --- | --- |

@@ -19,6 +19,7 @@ jobs:
       - run: make lint
       - run: make questions-check
       - run: make test-render
+      - run: make test-quiz
       - run: make test-harness
       - run: make test-shell
       - name: Install the pinned jq and yq

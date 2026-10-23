@@ -1,18 +1,35 @@
 # Mock exams
 
-Timed, scored exam simulators in the style of killer.sh. Each one builds its
-own Namespaces and kubectl contexts on your lab cluster, gives you a fixed
-time and a pass mark, and scores the weighted questions all at once. A
-question counts when everything it asks for is right.
+Timed, scored exam simulators. The full CKAD, CKA, and CKS simulators and the
+KCSA practice exam come with Part V; see `ROADMAP.md`.
+
+## Multiple-choice practice exams
+
+The KCNA has no lab; its practice exam runs in the terminal (`tools/quiz.py`),
+timed and scored like the real one, with the questions in a new order each
+attempt.
+
+| Exam | Covers | Questions | Time | Pass mark |
+| --- | --- | --- | --- | --- |
+| [`kcna`](kcna/kcna.md) | The four KCNA domains, weighted as in the curriculum | 60 | 90 min | 75% |
+
+```bash
+make quiz EXAM=kcna          # start or resume; answer with a letter, flag, review, submit
+make quiz-reset EXAM=kcna    # throw the attempt away
+```
+
+## Performance-based mock exams
+
+In the style of killer.sh. Each one builds its own Namespaces and kubectl
+contexts on your lab cluster, gives you a fixed time and a pass mark, and
+scores the weighted questions all at once. A question counts when everything
+it asks for is right.
 
 | Exam | Covers | Questions | Time | Pass mark |
 | --- | --- | --- | --- | --- |
 | [`part1`](part1/part1.md) | Part I (Chapters 02 to 06), CKAD/CKA style | 18 | 120 min | 66% |
 | [`part2`](part2/part2.md) | Part II (Chapters 07 to 16), CKAD/CKA style | 14 | 120 min | 66% |
 | [`part3`](part3/part3.md) | Part III (Chapters 17 to 28), CKA style, on the Tier 2 VMs | 16 | 120 min | 66% |
-
-The full CKAD, CKA, and CKS simulators (and the KCNA and KCSA question banks)
-come with Part V; see `ROADMAP.md`.
 
 ```bash
 make cluster                       # once

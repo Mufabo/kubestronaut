@@ -101,10 +101,14 @@ class ValidateTests(unittest.TestCase):
         self.assertIn("<summary>Answers</summary>", out)
         self.assertIn("**1. B.** Because.", out)
 
+    def test_render_heading(self):
+        self.assertTrue(rq.render(bank(MCQ)).startswith("## End-of-chapter questions\n"))
+        self.assertTrue(rq.render(bank(MCQ), "Questions").startswith("## Questions\n"))
+
     def test_real_chapter_banks_are_valid(self):
         import yaml
         root = pathlib.Path(__file__).resolve().parent.parent
-        files = sorted(root.glob("chapters/*/questions.yaml"))
+        files = sorted(root.glob("chapters/*/questions.yaml")) + sorted(root.glob("mock-exams/*/questions.yaml"))
         self.assertTrue(files, "no question banks found")
         for f in files:
             rq.validate(yaml.safe_load(f.read_text(encoding="utf-8")), str(f))

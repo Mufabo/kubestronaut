@@ -7,7 +7,7 @@ PART ?=
 EXAM ?=
 SHELL := /usr/bin/env bash
 
-.PHONY: help cluster cluster-recreate cluster-delete cluster-pause cluster-resume test-tier2-env lab question check skip use-namespace reset verify solve teardown test test-lib test-harness test-render test-shell test-examples test-tier1 mock mock-score mock-reset mock-solve mock-teardown mock-test test-mocks questions questions-check lint
+.PHONY: help cluster cluster-recreate cluster-delete cluster-pause cluster-resume test-tier2-env lab question check skip use-namespace reset verify solve teardown test test-lib test-harness test-render test-shell test-examples test-tier1 mock mock-score mock-reset mock-solve mock-teardown mock-test test-mocks quiz quiz-reset test-quiz questions questions-check lint
 
 help: ## Show this help
 	@grep -hE '^[a-zA-Z_-]+:.*## ' Makefile | awk -F':.*## ' '{printf "  %-16s %s\n", $$1, $$2}'
@@ -78,6 +78,9 @@ test-examples: ## Check every jq/yq example in Chapter 03 against real jq and yq
 test-render: ## Unit-test the question renderer's validation
 	@python3 tools/test_render_questions.py
 
+test-quiz: ## Unit-test the multiple-choice quiz runner and validate every quiz bank
+	@python3 tools/test_quiz.py
+
 test-lib: ## Unit-test the shared shell helpers (needs kubectl; no cluster)
 	@bash tools/test-lib.sh
 
@@ -111,7 +114,13 @@ test-mocks: ## Run the CI loop for every Tier 1 mock exam (Tier 2 mocks run by h
 	  if grep -qE '^LAB_TIER=2' "$$d/lab.env"; then echo "=== $$name: Tier 2, skipped (run make mock-test EXAM=$$name on cp1) ==="; continue; fi; \
 	  bash tools/test-lab.sh "$$name"; done
 
-questions: ## Render questions.yaml into every chapter file
+quiz: ## Take (or resume) the timed multiple-choice exam EXAM, e.g. EXAM=kcna
+	@python3 tools/quiz.py "$(EXAM)"
+
+quiz-reset: ## Throw away the current attempt of quiz EXAM
+	@python3 tools/quiz.py "$(EXAM)" --reset
+
+questions: ## Render questions.yaml into every chapter file and question-only mock exam
 	@python3 tools/render-questions.py
 
 questions-check: ## Fail if any chapter file is out of date with its questions.yaml

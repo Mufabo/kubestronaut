@@ -50,6 +50,11 @@ if [[ "$action" == reset && -f "${dir}/lab/lab.env" ]]; then
 fi
 
 script="${dir}/lab/${action}.sh"
+# Multiple-choice practice exams (mock-exams/<name>/quiz.yaml) have no lab.
+if [[ ! -d "${dir}/lab" && -f "${dir}/quiz.yaml" ]]; then
+  echo "error: ${ch} is a multiple-choice practice exam with no lab; run: make quiz EXAM=${ch}" >&2
+  exit 2
+fi
 if [[ ! -f "$script" ]]; then
   if [[ "$action" == "teardown" ]]; then
     echo "==> this lab has no teardown script; nothing to do"

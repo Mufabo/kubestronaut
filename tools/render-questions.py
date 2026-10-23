@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 """Render chapters/<NN-name>/questions.yaml into the chapter file
 chapters/<NN-name>/<NN-name>.md (the chapter file is named after its directory).
+Question-only mock exams (mock-exams/<name>/questions.yaml, such as the KCNA
+practice exam) render into mock-exams/<name>/<name>.md the same way, under a
+"Questions" heading.
 
 The chapter file must contain the markers:
     <!-- QUESTIONS:START -->
@@ -100,7 +103,7 @@ def validate(questions, source="questions.yaml"):
         raise QuestionError("\n".join(problems))
 
 
-def render(questions):
+def render(questions, heading="End-of-chapter questions"):
     body, answers = [], []
     for n, q in enumerate(questions, 1):
         tags = " ".join(f"`{t}`" for t in q.get("exams", []))
@@ -117,7 +120,7 @@ def render(questions):
             answers.append(f"**{n}.**\n\n{q['solution'].strip()}\n")
         else:
             raise ValueError(f"{q['id']}: unknown type {q['type']}")
-    out = ["## End-of-chapter questions\n", *body,
+    out = [f"## {heading}\n", *body,
            "<details>\n<summary>Answers</summary>\n", *answers, "</details>"]
     return "\n".join(out).rstrip() + "\n"
 
@@ -142,7 +145,8 @@ def process(chapter_dir, check):
     except (yaml.YAMLError, QuestionError) as err:
         print(f"invalid question bank:\n{err}", file=sys.stderr)
         return False
-    new = f"{head}{START}\n\n{render(questions)}\n{END}{tail}"
+    heading = "Questions" if chapter_dir.parent.name == "mock-exams" else "End-of-chapter questions"
+    new = f"{head}{START}\n\n{render(questions, heading)}\n{END}{tail}"
     if new == text:
         return True
     if check:
@@ -159,7 +163,7 @@ def main():
     ap.add_argument("chapters", nargs="*", type=pathlib.Path)
     args = ap.parse_args()
     root = pathlib.Path(__file__).resolve().parent.parent
-    dirs = args.chapters or sorted((root / "chapters").glob("*/"))
+    dirs = args.chapters or sorted((root / "chapters").glob("*/")) + sorted((root / "mock-exams").glob("*/"))
     # Validate every chapter (no short-circuit) so all problems are reported.
     ok = all([process(d, args.check) for d in dirs])
     sys.exit(0 if ok else 1)

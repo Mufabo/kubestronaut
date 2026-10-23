@@ -1,0 +1,22 @@
+# Settings for `make quiz EXAM=kcna` (tools/quiz.py). Question ids are
+# kcna-<domain>-NN; each domain's count must match the bank.
+title: KCNA practice exam
+minutes: 90
+pass_percent: 75
+domains:
+  fund:
+    title: Kubernetes Fundamentals
+    weight: 44
+    questions: 26
+  orch:
+    title: Container Orchestration
+    weight: 28
+    questions: 17
+  deliv:
+    title: Cloud Native Application Delivery
+    weight: 16
+    questions: 10
+  arch:
+    title: Cloud Native Architecture
+    weight: 12
+    questions: 7
