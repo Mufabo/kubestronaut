@@ -275,9 +275,10 @@ kubectl get csidrivers --no-headers | wc -l
 ```
 
 ```text
-CRI=containerd://2.2.0
+CRI=containerd://2.3.4
 10-calico.conflist
 calico-kubeconfig
+No resources found
 0
 ```
 

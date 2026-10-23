@@ -142,8 +142,8 @@ kubectl -n kube-system get pods -l k8s-app=kube-dns \
 ```
 
 ```text
-registry.k8s.io/coredns/coredns:v1.13.1  sha256:aa5e3ebc0dfed0566805186b9e47110d8f9122291d8bad1497e78873ad291139
-registry.k8s.io/coredns/coredns:v1.13.1  sha256:aa5e3ebc0dfed0566805186b9e47110d8f9122291d8bad1497e78873ad291139
+registry.k8s.io/coredns/coredns:v1.14.6  sha256:520212b8b0fcd9309d7362d592f513b72880fa5a4e9e8b91442e7ee3b622c6a9
+registry.k8s.io/coredns/coredns:v1.14.6  sha256:520212b8b0fcd9309d7362d592f513b72880fa5a4e9e8b91442e7ee3b622c6a9
 ```
 
 The first column is the tag the Pod asked for. The second is the digest the node pulled.

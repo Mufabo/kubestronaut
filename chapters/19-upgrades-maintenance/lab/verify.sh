@@ -8,7 +8,7 @@ source "${here}/lab.env"
 require_snapshot "$LAB_SNAPSHOT"
 require_lab_cluster
 
-want="${K8S_VERSION#v}-"   # Debian package versions look like 1.35.0-1.1
+want="${K8S_VERSION#v}-"   # Debian package versions look like 1.37.0-1.1
 
 # Runs a command string on a node: locally on cp1, over SSH on the workers.
 on() { if [[ "$1" == cp1 ]]; then bash -c "$2"; else ssh -o BatchMode=yes "$1" "$2"; fi; }

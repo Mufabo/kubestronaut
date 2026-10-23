@@ -305,11 +305,13 @@ is now part of Kubernetes Fundamentals, and "Networking", "Security",
 
 ### Exam environment (checked when Chapter 03 was written)
 
-From the Linux Foundation's published exam instructions: CKA and CKAD run 15 to 20 tasks in two hours on designated SSH hosts that have `kubectl` with the `k` alias and Bash completion, `yq`, `curl`, `wget`, and `man` pages; `jq` and `tmux` are not listed. The CKA environment was on Kubernetes v1.35 and the CKAD on v1.37 at that time. Chapter 03 teaches `jq` and `tmux` as conveniences only and `yq` as a tool that exists in the exam. Re-read the instructions before every edition.
+From the Linux Foundation's published exam instructions: CKA and CKAD run 15 to 20 tasks in two hours on designated SSH hosts that have `kubectl` with the `k` alias and Bash completion, `yq`, `curl`, `wget`, and `man` pages; `jq` and `tmux` are not listed. The CKA environment was on Kubernetes v1.35 and the CKAD on v1.37 at that time; on 2026-10-23 both ran v1.37, and the instructions and the allowed-resources page (Kubernetes docs and blog, Helm docs, and for the CKA the Gateway API docs) were re-read for Chapters 03 and 38. Chapter 03 teaches `jq` and `tmux` as conveniences only and `yq` as a tool that exists in the exam. Re-read the instructions before every edition.
 
 ## Kubernetes version
 
 The book pins one minor version in `versions.env`. Re-check the version each
 exam is currently written against before each edition. The curriculum files
 above match the exam versions reported at the time this file was started (CKA
-v1.35, CKAD v1.37, CKS v1.34), which is why v1.35 is the current pin.
+v1.35, CKAD v1.37, CKS v1.34). On 2026-10-23 the CKA and the CKAD both ran
+v1.37, and the book moved its pin from v1.35 to v1.37.0 (kind v0.33.0 ships
+node images up to v1.37.0); the VMs' `cluster-prev` snapshot moved to v1.36.5.

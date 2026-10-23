@@ -92,7 +92,7 @@ kubectl -n ch24-crd get backups.ch24.example.com -o name > /tmp/ch24-names.txt
 kubectl get node kbook-worker -o jsonpath='{.status.nodeInfo.containerRuntimeVersion}' | sed 's#://.*##' > /tmp/ch24-cri.txt
 ```
 
-The field reads `containerd://2.2.0`. The part before `://` is the runtime's name,
+The field reads `containerd://2.3.4`. The part before `://` is the runtime's name,
 `containerd`, which is what the CRI in this cluster is.
 
 ## Task 6: cert-manager issues `site-tls`

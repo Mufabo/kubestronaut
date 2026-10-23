@@ -9,8 +9,8 @@ source "${here}/lab.env"
 require_snapshot "$LAB_SNAPSHOT"
 require_lab_cluster
 
-prev_minor="$(cut -d. -f1-2 <<<"$K8S_PREV_VERSION")"   # v1.34
-minor="$(cut -d. -f1-2 <<<"$K8S_VERSION")"             # v1.35
+prev_minor="$(cut -d. -f1-2 <<<"$K8S_PREV_VERSION")"   # for example v1.36
+minor="$(cut -d. -f1-2 <<<"$K8S_VERSION")"             # for example v1.37
 
 on() { if [[ "$1" == cp1 ]]; then bash -c "$2"; else ssh -o BatchMode=yes "$1" "$2"; fi; }
 

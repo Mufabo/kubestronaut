@@ -279,7 +279,7 @@ Estimates assume one author working part-time; adjust for your pace and any co-a
 
 ## 9. Immediate next steps
 
-1. ~~Decide the Kubernetes version~~ Decided 2026-10-15: stay on v1.35. The Linux Foundation lists the CKA as based on v1.35 and moves the exam to a new minor release within about 4 to 8 weeks of its release, so check again before the beta (upstream stable is v1.37.1, and the CKAD curriculum file is already v1.37). A move means re-running every chapter's captured output.
+1. ~~Decide the Kubernetes version~~ Decided 2026-10-15 to stay on v1.35; on 2026-10-23 the Linux Foundation moved the CKA and the CKAD to v1.37, and the book moved its pin to v1.37.0 (previous version v1.36.5), re-running every lab and re-capturing the output that depends on the version. Check again before the beta.
 2. ~~Finish Part III on the VMs~~ Done 2026-10-15: Chapters 18, 19, 20, and 27.
 3. ~~Write the Part III mock exam~~ Done 2026-10-15 (`mock-exams/part3`).
 4. Finish Part IV: 29, 30, 32, 33, 35. Close the "Minimize base image footprint" gap in 34 (or 16).

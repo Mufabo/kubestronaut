@@ -43,11 +43,11 @@ curl -fsSL https://get.docker.com | sh
 sudo usermod -aG docker "$USER"        # log out and back in afterwards
 
 # kind
-curl -Lo kind https://kind.sigs.k8s.io/dl/v0.31.0/kind-linux-amd64
+curl -Lo kind https://kind.sigs.k8s.io/dl/v0.33.0/kind-linux-amd64
 chmod +x kind && sudo mv kind /usr/local/bin/kind
 
 # kubectl (match the cluster version; use arm64 instead of amd64 on ARM)
-curl -LO https://dl.k8s.io/release/v1.35.0/bin/linux/amd64/kubectl
+curl -LO https://dl.k8s.io/release/v1.37.0/bin/linux/amd64/kubectl
 chmod +x kubectl && sudo mv kubectl /usr/local/bin/kubectl
 
 # make
@@ -83,9 +83,9 @@ You should see three nodes, all `Ready`:
 
 ```text
 NAME                  STATUS   ROLES           AGE   VERSION
-kbook-control-plane   Ready    control-plane   2m    v1.35.0
-kbook-worker          Ready    <none>          2m    v1.35.0
-kbook-worker2         Ready    <none>          2m    v1.35.0
+kbook-control-plane   Ready    control-plane   74m   v1.37.0
+kbook-worker          Ready    <none>          74m   v1.37.0
+kbook-worker2         Ready    <none>          74m   v1.37.0
 ```
 
 Example output (ages and versions will differ):
@@ -95,7 +95,7 @@ Example output (ages and versions will differ):
 | Symptom | Likely cause | Fix |
 | --- | --- | --- |
 | `Cannot connect to the Docker daemon` | Docker is not running, or your user is not in the `docker` group | Start Docker; log out and back in after `usermod` |
-| `kind create cluster` hangs or fails pulling the node image | No network, or a proxy | Check connectivity; `docker pull kindest/node:v1.35.0` by hand shows the real error |
+| `kind create cluster` hangs or fails pulling the node image | No network, or a proxy | Check connectivity; `docker pull kindest/node:v1.37.0` by hand shows the real error |
 | Nodes stay `NotReady` | Not enough memory for Docker | Give Docker 4 GB or more; delete the cluster and retry |
 | `make cluster` says the cluster runs another version | You changed `versions.env` | `make cluster-recreate` |
 | Context `kind-kbook` missing | Cluster deleted, or kubeconfig replaced | `make cluster` |
@@ -638,7 +638,7 @@ On a timed exam, every command you type costs seconds. A few habits remove most 
 
 ### What the exam gives you, and what to practise with
 
-The Linux Foundation's published exam instructions (checked while writing this chapter; read the current version before your exam) say the CKA and CKAD run on designated hosts you reach with `ssh`, and that those hosts already have `kubectl` with the **`k` alias and Bash completion**, `yq`, `curl`, `wget`, and `man` pages. Nested `ssh` is not supported, so after you `ssh` to a node for a task you `exit` back before the next one. They allow the official Kubernetes documentation (and, for the CKA, the Gateway API docs), and describe copy and paste in the exam terminal as `Ctrl+Shift+C` and `Ctrl+Shift+V`. The CKA and CKAD each have 15 to 20 tasks in two hours. The CKA environment was on Kubernetes v1.35 and the CKAD on v1.37 when this chapter was written, which is why the book pins v1.35: small differences between versions are normal, so run `kubectl version` first.
+The Linux Foundation's published exam instructions (checked while writing this chapter; read the current version before your exam) say the CKA and CKAD run on designated hosts you reach with `ssh`, and that those hosts already have `kubectl` with the **`k` alias and Bash completion**, `yq`, `curl`, `wget`, and `man` pages. Nested `ssh` is not supported, so after you `ssh` to a node for a task you `exit` back before the next one. They allow the official Kubernetes documentation and blog, the Helm documentation, and, for the CKA, the Gateway API docs (Chapter 38 has the full list), and describe copy and paste in the exam terminal as `Ctrl+Shift+C` and `Ctrl+Shift+V`. The CKA and CKAD each have 15 to 20 tasks in two hours. Both environments ran Kubernetes v1.37 when this was last checked (October 2026), which is why the book pins v1.37: small differences between versions are normal, so run `kubectl version` first.
 
 You therefore do not need to build the alias and completion *in* the exam, but you do need to be fast with them there, and you should practise with the same setup at home. `envs/shell/` in this repository gives you that:
 
