@@ -284,6 +284,7 @@ them. They are mapped here so their coverage stays visible.
 | `jq` and `yq` | 03 | 03/a A7 (optional) | ch03-q15 | drafted |
 | Fast terminal: aliases, completion, `vim` | 03, 37 | 37 drills | ch37-q01, q07, q08 | partly (37 drills the habits; setup is in 03) |
 | Working under time pressure, context per question | 03, 37 | 03/final; 37 drills; P1 (whole exam) | ch37-q10 | partly |
+| Finding answers in the allowed documentation, `explain`, and `--help` | 38 | 38 exploration exercise | ch38-q01–q12 | drafted |
 
 ## Curriculum revisions checked
 
