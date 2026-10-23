@@ -123,6 +123,37 @@ spec:
       command: ["sleep", "3600"]
 YAML
 
+# Task 6
+k apply -f - >/dev/null <<'YAML'
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: node-agent
+spec:
+  selector:
+    matchLabels:
+      app: node-agent
+  template:
+    metadata:
+      labels:
+        app: node-agent
+    spec:
+      tolerations:
+        - key: node-role.kubernetes.io/control-plane
+          operator: Exists
+          effect: NoSchedule
+      containers:
+        - name: agent
+          image: busybox:1.36
+          command: ["sh", "-c", "echo \"agent on $NODE_NAME\"; sleep 3600"]
+          env:
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+YAML
+k rollout status daemonset/node-agent --timeout=300s >/dev/null
+
 info "Waiting for the Pods to run"
 k wait --for=condition=Ready pod/pair --timeout=180s >/dev/null
 for p in setup checked logged debug; do

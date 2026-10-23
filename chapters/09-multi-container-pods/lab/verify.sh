@@ -60,6 +60,24 @@ t5() {
   [[ "$n" -ge 2 ]]
 }
 
+# Task 6: a DaemonSet with a Ready Pod on every node it may use, the control plane included
+t6() {
+  local want ready cp pods pod node
+  [[ "$(jp daemonset/node-agent '{.spec.template.metadata.labels.app}')" == node-agent ]] &&
+  [[ "$(jp daemonset/node-agent '{.spec.template.spec.containers[?(@.name=="agent")].image}')" == busybox:1.36 ]] &&
+  [[ "$(jp daemonset/node-agent '{.spec.template.spec.containers[?(@.name=="agent")].env[?(@.name=="NODE_NAME")].valueFrom.fieldRef.fieldPath}')" == spec.nodeName ]] &&
+  [[ "$(jp daemonset/node-agent '{.spec.template.spec.tolerations[?(@.key=="node-role.kubernetes.io/control-plane")].effect}')" == *NoSchedule* ]] &&
+  want="$(jp daemonset/node-agent '{.status.desiredNumberScheduled}')" &&
+  ready="$(jp daemonset/node-agent '{.status.numberReady}')" &&
+  [[ -n "$want" && "$want" -gt 0 && "$ready" == "$want" ]] &&
+  cp="$(kubectl get nodes -l node-role.kubernetes.io/control-plane -o jsonpath='{.items[0].metadata.name}' 2>/dev/null)" &&
+  pods="$(k get pods -l app=node-agent -o jsonpath='{range .items[*]}{.metadata.name} {.spec.nodeName}{"\n"}{end}' 2>/dev/null)" &&
+  grep -q " ${cp}$" <<<"$pods" || return 1
+  while read -r pod node; do
+    [[ "$(k logs "$pod" -c agent 2>/dev/null)" == "agent on ${node}" ]] || return 1
+  done <<<"$pods"
+}
+
 check 1 "Pod pair has containers writer and reader, sharing an emptyDir mounted at /shared" \
   "both containers must mount the same volume; the reader must see the writer's file" t1
 check 2 "Pod setup: init container prepare writes 'ready' to /work/status.txt, and app sees it" \
@@ -70,5 +88,8 @@ check 4 "Pod logged: shipper is a native sidecar (init container with restartPol
   "a native sidecar is an initContainers entry with restartPolicy: Always" t4
 check 5 "Pod debug shares its process namespace: helper sees the app container's processes" \
   "spec.shareProcessNamespace: true, and both containers must be in the same Pod" t5
+
+check 6 "DaemonSet node-agent (busybox:1.36, NODE_NAME from spec.nodeName, control-plane toleration) has a Ready Pod on every node it may use, the control plane included, each logging its node" \
+  "a DaemonSet has no replicas; tolerate node-role.kubernetes.io/control-plane:NoSchedule to reach the control plane node" t6
 
 finish_checks

@@ -209,3 +209,30 @@
     ```
 
     The output lists two `sleep 3600` processes, one from each container, because the process namespace is shared. Without `shareProcessNamespace: true`, `debugger` would see only its own.
+
+- id: ch09-q12
+  type: mcq
+  exams: [CKAD, CKA]
+  question: "A log collector must read the container logs of every Pod on every node. Which workload fits?"
+  choices:
+    - "A sidecar container in every application Pod"
+    - "A DaemonSet, so one collector Pod runs on each node"
+    - "A Deployment with as many replicas as there are nodes"
+    - "A Job that runs once per hour"
+  answer: B
+  explanation: "A DaemonSet runs one Pod per node and adds one when a node joins. A Deployment's replicas can land several on one node and none on another, and a sidecar per application Pod duplicates the work and misses everything else on the node."
+
+- id: ch09-q13
+  type: task
+  exams: [CKAD]
+  prompt: "In namespace `ops`, the DaemonSet `collector` runs on the workers but not on the control plane node. Make it run there too, and show one Pod per node."
+  solution: |
+    ```bash
+    kubectl describe node CONTROL_PLANE_NODE | grep Taints
+    kubectl -n ops patch daemonset collector --type=json \
+      -p='[{"op":"add","path":"/spec/template/spec/tolerations","value":[{"key":"node-role.kubernetes.io/control-plane","operator":"Exists","effect":"NoSchedule"}]}]'
+    kubectl -n ops rollout status daemonset/collector
+    kubectl -n ops get pods -o wide
+    ```
+
+    The control plane node carries the taint `node-role.kubernetes.io/control-plane:NoSchedule`. A toleration in the Pod template lets the DaemonSet place a Pod there; the patch changes the template, so the Pods are replaced one at a time. If the template already has tolerations, `add` to `/spec/template/spec/tolerations/-` instead, or edit the YAML.

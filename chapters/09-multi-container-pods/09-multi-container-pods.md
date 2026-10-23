@@ -16,6 +16,7 @@ After this chapter you can:
 - Declare a native sidecar, an init container with `restartPolicy: Always`, and explain how it starts and stops relative to the main containers
 - Recognize the sidecar, ambassador, and adapter patterns, and say what each one is for
 - Share a process namespace between containers, and use it to inspect a running container from a helper
+- Run a node agent as a DaemonSet instead of a sidecar, and make it reach the control plane node with a toleration
 
 ## Concepts
 
@@ -128,6 +129,21 @@ the shared namespace and volumes.
 Each pattern is a question of where the helper sits, not of different Kubernetes
 objects. In all three, the helper is an ordinary container, or a native sidecar
 when it must start first.
+
+### Node agents: a DaemonSet instead of a sidecar
+
+A sidecar serves one Pod. Some helpers serve a whole node instead: a log
+collector that reads every container's logs from the node, a monitoring agent,
+or a network plugin. Running one per application Pod would waste resources and
+miss everything else on the node. These run as a **DaemonSet**: one Pod on every
+node, added automatically when a node joins and removed when it leaves.
+
+A DaemonSet has a Pod template and a selector, like a Deployment, but no
+`replicas`: the number of nodes decides the number of Pods, and `kubectl scale`
+does not apply. It respects taints like any Pod, so it does not run on the
+control plane node unless its template tolerates the control plane's taint. Its
+Pods often learn which node they run on through the downward API
+(`fieldRef: spec.nodeName`, Chapter 07).
 
 ### Sharing a process namespace
 
@@ -397,6 +413,107 @@ The helper sees both `sleep` processes, one from each container. Process 1 is
 the pause container that holds the Pod's namespaces. Without
 `shareProcessNamespace`, the helper would see only its own `sleep`.
 
+### Run an agent on every node
+
+A DaemonSet whose Pods log the name of their node. Use a Namespace of its own:
+
+```yaml
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: agent
+spec:
+  selector:
+    matchLabels:
+      app: agent
+  template:
+    metadata:
+      labels:
+        app: agent
+    spec:
+      containers:
+        - name: agent
+          image: busybox:1.36
+          command: ["sh", "-c", "echo agent on $NODE_NAME; sleep 3600"]
+          env:
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+```
+
+```bash
+kubectl create namespace ch09-demo
+kubectl -n ch09-demo apply -f agent.yaml
+kubectl -n ch09-demo rollout status daemonset/agent --timeout=180s
+kubectl -n ch09-demo get daemonset agent
+kubectl -n ch09-demo get pods -o wide
+```
+
+```text
+namespace/ch09-demo created
+daemonset.apps/agent created
+Waiting for daemon set "agent" rollout to finish: 0 of 2 updated pods are available...
+Waiting for daemon set "agent" rollout to finish: 1 of 2 updated pods are available...
+daemon set "agent" successfully rolled out
+NAME    DESIRED   CURRENT   READY   UP-TO-DATE   AVAILABLE   NODE SELECTOR   AGE
+agent   2         2         2       2            2           <none>          5s
+NAME          READY   STATUS    RESTARTS   AGE   IP                NODE            NOMINATED NODE   READINESS GATES
+agent-8p8tg   1/1     Running   0          5s    192.168.145.197   kbook-worker    <none>           <none>
+agent-qbmcb   1/1     Running   0          5s    192.168.29.131    kbook-worker2   <none>           <none>
+```
+
+Two Pods for three nodes: the control plane node is tainted, and the template
+does not tolerate it:
+
+```bash
+kubectl describe node kbook-control-plane | grep Taints
+```
+
+```text
+Taints:             node-role.kubernetes.io/control-plane:NoSchedule
+```
+
+Add the toleration, and the DaemonSet rolls out to every node:
+
+```bash
+kubectl -n ch09-demo patch daemonset agent --type=json -p='[{"op":"add","path":"/spec/template/spec/tolerations","value":[{"key":"node-role.kubernetes.io/control-plane","operator":"Exists","effect":"NoSchedule"}]}]'
+kubectl -n ch09-demo rollout status daemonset/agent --timeout=180s
+kubectl -n ch09-demo get pods -o wide
+for p in $(kubectl -n ch09-demo get pods -l app=agent -o name); do kubectl -n ch09-demo logs $p; done
+```
+
+```text
+daemonset.apps/agent patched
+Waiting for daemon set "agent" rollout to finish: 1 out of 3 new pods have been updated...
+Waiting for daemon set "agent" rollout to finish: 1 out of 3 new pods have been updated...
+Waiting for daemon set "agent" rollout to finish: 2 out of 3 new pods have been updated...
+Waiting for daemon set "agent" rollout to finish: 2 out of 3 new pods have been updated...
+Waiting for daemon set "agent" rollout to finish: 2 of 3 updated pods are available...
+daemon set "agent" successfully rolled out
+NAME          READY   STATUS    RESTARTS   AGE   IP                NODE                  NOMINATED NODE   READINESS GATES
+agent-4z76c   1/1     Running   0          68s   192.168.153.65    kbook-control-plane   <none>           <none>
+agent-cqrj9   1/1     Running   0          2s    192.168.29.132    kbook-worker2         <none>           <none>
+agent-z55ft   1/1     Running   0          34s   192.168.145.198   kbook-worker          <none>           <none>
+agent on kbook-control-plane
+agent on kbook-worker2
+agent on kbook-worker
+```
+
+The patch changed the Pod template, so the existing Pods were replaced one at a
+time, as in a Deployment's rolling update. A DaemonSet has no replica count to
+change:
+
+```bash
+kubectl -n ch09-demo scale daemonset agent --replicas=5
+```
+
+```text
+Error from server (NotFound): the server could not find the requested resource
+```
+
+Remove the demo: `kubectl delete namespace ch09-demo`.
+
 ## Hands-on lab
 
 The lab works like a KodeKloud lab: one task at a time, a check after each, and
@@ -413,7 +530,7 @@ make verify CH=9     # check every task at once
 Everything happens in the Namespace `ch09-multi`: use `-n ch09-multi` on every
 command, or run `make use-namespace CH=9` once. The setup created one Pod,
 `checked`, which does not start. Task 3 is about it. The other tasks create new
-Pods, and they are independent of each other. Full solutions are in
+objects, and they are independent of each other. Full solutions are in
 [`lab/solutions.md`](lab/solutions.md).
 
 ### Task 1: Two containers that share a volume
@@ -470,6 +587,17 @@ Create a Pod with the following specification.
 - From `helper`, the processes of both containers are visible
 - Status: `Running`
 
+### Task 6: An agent on every node
+
+Run a node agent that the cluster places on every node, including the control
+plane node.
+
+- DaemonSet `node-agent`, Pod label `app=node-agent`
+- Container `agent`: image `busybox:1.36`, runs `sh -c 'echo "agent on $NODE_NAME"; sleep 3600'`
+- `NODE_NAME` comes from the Pod's node name, through the downward API
+- A toleration for the control plane taint `node-role.kubernetes.io/control-plane:NoSchedule`
+- A Ready Pod on every node it may run on, including the control plane node, and each Pod logs its own node's name
+
 ## Exam tips
 
 > **Exam tip:** Generate a Pod with `kubectl run NAME --image=IMAGE --dry-run=client -o yaml`, then add the second container, the volume, and the mounts by hand. Multi-container YAML is easier to get right when you write the volumes first and reference them by name.
@@ -486,6 +614,8 @@ Create a Pod with the following specification.
 - Forgetting the `-c` flag on `kubectl logs` or `kubectl exec`, and reading the wrong container's output.
 - Mounting an `emptyDir` in one container and naming a different volume in the other. The two containers must refer to the same volume name.
 - Using `shareProcessNamespace` without thinking about it. The containers can then see and signal each other's processes.
+- Running a node-wide agent as a sidecar in every application Pod. One DaemonSet Pod per node does the job.
+- Expecting a DaemonSet on the control plane node without a toleration for its taint.
 
 <!-- QUESTIONS:START -->
 
@@ -547,6 +677,15 @@ Create a Pod with the following specification.
 **10. (Task)** `CKAD` In namespace `prod`, create a Pod named `precheck`. Its init container `precheck-init` (image `busybox:1.36`) must succeed only if the file `/etc/hostname` exists in its filesystem. The main container `main` (image `busybox:1.36`) runs `sleep 3600`. Show that the Pod is Running and that the init container's state is `Completed`.
 
 **11. (Task)** `CKAD` In namespace `prod`, create a Pod named `shared-pid` with two containers, `main` and `debugger`, both running `busybox:1.36` with the command `sleep 3600`. The containers must share a process namespace. Show the processes that `debugger` can see, and check that the `sleep` process of `main` is among them.
+
+**12.** `CKAD` `CKA` A log collector must read the container logs of every Pod on every node. Which workload fits?
+
+- **A.** A sidecar container in every application Pod
+- **B.** A DaemonSet, so one collector Pod runs on each node
+- **C.** A Deployment with as many replicas as there are nodes
+- **D.** A Job that runs once per hour
+
+**13. (Task)** `CKAD` In namespace `ops`, the DaemonSet `collector` runs on the workers but not on the control plane node. Make it run there too, and show one Pod per node.
 
 <details>
 <summary>Answers</summary>
@@ -680,6 +819,20 @@ kubectl -n prod exec shared-pid -c debugger -- ps
 ```
 
 The output lists two `sleep 3600` processes, one from each container, because the process namespace is shared. Without `shareProcessNamespace: true`, `debugger` would see only its own.
+
+**12. B.** A DaemonSet runs one Pod per node and adds one when a node joins. A Deployment's replicas can land several on one node and none on another, and a sidecar per application Pod duplicates the work and misses everything else on the node.
+
+**13.**
+
+```bash
+kubectl describe node CONTROL_PLANE_NODE | grep Taints
+kubectl -n ops patch daemonset collector --type=json \
+  -p='[{"op":"add","path":"/spec/template/spec/tolerations","value":[{"key":"node-role.kubernetes.io/control-plane","operator":"Exists","effect":"NoSchedule"}]}]'
+kubectl -n ops rollout status daemonset/collector
+kubectl -n ops get pods -o wide
+```
+
+The control plane node carries the taint `node-role.kubernetes.io/control-plane:NoSchedule`. A toleration in the Pod template lets the DaemonSet place a Pod there; the patch changes the template, so the Pods are replaced one at a time. If the template already has tolerations, `add` to `/spec/template/spec/tolerations/-` instead, or edit the YAML.
 
 </details>
 

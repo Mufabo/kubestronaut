@@ -152,3 +152,51 @@ kubectl exec debug -c helper -- ps
 
 `ps` from `helper` lists two `sleep 3600` processes. Without
 `shareProcessNamespace: true` it would list one.
+
+## Task 6: `node-agent`, a DaemonSet on every node
+
+There is no `kubectl create daemonset`. Generate a Deployment, then change the
+kind and remove the fields a DaemonSet does not have (`replicas`, `strategy`):
+
+```bash
+kubectl create deployment node-agent --image=busybox:1.36 --dry-run=client -o yaml > node-agent.yaml
+```
+
+```yaml
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: node-agent
+spec:
+  selector:
+    matchLabels:
+      app: node-agent
+  template:
+    metadata:
+      labels:
+        app: node-agent
+    spec:
+      tolerations:
+        - key: node-role.kubernetes.io/control-plane
+          operator: Exists
+          effect: NoSchedule
+      containers:
+        - name: agent
+          image: busybox:1.36
+          command: ["sh", "-c", "echo \"agent on $NODE_NAME\"; sleep 3600"]
+          env:
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+```
+
+```bash
+kubectl apply -f node-agent.yaml
+kubectl rollout status daemonset/node-agent
+kubectl get pods -l app=node-agent -o wide
+for p in $(kubectl get pods -l app=node-agent -o name); do kubectl logs $p; done
+```
+
+One Pod per node, the control plane node included, each printing its own node.
+Without the toleration, the control plane node gets none.
