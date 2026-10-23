@@ -147,14 +147,14 @@ systemctl status kubelet --no-pager | head -12
      Loaded: loaded (/lib/systemd/system/kubelet.service; enabled; vendor preset: enabled)
     Drop-In: /usr/lib/systemd/system/kubelet.service.d
              └─10-kubeadm.conf
-     Active: active (running) since Mon 2026-10-12 17:45:36 UTC; 3 days ago
+     Active: active (running) since Fri 2026-10-23 16:57:55 UTC; 34min ago
        Docs: https://kubernetes.io/docs/
-   Main PID: 10862 (kubelet)
+   Main PID: 10942 (kubelet)
       Tasks: 10 (limit: 2221)
-     Memory: 42.5M
-        CPU: 23.244s
+     Memory: 47.7M
+        CPU: 40.612s
      CGroup: /system.slice/kubelet.service
-             └─10862 /usr/bin/kubelet --bootstrap-kubeconfig=/etc/kubernetes/bootstrap-kubelet.conf --kubeconfig=/etc/kubernetes/kubelet.conf --config=/var/lib/kubelet/config.yaml --node-ip=192.168.56.10
+             └─10942 /usr/bin/kubelet --bootstrap-kubeconfig=/etc/kubernetes/bootstrap-kubelet.conf --kubeconfig=/etc/kubernetes/kubelet.conf --config=/var/lib/kubelet/config.yaml --node-ip=192.168.56.10
 ```
 
 Three things to read: `enabled` (it starts at boot), `active (running)`, and
@@ -205,18 +205,20 @@ sudo crictl ps
 
 ```text
 CONTAINER           IMAGE               CREATED             STATE               NAME                      ATTEMPT             POD ID              POD                                        NAMESPACE
-499fa08fef60b       81a30a7a24037       3 days ago          Running             calico-kube-controllers   0                   6105ef0029b5b       calico-kube-controllers-7bbf4599f5-h7762   kube-system
-fa8742a6c5705       aa5e3ebc0dfed       3 days ago          Running             coredns                   0                   8b9ac7e4e5ecf       coredns-7d764666f9-t8dlg                   kube-system
-4d935fda28099       c5f89ea6b7611       3 days ago          Running             calico-node               0                   abb74431674f6       calico-node-ppjbw                          kube-system
-381a75911b018       32652ff1bbe6b       3 days ago          Running             kube-proxy                0                   e98d86d58d336       kube-proxy-z2b44                           kube-system
-a22acaa93c0bb       0a108f7189562       3 days ago          Running             etcd                      0                   a998ba29441a1       etcd-cp1                                   kube-system
-b64ee20e2f8b2       550794e3b12ac       3 days ago          Running             kube-scheduler            0                   0e0e50e4af8d8       kube-scheduler-cp1                         kube-system
-725eda2f8c9ba       5c6acd67e9cd1       3 days ago          Running             kube-apiserver            0                   73fd285cf3349       kube-apiserver-cp1                         kube-system
-15985a38a8653       2c9a4b058bd7e       3 days ago          Running             kube-controller-manager   0                   c4c427f001cf1       kube-controller-manager-cp1                kube-system
+26f3ca7c1c222       1fabf80a1273a       6 minutes ago       Running             kube-scheduler            1                   85605aca775cb       kube-scheduler-cp1                         kube-system
+371b998bb7566       364b3c3d9ec19       7 minutes ago       Running             kube-controller-manager   1                   7de7fe686cb63       kube-controller-manager-cp1                kube-system
+9468807bda593       4ad92d437c956       31 minutes ago      Running             calico-kube-controllers   0                   7fb42c8a4fe3e       calico-kube-controllers-846669895c-lg87b   kube-system
+d5be5f630b01b       520212b8b0fcd       31 minutes ago      Running             coredns                   0                   f54c19efdcc25       coredns-559f6c778d-fh82h                   kube-system
+d1d95b9b66aa8       93e6f0b640645       31 minutes ago      Running             calico-node               0                   06e664156707f       calico-node-lr28v                          kube-system
+f3948f75ee96a       d6a28daf3e6b0       33 minutes ago      Running             kube-proxy                0                   99e3a80d7f70f       kube-proxy-b9vhr                           kube-system
+f97f2044d2f07       bec5f0e1e2eeb       34 minutes ago      Running             kube-apiserver            0                   1e6ad7efed8d9       kube-apiserver-cp1                         kube-system
+ca78408174b05       270fbeb697171       34 minutes ago      Running             etcd                      0                   1420389898a37       etcd-cp1                                   kube-system
 ```
 
-On these VMs, `crictl` has no configuration file, so it also prints a few
-warnings about guessing the runtime's socket; pass
+`crictl` comes from the `cri-tools` package. Since Kubernetes 1.37 the kubeadm
+package no longer installs it, so the lab VMs install it explicitly, with
+`/etc/crictl.yaml` pointing it at containerd's socket. Without that file,
+`crictl` guesses the socket and prints a few warnings each time; pass
 `--runtime-endpoint unix:///run/containerd/containerd.sock` to silence them.
 
 ### The control plane's own health
@@ -237,8 +239,8 @@ kubectl get componentstatuses
 readyz check passed
 Warning: v1 ComponentStatus is deprecated in v1.19+
 NAME                 STATUS    MESSAGE   ERROR
-scheduler            Healthy   ok
 controller-manager   Healthy   ok
+scheduler            Healthy   ok
 etcd-0               Healthy   ok
 ```
 
@@ -253,22 +255,22 @@ sudo kubeadm certs check-expiration
 [check-expiration] Use 'kubeadm init phase upload-config kubeadm --config your-config-file' to re-upload it.
 
 CERTIFICATE                EXPIRES                  RESIDUAL TIME   CERTIFICATE AUTHORITY   EXTERNALLY MANAGED
-admin.conf                 Oct 12, 2027 17:43 UTC   361d            ca                      no
-apiserver                  Oct 12, 2027 17:43 UTC   361d            ca                      no
-apiserver-etcd-client      Oct 12, 2027 17:43 UTC   361d            etcd-ca                 no
-apiserver-kubelet-client   Oct 12, 2027 17:43 UTC   361d            ca                      no
-controller-manager.conf    Oct 12, 2027 17:43 UTC   361d            ca                      no
-etcd-healthcheck-client    Oct 12, 2027 17:43 UTC   361d            etcd-ca                 no
-etcd-peer                  Oct 12, 2027 17:43 UTC   361d            etcd-ca                 no
-etcd-server                Oct 12, 2027 17:43 UTC   361d            etcd-ca                 no
-front-proxy-client         Oct 12, 2027 17:43 UTC   361d            front-proxy-ca          no
-scheduler.conf             Oct 12, 2027 17:43 UTC   361d            ca                      no
-super-admin.conf           Oct 12, 2027 17:43 UTC   361d            ca                      no
+admin.conf                 Oct 23, 2027 16:56 UTC   364d            ca                      no
+apiserver                  Oct 23, 2027 16:56 UTC   364d            ca                      no
+apiserver-etcd-client      Oct 23, 2027 16:56 UTC   364d            etcd-ca                 no
+apiserver-kubelet-client   Oct 23, 2027 16:56 UTC   364d            ca                      no
+controller-manager.conf    Oct 23, 2027 16:56 UTC   364d            ca                      no
+etcd-healthcheck-client    Oct 23, 2027 16:56 UTC   364d            etcd-ca                 no
+etcd-peer                  Oct 23, 2027 16:56 UTC   364d            etcd-ca                 no
+etcd-server                Oct 23, 2027 16:56 UTC   364d            etcd-ca                 no
+front-proxy-client         Oct 23, 2027 16:56 UTC   364d            front-proxy-ca          no
+scheduler.conf             Oct 23, 2027 16:56 UTC   364d            ca                      no
+super-admin.conf           Oct 23, 2027 16:56 UTC   364d            ca                      no
 
 CERTIFICATE AUTHORITY   EXPIRES                  RESIDUAL TIME   EXTERNALLY MANAGED
-ca                      Oct 09, 2036 17:43 UTC   9y              no
-etcd-ca                 Oct 09, 2036 17:43 UTC   9y              no
-front-proxy-ca          Oct 09, 2036 17:43 UTC   9y              no
+ca                      Oct 20, 2036 16:56 UTC   9y              no
+etcd-ca                 Oct 20, 2036 16:56 UTC   9y              no
+front-proxy-ca          Oct 20, 2036 16:56 UTC   9y              no
 ```
 
 One certificate in detail:
@@ -281,7 +283,7 @@ sudo openssl x509 -in /etc/kubernetes/pki/apiserver.crt -noout -ext subjectAltNa
 ```text
 subject=CN = kube-apiserver
 issuer=CN = kubernetes
-notAfter=Oct 12 17:43:57 2027 GMT
+notAfter=Oct 23 16:56:39 2027 GMT
 X509v3 Subject Alternative Name:
     DNS:cp1, DNS:kubernetes, DNS:kubernetes.default, DNS:kubernetes.default.svc, DNS:kubernetes.default.svc.cluster.local, IP Address:10.96.0.1, IP Address:192.168.56.10
 ```
@@ -300,13 +302,13 @@ kubectl get nodes          # repeat for about a minute
 ```
 
 ```text
-NAME    STATUS     ROLES           AGE    VERSION
-cp1     Ready      control-plane   3d1h   v1.35.0
-node1   NotReady   <none>          3d1h   v1.35.0
-node2   Ready      <none>          3d1h   v1.35.0
+NAME    STATUS     ROLES           AGE   VERSION
+cp1     Ready      control-plane   35m   v1.37.0
+node1   NotReady   <none>          31m   v1.37.0
+node2   Ready      <none>          31m   v1.37.0
 ```
 
-It took about 48 seconds: the 40-second grace period, plus the controller's
+It took about 50 seconds: the 40-second grace period, plus the controller's
 polling. The conditions and taints say why:
 
 ```bash
@@ -318,20 +320,20 @@ kubectl describe node node1 | grep -A3 "^Taints:"
 Conditions:
   Type                 Status    LastHeartbeatTime                 LastTransitionTime                Reason              Message
   ----                 ------    -----------------                 ------------------                ------              -------
-  NetworkUnavailable   False     Mon, 12 Oct 2026 17:50:26 +0000   Mon, 12 Oct 2026 17:50:26 +0000   CalicoIsUp          Calico is running on this node
-  MemoryPressure       Unknown   Mon, 12 Oct 2026 17:51:13 +0000   Thu, 15 Oct 2026 19:23:14 +0000   NodeStatusUnknown   Kubelet stopped posting node status.
-  DiskPressure         Unknown   Mon, 12 Oct 2026 17:51:13 +0000   Thu, 15 Oct 2026 19:23:14 +0000   NodeStatusUnknown   Kubelet stopped posting node status.
-  PIDPressure          Unknown   Mon, 12 Oct 2026 17:51:13 +0000   Thu, 15 Oct 2026 19:23:14 +0000   NodeStatusUnknown   Kubelet stopped posting node status.
-  Ready                Unknown   Mon, 12 Oct 2026 17:51:13 +0000   Thu, 15 Oct 2026 19:23:14 +0000   NodeStatusUnknown   Kubelet stopped posting node status.
+  NetworkUnavailable   False     Fri, 23 Oct 2026 17:04:19 +0000   Fri, 23 Oct 2026 17:04:19 +0000   CalicoIsUp          Calico is running on this node
+  MemoryPressure       Unknown   Fri, 23 Oct 2026 17:31:19 +0000   Fri, 23 Oct 2026 17:32:56 +0000   NodeStatusUnknown   Kubelet stopped posting node status.
+  DiskPressure         Unknown   Fri, 23 Oct 2026 17:31:19 +0000   Fri, 23 Oct 2026 17:32:56 +0000   NodeStatusUnknown   Kubelet stopped posting node status.
+  PIDPressure          Unknown   Fri, 23 Oct 2026 17:31:19 +0000   Fri, 23 Oct 2026 17:32:56 +0000   NodeStatusUnknown   Kubelet stopped posting node status.
+  Ready                Unknown   Fri, 23 Oct 2026 17:31:19 +0000   Fri, 23 Oct 2026 17:32:56 +0000   NodeStatusUnknown   Kubelet stopped posting node status.
 Addresses:
-Taints:             node.kubernetes.io/unreachable:NoExecute
-                    node.kubernetes.io/unreachable:NoSchedule
+Taints:             node.kubernetes.io/unreachable:NoSchedule
 Unschedulable:      false
 Lease:
+  HolderIdentity:  node1
 ```
 
-(The old heartbeat times come from the VM snapshot, which was taken three days
-earlier; the kubelet only rewrites them when something changes.) Start it
+(The heartbeat times are older than the transition: they are from the kubelet's
+last report before the snapshot was taken.) Start it
 again; the node is `Ready` within seconds:
 
 ```bash

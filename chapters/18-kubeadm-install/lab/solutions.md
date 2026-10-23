@@ -9,7 +9,7 @@ a real run on the lab VMs; tokens and hashes are replaced by `<token>` and
 
 ```bash
 sudo kubeadm init --apiserver-advertise-address=192.168.56.10 \
-  --pod-network-cidr=10.244.0.0/16 --kubernetes-version=v1.35.0 \
+  --pod-network-cidr=10.244.0.0/16 --kubernetes-version=v1.37.0 \
   --ignore-preflight-errors=NumCPU
 ```
 
@@ -75,7 +75,7 @@ kubectl get nodes
 ```text
 Context "kubernetes-admin@kubernetes" renamed to "kbook-vm".
 NAME   STATUS     ROLES           AGE   VERSION
-cp1    NotReady   control-plane   7s    v1.35.0
+cp1    NotReady   control-plane   12s   v1.37.0
 ```
 
 `NotReady` is expected: there is no Pod network yet.
@@ -86,13 +86,13 @@ Download the manifest, then uncomment the pool setting and give it the Pod
 network from Task 1:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/projectcalico/calico/v3.32.2/manifests/calico.yaml -o calico.yaml
+curl -fsSL https://raw.githubusercontent.com/projectcalico/calico/v3.33.0/manifests/calico.yaml -o calico.yaml
 grep -n -A1 "CALICO_IPV4POOL_CIDR" calico.yaml
 ```
 
 ```text
-7633:            # - name: CALICO_IPV4POOL_CIDR
-7634-            #   value: "192.168.0.0/16"
+13014:            # - name: CALICO_IPV4POOL_CIDR
+13015-            #   value: "192.168.0.0/16"
 ```
 
 ```bash
@@ -102,8 +102,8 @@ grep -n -A1 "CALICO_IPV4POOL_CIDR" calico.yaml
 ```
 
 ```text
-7633:            - name: CALICO_IPV4POOL_CIDR
-7634-              value: "10.244.0.0/16"
+13014:            - name: CALICO_IPV4POOL_CIDR
+13015-              value: "10.244.0.0/16"
 ```
 
 Editing the file in `vim` works just as well; keep the indentation of the
@@ -118,8 +118,8 @@ kubectl get nodes
 ```text
 Waiting for daemon set "calico-node" rollout to finish: 0 of 1 updated pods are available...
 daemon set "calico-node" successfully rolled out
-NAME   STATUS   ROLES           AGE   VERSION
-cp1    Ready    control-plane   82s   v1.35.0
+NAME   STATUS   ROLES           AGE     VERSION
+cp1    Ready    control-plane   3m53s   v1.37.0
 ```
 
 Calico reads `CALICO_IPV4POOL_CIDR` only when it creates its first IP pool. If
@@ -151,7 +151,7 @@ exit
 ...
 [kubelet-start] Starting the kubelet
 [kubelet-check] Waiting for a healthy kubelet at http://127.0.0.1:10248/healthz. This can take up to 4m0s
-[kubelet-check] The kubelet is healthy after 1.323030307s
+[kubelet-check] The kubelet is healthy after 2.574335289s
 [kubelet-start] Waiting for the kubelet to perform the TLS Bootstrap
 
 This node has joined the cluster:
@@ -161,23 +161,28 @@ This node has joined the cluster:
 Run 'kubectl get nodes' on the control-plane to see this node join the cluster.
 ```
 
-Repeat on `node2`. A joined node is `NotReady` until Calico has started on it,
-which takes a minute or two on these VMs:
+Repeat on `node2`. A joined node is `NotReady` until Calico's network is set up
+on it, so wait for all three:
 
 ```bash
+kubectl wait --for=condition=Ready node --all --timeout=600s
 kubectl get nodes -o wide
 ```
 
 ```text
-NAME    STATUS     ROLES           AGE     VERSION   INTERNAL-IP     EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION      CONTAINER-RUNTIME
-cp1     Ready      control-plane   2m32s   v1.35.0   192.168.56.10   <none>        Ubuntu 22.04.3 LTS   5.15.0-91-generic   containerd://2.2.1
-node1   Ready      <none>          59s     v1.35.0   192.168.56.11   <none>        Ubuntu 22.04.3 LTS   5.15.0-91-generic   containerd://2.2.1
-node2   NotReady   <none>          48s     v1.35.0   192.168.56.12   <none>        Ubuntu 22.04.3 LTS   5.15.0-91-generic   containerd://2.2.1
+node/cp1 condition met
+node/node1 condition met
+node/node2 condition met
+NAME    STATUS   ROLES           AGE     VERSION   INTERNAL-IP     EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION              CONTAINER-RUNTIME
+cp1     Ready    control-plane   6m19s   v1.37.0   192.168.56.10   <none>        Ubuntu 22.04.3 LTS   5.15.0-91-generic (amd64)   containerd://2.2.1
+node1   Ready    <none>          2m7s    v1.37.0   192.168.56.11   <none>        Ubuntu 22.04.3 LTS   5.15.0-91-generic (amd64)   containerd://2.2.1
+node2   Ready    <none>          105s    v1.37.0   192.168.56.12   <none>        Ubuntu 22.04.3 LTS   5.15.0-91-generic (amd64)   containerd://2.2.1
 ```
 
-`kubectl -n kube-system get pods -o wide` shows why: `node2`'s `calico-node`
-Pod is still in `Init:0/3`. Wait until every node is `Ready`
-(`kubectl wait --for=condition=Ready node --all --timeout=600s`).
+A node can turn `Ready` before every Pod on it has started: in this run,
+`kubectl -n kube-system get pods -o wide` still showed the workers' `calico-node`
+Pods in `Init:3/4`, and one CoreDNS Pod in `ContainerCreating`. They finish
+within a minute or two on these VMs.
 
 ## Task 5: label the workers
 
@@ -189,15 +194,14 @@ kubectl get nodes
 ```text
 node/node1 labeled
 node/node2 labeled
-NAME    STATUS     ROLES           AGE     VERSION
-cp1     Ready      control-plane   2m33s   v1.35.0
-node1   Ready      worker          60s     v1.35.0
-node2   NotReady   worker          49s     v1.35.0
+NAME    STATUS   ROLES           AGE     VERSION
+cp1     Ready    control-plane   6m20s   v1.37.0
+node1   Ready    worker          2m8s    v1.37.0
+node2   Ready    worker          106s    v1.37.0
 ```
 
 The `ROLES` column is only a display of `node-role.kubernetes.io/<role>`
-labels; it has no effect on scheduling. (In this run `node2` was still waiting
-for Calico; it becomes `Ready` shortly after.)
+labels; it has no effect on scheduling.
 
 ## Explore what you built
 

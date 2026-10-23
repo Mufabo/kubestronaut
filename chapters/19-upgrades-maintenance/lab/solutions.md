@@ -7,34 +7,33 @@ VMs. Pod names and timestamps differ on every run.
 
 ## Task 1: upgrade the control plane
 
-Point apt at the 1.35 repository and look at what it offers:
+Point apt at the 1.37 repository and look at what it offers:
 
 ```bash
-sudo sed -i "s|/v1.34/|/v1.35/|" /etc/apt/sources.list.d/kubernetes.list
+sudo sed -i "s|/v1.36/|/v1.37/|" /etc/apt/sources.list.d/kubernetes.list
 cat /etc/apt/sources.list.d/kubernetes.list
 sudo apt-get update -qq
 apt-cache madison kubeadm | head -3
 ```
 
 ```text
-deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.35/deb/ /
-   kubeadm | 1.35.9-1.1 | https://pkgs.k8s.io/core:/stable:/v1.35/deb  Packages
-   kubeadm | 1.35.8-1.1 | https://pkgs.k8s.io/core:/stable:/v1.35/deb  Packages
-   kubeadm | 1.35.7-1.1 | https://pkgs.k8s.io/core:/stable:/v1.35/deb  Packages
+deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.37/deb/ /
+   kubeadm | 1.37.1-1.1 | https://pkgs.k8s.io/core:/stable:/v1.37/deb  Packages
+   kubeadm | 1.37.0-1.1 | https://pkgs.k8s.io/core:/stable:/v1.37/deb  Packages
 ```
 
-The newest patch is 1.35.9, but the task asks for 1.35.0. Install exactly that
+The newest patch is 1.37.1, but the task asks for 1.37.0. Install exactly that
 version of kubeadm, holding it again afterwards:
 
 ```bash
 sudo apt-mark unhold kubeadm
-sudo apt-get install -y kubeadm=1.35.0-1.1
+sudo apt-get install -y kubeadm=1.37.0-1.1
 sudo apt-mark hold kubeadm
 kubeadm version -o short
 ```
 
 ```text
-v1.35.0
+v1.37.0
 ```
 
 Check the plan:
@@ -45,53 +44,52 @@ sudo kubeadm upgrade plan
 
 ```text
 ...
-[upgrade/versions] Cluster version: 1.34.12
-[upgrade/versions] kubeadm version: v1.35.0
-I1015 18:23:58.647118   20012 version.go:260] remote version is much newer: v1.37.1; falling back to: stable-1.35
-[upgrade/versions] Target version: v1.35.9
-[upgrade/versions] Latest version in the v1.34 series: v1.34.12
+[upgrade/versions] Cluster version: 1.36.5
+[upgrade/versions] kubeadm version: v1.37.0
+[upgrade/versions] Target version: v1.37.1
+[upgrade/versions] Latest version in the v1.36 series: v1.36.5
 
 Components that must be upgraded manually after you have upgraded the control plane with 'kubeadm upgrade apply':
-COMPONENT   NODE      CURRENT    TARGET
-kubelet     cp1       v1.34.12   v1.35.9
-kubelet     node1     v1.34.12   v1.35.9
-kubelet     node2     v1.34.12   v1.35.9
+COMPONENT   NODE      CURRENT   TARGET
+kubelet     cp1       v1.36.5   v1.37.1
+kubelet     node1     v1.36.5   v1.37.1
+kubelet     node2     v1.36.5   v1.37.1
 
 Upgrade to the latest stable version:
 
-COMPONENT                 NODE      CURRENT    TARGET
-kube-apiserver            cp1       v1.34.12   v1.35.9
-kube-controller-manager   cp1       v1.34.12   v1.35.9
-kube-scheduler            cp1       v1.34.12   v1.35.9
-kube-proxy                          1.34.12    v1.35.9
-CoreDNS                             v1.12.1    v1.13.1
-etcd                      cp1       3.6.5-0    3.6.6-0
+COMPONENT                 NODE      CURRENT   TARGET
+kube-apiserver            cp1       v1.36.5   v1.37.1
+kube-controller-manager   cp1       v1.36.5   v1.37.1
+kube-scheduler            cp1       v1.36.5   v1.37.1
+kube-proxy                          1.36.5    v1.37.1
+CoreDNS                             v1.14.2   v1.14.6
+etcd                      cp1       3.6.8-0   3.7.0-0
 
 You can now apply the upgrade by executing the following command:
 
-	kubeadm upgrade apply v1.35.9
+	kubeadm upgrade apply v1.37.1
 
-Note: Before you can perform this upgrade, you have to update kubeadm to v1.35.9.
+Note: Before you can perform this upgrade, you have to update kubeadm to v1.37.1.
+
 ...
 ```
 
-The plan suggests the newest patch, v1.35.9. Name the version you want
+The plan suggests the newest patch, v1.37.1. Name the version you want
 explicitly:
 
 ```bash
-sudo kubeadm upgrade apply -y v1.35.0
+sudo kubeadm upgrade apply -y v1.37.0
 ```
 
 ```text
 [upgrade] Reading configuration from the "kubeadm-config" ConfigMap in namespace "kube-system"...
 ...
-[upgrade/preflight] You have chosen to upgrade the cluster version to "v1.35.0"
-[upgrade/versions] Cluster version: v1.34.12
-[upgrade/versions] kubeadm version: v1.35.0
+[upgrade/preflight] You have chosen to upgrade the cluster version to "v1.37.0"
+[upgrade/versions] Cluster version: v1.36.5
+[upgrade/versions] kubeadm version: v1.37.0
 [upgrade/preflight] Pulling images required for setting up a Kubernetes cluster
-...
-[upgrade/control-plane] Upgrading your static Pod-hosted control plane to version "v1.35.0" (timeout: 5m0s)...
-[upgrade/staticpods] Writing new Static Pod manifests to "/etc/kubernetes/tmp/kubeadm-upgraded-manifests3792397203"
+[upgrade/control-plane] Upgrading your static Pod-hosted control plane to version "v1.37.0" (timeout: 5m0s)...
+[upgrade/staticpods] Writing new Static Pod manifests to "/etc/kubernetes/tmp/kubeadm-upgraded-manifests3142875085"
 [upgrade/staticpods] Preparing for "etcd" upgrade
 [upgrade/staticpods] Renewing etcd-server certificate
 ...
@@ -102,13 +100,17 @@ sudo kubeadm upgrade apply -y v1.35.0
 [upgrade/staticpods] Component "kube-controller-manager" upgraded successfully!
 ...
 [upgrade/staticpods] Component "kube-scheduler" upgraded successfully!
+...
 [upgrade/control-plane] The control plane instance for this node was successfully upgraded!
+...
+[upgrade/kubeconfig] The kubeconfig files for this node were successfully upgraded!
+...
+[upgrade/kubelet-config] The kubelet configuration for this node was successfully upgraded!
 ...
 [addons] Applied essential addon: CoreDNS
 [addons] Applied essential addon: kube-proxy
-...
 
-[upgrade] SUCCESS! A control plane node of your cluster was upgraded to "v1.35.0".
+[upgrade] SUCCESS! A control plane node of your cluster was upgraded to "v1.37.0".
 
 [upgrade] Now please proceed with upgrading the rest of the nodes by following the right order.
 ```
@@ -118,13 +120,12 @@ If it stops in its preflight with `[ERROR CreateJob]: Job
 too busy to run kubeadm's health-check Job in time (the lab VMs have one CPU
 each). Nothing has changed yet; run the same command again.
 
-The whole run takes a few minutes. One `E1015 ... request canceled` line in the
-middle is normal: it appears while etcd restarts. The old manifests are backed
-up under `/etc/kubernetes/tmp/kubeadm-backup-manifests-*`.
+The whole run takes a few minutes. The old manifests are backed up under
+`/etc/kubernetes/tmp/kubeadm-backup-manifests-*`.
 
 ## Task 2: upgrade cp1's kubelet
 
-`kubectl get nodes` still shows v1.34.12 everywhere, because its `VERSION`
+`kubectl get nodes` still shows v1.36.5 everywhere, because its `VERSION`
 column is the kubelet's version. Drain `cp1`, then upgrade the kubelet and
 kubectl:
 
@@ -134,13 +135,13 @@ kubectl drain cp1 --ignore-daemonsets
 
 ```text
 node/cp1 cordoned
-Warning: ignoring DaemonSet-managed Pods: kube-system/calico-node-wgphd, kube-system/kube-proxy-kxz8j
-evicting pod kube-system/coredns-66bc5c9577-mbrcf
-evicting pod kube-system/calico-kube-controllers-855c4cc49d-djcx7
-error when evicting pods/"calico-kube-controllers-855c4cc49d-djcx7" -n "kube-system" (will retry after 5s): Cannot evict pod as it would violate the pod's disruption budget.
-evicting pod kube-system/calico-kube-controllers-855c4cc49d-djcx7
-pod/coredns-66bc5c9577-mbrcf evicted
-pod/calico-kube-controllers-855c4cc49d-djcx7 evicted
+Warning: ignoring DaemonSet-managed Pods: kube-system/calico-node-jfwcj, kube-system/kube-proxy-7ftw9
+evicting pod kube-system/coredns-589f44dc88-md2vl
+evicting pod kube-system/calico-kube-controllers-6ffffbccff-nt96w
+error when evicting pods/"calico-kube-controllers-6ffffbccff-nt96w" -n "kube-system" (will retry after 5s): Cannot evict pod as it would violate the pod's disruption budget.
+evicting pod kube-system/calico-kube-controllers-6ffffbccff-nt96w
+pod/coredns-589f44dc88-md2vl evicted
+pod/calico-kube-controllers-6ffffbccff-nt96w evicted
 node/cp1 drained
 ```
 
@@ -149,7 +150,7 @@ retried, as the chapter describes.
 
 ```bash
 sudo apt-mark unhold kubelet kubectl
-sudo apt-get install -y kubelet=1.35.0-1.1 kubectl=1.35.0-1.1
+sudo apt-get install -y kubelet=1.37.0-1.1 kubectl=1.37.0-1.1
 sudo apt-mark hold kubelet kubectl
 sudo systemctl daemon-reload
 sudo systemctl restart kubelet
@@ -160,23 +161,27 @@ kubectl get nodes
 
 ```text
 node/cp1 condition met
-node/cp1 uncordoned
-NAME    STATUS   ROLES           AGE   VERSION
-cp1     Ready    control-plane   3d    v1.35.0
-node1   Ready    <none>          3d    v1.34.12
-node2   Ready    <none>          3d    v1.34.12
+E1023 18:24:41.163667   22782 request.go:1198] "Unexpected error when reading response body" err="unexpected EOF"
+error: unable to uncordon node "cp1": unexpected error when reading response body. Please retry. Original error: unexpected EOF
+The connection to the server 192.168.56.10:6443 was refused - did you specify the right host or port?
 ```
 
-The new kubelet restarts the control plane's static Pods, so the API server can
-go away for a minute **after** this point. In the run above, the next command
-failed:
+The new kubelet restarts the control plane's static Pods, so the API server
+goes away for a minute right after the node reports `Ready`. In the run above,
+`uncordon` hit that moment, and so did the next commands: the first `drain`
+of `node1` failed the same way. (Here the uncordon had gone through before the
+connection dropped; check with `kubectl get nodes`, which shows
+`SchedulingDisabled` if it did not.) Wait until `kubectl get nodes` answers
+again, and repeat any command that failed, before you go on:
 
 ```text
-error: Get "https://192.168.56.10:6443/api/v1/nodes/node1": dial tcp 192.168.56.10:6443: connect: connection refused - error from a previous attempt: unexpected EOF
+NAME    STATUS   ROLES           AGE   VERSION
+cp1     Ready    control-plane   73m   v1.37.0
+node1   Ready    <none>          70m   v1.36.5
+node2   Ready    <none>          70m   v1.36.5
 ```
 
-Wait until `kubectl get nodes` answers again, and repeat any command that
-failed, before you go on.
+`cp1` reports v1.37.0; the workers are next.
 
 ## Task 3: upgrade node1
 
@@ -193,10 +198,10 @@ Then, on the worker, the same repository switch and packages, with
 
 ```bash
 ssh node1
-sudo sed -i "s|/v1.34/|/v1.35/|" /etc/apt/sources.list.d/kubernetes.list
+sudo sed -i "s|/v1.36/|/v1.37/|" /etc/apt/sources.list.d/kubernetes.list
 sudo apt-get update -qq
 sudo apt-mark unhold kubeadm kubelet kubectl
-sudo apt-get install -y kubeadm=1.35.0-1.1
+sudo apt-get install -y kubeadm=1.37.0-1.1
 sudo kubeadm upgrade node
 ```
 
@@ -208,16 +213,15 @@ sudo kubeadm upgrade node
 [upgrade/control-plane] Skipping phase. Not a control plane node.
 [upgrade/kubeconfig] Skipping phase. Not a control plane node.
 ...
+[patches] Applied patch of type "application/strategic-merge-patch+json" to target "kubeletconfiguration"
 [kubelet-start] Writing kubelet configuration to file "/var/lib/kubelet/config.yaml"
 [upgrade/kubelet-config] The kubelet configuration for this node was successfully upgraded!
 [upgrade/addon] Skipping the addon/coredns phase. Not a control plane node.
 [upgrade/addon] Skipping the addon/kube-proxy phase. Not a control plane node.
-...
-[kubelet-start] Writing kubelet environment file with flags to file "/var/lib/kubelet/kubeadm-flags.env"
 ```
 
 ```bash
-sudo apt-get install -y kubelet=1.35.0-1.1 kubectl=1.35.0-1.1
+sudo apt-get install -y kubelet=1.37.0-1.1 kubectl=1.37.0-1.1
 sudo apt-mark hold kubeadm kubelet kubectl
 sudo systemctl daemon-reload
 sudo systemctl restart kubelet

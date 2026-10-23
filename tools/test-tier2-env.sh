@@ -32,6 +32,7 @@ done
 kubeadm_v="$(kubeadm version -o short 2>/dev/null)"
 [[ "$kubeadm_v" == "$want" ]] && ok "kubeadm is ${want}" || bad "kubeadm is ${want} (got '${kubeadm_v}')"
 expect "containerd is running" systemctl is-active --quiet containerd
+expect "crictl reaches containerd" sudo crictl version
 expect "swap is off" bash -c '[[ -z "$(swapon --show)" ]]'
 
 if [[ "$snapshot" == prereqs ]]; then
@@ -51,6 +52,10 @@ else
   ns=kbook-tier2-smoke
   kubectl delete namespace "$ns" --ignore-not-found --wait=true >/dev/null 2>&1
   kubectl create namespace "$ns" >/dev/null 2>&1
+  # Right after a snapshot restore, the controller manager may not have created the
+  # Namespace's default ServiceAccount yet, and Pods cannot be created without it.
+  has_default_sa() { kubectl -n "$ns" get serviceaccount default >/dev/null 2>&1; }
+  (wait_for "the default ServiceAccount in ${ns}" 120 has_default_sa) || true
   # One Pod per node, so a node whose Pod network is broken cannot hide.
   for node in cp1 node1 node2; do
     kubectl -n "$ns" run "dns-${node}" --image=busybox:1.36 --restart=Never \

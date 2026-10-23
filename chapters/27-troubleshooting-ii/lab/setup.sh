@@ -41,6 +41,13 @@ wait_for "the scheduler is down" 300 scheduler_down
 
 # Created while nothing can schedule it.
 kubectl -n "$LAB_NS" apply -f "${here}/../manifests/web.yaml" >/dev/null
+# Both Pods must exist (Pending) before the lab starts, so nothing appears later on its own.
+two_pods() {
+  local pods
+  pods="$(kubectl -n "$LAB_NS" get pods -l app=web -o name 2>/dev/null)"
+  [[ "$(grep -c . <<<"$pods")" == 2 ]]
+}
+wait_for "both web Pods created" 300 two_pods
 
 node_not_ready() { ! node_ready "$1"; }
 wait_for "node1 NotReady" 300 node_not_ready node1

@@ -150,24 +150,25 @@
 - id: ch18-q13
   type: task
   exams: [CKA]
-  prompt: "A worker node `node1` has the container runtime installed but not the Kubernetes tools. Install `kubeadm`, `kubelet`, and `kubectl` at the cluster's exact version (here `1.35.0`) from the pkgs.k8s.io repository, and stop them from being upgraded by `apt upgrade`."
+  prompt: "A worker node `node1` has the container runtime installed but not the Kubernetes tools. Install `kubeadm`, `kubelet`, and `kubectl` at the cluster's exact version (here `1.37.0`) from the pkgs.k8s.io repository, and stop them from being upgraded by `apt upgrade`."
   solution: |
     ```bash
     sudo apt-get update
     sudo apt-get install -y apt-transport-https ca-certificates curl gpg
     sudo mkdir -p -m 755 /etc/apt/keyrings
-    curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.35/deb/Release.key |
+    curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.37/deb/Release.key |
       sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
-    echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.35/deb/ /' |
+    echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.37/deb/ /' |
       sudo tee /etc/apt/sources.list.d/kubernetes.list
     sudo apt-get update
     apt-cache madison kubeadm | head -3
-    sudo apt-get install -y kubelet=1.35.0-1.1 kubeadm=1.35.0-1.1 kubectl=1.35.0-1.1
+    sudo apt-get install -y kubelet=1.37.0-1.1 kubeadm=1.37.0-1.1 kubectl=1.37.0-1.1
     sudo apt-mark hold kubelet kubeadm kubectl
+    sudo apt-get install -y cri-tools
     sudo systemctl enable kubelet
     ```
 
-    The repository is per minor version (`v1.35`), and `apt-cache madison` shows the exact package versions it offers. The commands come from the "Installing kubeadm" page, which the exam lets you open.
+    The repository is per minor version (`v1.37`), and `apt-cache madison` shows the exact package versions it offers. Since Kubernetes 1.37 the kubeadm package no longer pulls in `cri-tools`, so install it yourself if you want `crictl` on the node. The commands come from the "Installing kubeadm" page, which the exam lets you open.
 
 - id: ch18-q14
   type: task

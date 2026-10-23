@@ -40,15 +40,15 @@ its order:
 
 Two rules follow. **The control plane is upgraded first**, because no kubelet
 may be newer than the API server. And **you cannot skip a minor version**:
-from 1.34 you go to 1.35, and only then to 1.36. Patch versions within a minor
-version can be skipped (1.35.0 to 1.35.9 is fine).
+from 1.36 you go to 1.37, and only then to 1.38. Patch versions within a minor
+version can be skipped (1.37.0 to 1.37.1 is fine).
 
 ### The upgrade order with kubeadm
 
 ```mermaid
 flowchart TD
   A["cp1: upgrade the kubeadm package"] --> B["kubeadm upgrade plan"]
-  B --> C["kubeadm upgrade apply v1.35.0<br/>(control plane, etcd, CoreDNS, kube-proxy)"]
+  B --> C["kubeadm upgrade apply v1.37.0<br/>(control plane, etcd, CoreDNS, kube-proxy)"]
   C --> D["drain cp1, upgrade kubelet + kubectl,<br/>restart kubelet, uncordon"]
   D --> E["each worker, one at a time:<br/>drain, kubeadm package, kubeadm upgrade node,<br/>kubelet + kubectl, restart kubelet, uncordon"]
 ```
@@ -64,8 +64,8 @@ Each step has a reason:
 - **One worker at a time**, so the workloads always have somewhere to run.
 
 The packages come from `pkgs.k8s.io`, which has **one repository per minor
-version**. A node set up for 1.34 cannot see the 1.35 packages until its apt
-source points at the 1.35 repository. Because the packages are held (Chapter
+version**. A node set up for 1.36 cannot see the 1.37 packages until its apt
+source points at the 1.37 repository. Because the packages are held (Chapter
 18), each upgrade unholds them, installs the exact version, and holds them
 again.
 
@@ -119,8 +119,8 @@ crashes.
 ## Guided walkthrough
 
 The walkthrough and the lab run on `cp1`, starting from the `cluster-prev`
-snapshot: a cluster built with kubeadm at v1.34.12, one minor version behind
-the book's v1.35.0. On the host:
+snapshot: a cluster built with kubeadm at v1.36.5, one minor version behind
+the book's v1.37.0. On the host:
 
 ```powershell
 .\envs\vagrant\kbook-vm.ps1 restore cluster-prev      # Windows; ./envs/vagrant/kbook-vm.sh on Linux/macOS
@@ -138,13 +138,13 @@ kubectl version
 
 ```text
 NAME    STATUS   ROLES           AGE   VERSION
-cp1     Ready    control-plane   3d    v1.34.12
-node1   Ready    <none>          3d    v1.34.12
-node2   Ready    <none>          3d    v1.34.12
-v1.34.12
-Client Version: v1.34.12
-Kustomize Version: v5.7.1
-Server Version: v1.34.12
+cp1     Ready    control-plane   63m   v1.36.5
+node1   Ready    <none>          60m   v1.36.5
+node2   Ready    <none>          60m   v1.36.5
+v1.36.5
+Client Version: v1.36.5
+Kustomize Version: v5.8.1
+Server Version: v1.36.5
 ```
 
 The packages and the repository they come from:
@@ -156,18 +156,18 @@ apt-mark showhold
 ```
 
 ```text
-deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.34/deb/ /
-   kubeadm | 1.34.12-1.1 | https://pkgs.k8s.io/core:/stable:/v1.34/deb  Packages
-   kubeadm | 1.34.11-1.1 | https://pkgs.k8s.io/core:/stable:/v1.34/deb  Packages
-   kubeadm | 1.34.10-1.1 | https://pkgs.k8s.io/core:/stable:/v1.34/deb  Packages
-   kubeadm | 1.34.9-1.1 | https://pkgs.k8s.io/core:/stable:/v1.34/deb  Packages
-   kubeadm | 1.34.8-1.1 | https://pkgs.k8s.io/core:/stable:/v1.34/deb  Packages
+deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.36/deb/ /
+   kubeadm | 1.36.5-1.1 | https://pkgs.k8s.io/core:/stable:/v1.36/deb  Packages
+   kubeadm | 1.36.4-1.1 | https://pkgs.k8s.io/core:/stable:/v1.36/deb  Packages
+   kubeadm | 1.36.3-1.1 | https://pkgs.k8s.io/core:/stable:/v1.36/deb  Packages
+   kubeadm | 1.36.2-2.1 | https://pkgs.k8s.io/core:/stable:/v1.36/deb  Packages
+   kubeadm | 1.36.1-1.1 | https://pkgs.k8s.io/core:/stable:/v1.36/deb  Packages
 kubeadm
 kubectl
 kubelet
 ```
 
-The source is the `v1.34` repository, so only 1.34 packages are visible, and
+The source is the `v1.36` repository, so only 1.36 packages are visible, and
 all three packages are held.
 
 ### What kubeadm offers
@@ -185,17 +185,17 @@ sudo kubeadm upgrade plan
 [upgrade/config] Use 'kubeadm init phase upload-config kubeadm --config your-config-file' to re-upload it.
 [upgrade] Running cluster health checks
 [upgrade] Fetching available versions to upgrade to
-[upgrade/versions] Cluster version: 1.34.12
-[upgrade/versions] kubeadm version: v1.34.12
-I1015 18:21:14.493572   17669 version.go:260] remote version is much newer: v1.37.1; falling back to: stable-1.34
-[upgrade/versions] Target version: v1.34.12
-[upgrade/versions] Latest version in the v1.34 series: v1.34.12
+[upgrade/versions] Cluster version: 1.36.5
+[upgrade/versions] kubeadm version: v1.36.5
+I1023 18:16:59.009800   16832 version.go:260] remote version is much newer: v1.37.1; falling back to: stable-1.36
+[upgrade/versions] Target version: v1.36.5
+[upgrade/versions] Latest version in the v1.36 series: v1.36.5
 ```
 
-Nothing to do: the cluster is already at the newest 1.34 patch, and this
+Nothing to do: the cluster is already at the newest 1.36 patch, and this
 kubeadm cannot go beyond its own minor version. Notice also that kubeadm looked
 up the newest release online (v1.37.1) and fell back to its own series; it
-never offers to skip a minor version. Moving to 1.35 starts with a 1.35
+never offers to skip a minor version. Moving to 1.37 starts with a 1.37
 kubeadm, which is Task 1 of the lab.
 
 ### A workload that a careless drain would break
@@ -215,12 +215,12 @@ kubectl -n ch19-upgrade get pdb
 ```
 
 ```text
-NAME                  READY   STATUS    RESTARTS   AGE   IP               NODE    NOMINATED NODE   READINESS GATES
-debug                 1/1     Running   0          53s   10.244.166.131   node1   <none>           <none>
-web-f4dd7dd4f-28th2   1/1     Running   0          52s   10.244.166.132   node1   <none>           <none>
-web-f4dd7dd4f-stbzc   1/1     Running   0          52s   10.244.104.3     node2   <none>           <none>
+NAME                   READY   STATUS    RESTARTS   AGE   IP               NODE    NOMINATED NODE   READINESS GATES
+debug                  1/1     Running   0          47s   10.244.166.132   node1   <none>           <none>
+web-596556dd5f-4jcps   1/1     Running   0          47s   10.244.104.3     node2   <none>           <none>
+web-596556dd5f-5tjqm   1/1     Running   0          47s   10.244.166.131   node1   <none>           <none>
 NAME   MIN AVAILABLE   MAX UNAVAILABLE   ALLOWED DISRUPTIONS   AGE
-web    1               N/A               1                     54s
+web    1               N/A               1                     47s
 ```
 
 (The Pod names, IPs, and their placement differ on every run.) The Deployment
@@ -235,10 +235,10 @@ kubectl drain node1 --ignore-daemonsets
 
 ```text
 node/node1 cordoned
-error: unable to drain node "node1" due to error: cannot delete cannot delete Pods that declare no controller (use --force to override): ch19-upgrade/debug, continuing command...
+error: unable to drain node "node1" due to error: cannot delete Pods that declare no controller (use --force to override): ch19-upgrade/debug, continuing command...
 There are pending nodes to be drained:
  node1
-cannot delete cannot delete Pods that declare no controller (use --force to override): ch19-upgrade/debug
+cannot delete Pods that declare no controller (use --force to override): ch19-upgrade/debug
 ```
 
 The drain stopped, but its first step, the cordon, had already happened:
@@ -249,9 +249,9 @@ kubectl get nodes
 
 ```text
 NAME    STATUS                     ROLES           AGE   VERSION
-cp1     Ready                      control-plane   3d    v1.34.12
-node1   Ready,SchedulingDisabled   <none>          3d    v1.34.12
-node2   Ready                      <none>          3d    v1.34.12
+cp1     Ready                      control-plane   64m   v1.36.5
+node1   Ready,SchedulingDisabled   <none>          61m   v1.36.5
+node2   Ready                      <none>          61m   v1.36.5
 ```
 
 A failed drain leaves the node cordoned. Undo it before you start the lab:
@@ -267,7 +267,7 @@ node/node1 uncordoned
 ## Hands-on lab
 
 The lab works like a KodeKloud lab, one task at a time with a check after each,
-on the Tier 2 VMs. You upgrade the whole cluster from v1.34.12 to v1.35.0, on
+on the Tier 2 VMs. You upgrade the whole cluster from v1.36.5 to v1.37.0, on
 `cp1`, starting from the `cluster-prev` snapshot (see the walkthrough for the
 restore command):
 
@@ -281,8 +281,8 @@ make verify CH=19     # check every task at once
 
 To start over, restore `cluster-prev` on the host again; `make reset CH=19`
 prints that command. Use `sudo` for kubeadm and apt, and `ssh node1` (or
-`node2`) to work on a worker. Upgrade to exactly `v1.35.0` (package version
-`1.35.0-1.1`), not the newest 1.35 patch release, and do the tasks in order.
+`node2`) to work on a worker. Upgrade to exactly `v1.37.0` (package version
+`1.37.0-1.1`), not the newest 1.37 patch release, and do the tasks in order.
 The Namespace `ch19-upgrade` holds the Deployment `web`, its
 PodDisruptionBudget `web`, and a Pod `debug` that no controller manages. Full
 solutions are in [`lab/solutions.md`](lab/solutions.md).
@@ -292,30 +292,30 @@ solutions are in [`lab/solutions.md`](lab/solutions.md).
 Upgrade the control plane to the new minor version with kubeadm.
 
 - Node: `cp1`
-- Version: `v1.35.0` for the API server, controller manager, and scheduler, and in the `kubeadm-config` ConfigMap
+- Version: `v1.37.0` for the API server, controller manager, and scheduler, and in the `kubeadm-config` ConfigMap
 
 ### Task 2: Upgrade cp1's kubelet
 
 Finish the upgrade of `cp1` and put it back in service.
 
-- Packages on `cp1`: `kubeadm`, `kubelet`, and `kubectl` at `1.35.0`, all three held
-- `cp1` reports `v1.35.0`
+- Packages on `cp1`: `kubeadm`, `kubelet`, and `kubectl` at `1.37.0`, all three held
+- `cp1` reports `v1.37.0`
 - `cp1` schedulable
 
 ### Task 3: Upgrade node1
 
 Upgrade the first worker without taking `web` down, and put it back in service.
 
-- Packages on `node1`: `kubeadm`, `kubelet`, and `kubectl` at `1.35.0`, all three held
-- `node1` reports `v1.35.0`
+- Packages on `node1`: `kubeadm`, `kubelet`, and `kubectl` at `1.37.0`, all three held
+- `node1` reports `v1.37.0`
 - `node1` schedulable
 
 ### Task 4: Upgrade node2
 
 Upgrade the second worker the same way.
 
-- Packages on `node2`: `kubeadm`, `kubelet`, and `kubectl` at `1.35.0`, all three held
-- `node2` reports `v1.35.0`
+- Packages on `node2`: `kubeadm`, `kubelet`, and `kubectl` at `1.37.0`, all three held
+- `node2` reports `v1.37.0`
 
 ### Task 5: Take node2 out of service
 
@@ -330,7 +330,7 @@ weakening the protection `web` has.
 
 > **Exam tip:** Keep the "Upgrading kubeadm clusters" page of the Kubernetes documentation open while you upgrade. It has the commands for changing the package repository, unholding and holding the packages, and the order of the steps.
 >
-> **Exam tip:** When a task names an exact version, install exactly that version. `kubeadm upgrade plan` suggests the newest patch release, and `apt-get install kubeadm` without a version installs it too; use `apt-cache madison kubeadm` to find the full package version, such as `1.35.0-1.1`.
+> **Exam tip:** When a task names an exact version, install exactly that version. `kubeadm upgrade plan` suggests the newest patch release, and `apt-get install kubeadm` without a version installs it too; use `apt-cache madison kubeadm` to find the full package version, such as `1.37.0-1.1`.
 >
 > **Exam tip:** Read which machine each command belongs on. `kubeadm upgrade apply` runs once, on the first control plane node; `kubeadm upgrade node` runs on every other node; the package upgrades and the kubelet restart run on the node being upgraded; `kubectl drain` and `uncordon` run wherever your kubeconfig works, usually the control plane node.
 >
@@ -350,39 +350,39 @@ weakening the protection `web` has.
 
 ## End-of-chapter questions
 
-**1.** `CKA` A kubeadm cluster runs v1.33.4. You must bring it to v1.35.0. What is the correct path?
+**1.** `CKA` A kubeadm cluster runs v1.35.8. You must bring it to v1.37.0. What is the correct path?
 
-- **A.** Upgrade directly from v1.33.4 to v1.35.0
-- **B.** Upgrade to a v1.34 release first, then to v1.35.0
-- **C.** Upgrade the kubelets to v1.35.0 first, then the control plane
+- **A.** Upgrade directly from v1.35.8 to v1.37.0
+- **B.** Upgrade to a v1.36 release first, then to v1.37.0
+- **C.** Upgrade the kubelets to v1.37.0 first, then the control plane
 - **D.** Rebuild the cluster; kubeadm cannot upgrade across minor versions
 
-**2.** `CKA` The API server runs v1.35.0. Which kubelet version breaks the version skew policy?
+**2.** `CKA` The API server runs v1.37.0. Which kubelet version breaks the version skew policy?
 
-- **A.** v1.32.9
-- **B.** v1.34.12
-- **C.** v1.35.0
-- **D.** v1.36.0
+- **A.** v1.34.11
+- **B.** v1.36.5
+- **C.** v1.37.0
+- **D.** v1.38.0
 
 **3.** `CKA` Which command upgrades the control plane on the first control plane node of a kubeadm cluster?
 
 - **A.** `kubeadm upgrade node`
-- **B.** `kubeadm upgrade apply v1.35.0`
+- **B.** `kubeadm upgrade apply v1.37.0`
 - **C.** `apt-get upgrade kubelet`
 - **D.** `kubeadm init --upgrade`
 
-**4.** `CKA` After `kubeadm upgrade apply v1.35.0` succeeds, `kubectl get nodes` still shows v1.34.12 for every node. Why?
+**4.** `CKA` After `kubeadm upgrade apply v1.37.0` succeeds, `kubectl get nodes` still shows v1.36.5 for every node. Why?
 
 - **A.** The upgrade failed silently
 - **B.** The VERSION column shows each node's kubelet version, and the kubelets have not been upgraded yet
 - **C.** kubectl caches node versions for an hour
 - **D.** The nodes must be rebooted first
 
-**5.** `CKA` On a node set up for 1.34 from pkgs.k8s.io, `apt-cache madison kubeadm` shows no 1.35 packages. What is missing?
+**5.** `CKA` On a node set up for 1.36 from pkgs.k8s.io, `apt-cache madison kubeadm` shows no 1.37 packages. What is missing?
 
 - **A.** The node must be drained first
-- **B.** The apt source must point at the v1.35 repository, which has its own path per minor version
-- **C.** kubeadm 1.35 is only available as a container image
+- **B.** The apt source must point at the v1.37 repository, which has its own path per minor version
+- **C.** kubeadm 1.37 is only available as a container image
 - **D.** The packages are held, which hides newer versions
 
 **6.** `CKA` What does `kubectl cordon node1` do?
@@ -422,14 +422,14 @@ weakening the protection `web` has.
 
 **11. (Task)** `CKA` Take the worker `node1` out of service for maintenance: no Pods except DaemonSet Pods may remain on it, and no new Pods may be scheduled there. Some Pods on it use `emptyDir` volumes.
 
-**12. (Task)** `CKA` On the worker `node1`, which the control plane at v1.35.0 has already been upgraded for, upgrade the node's kubelet configuration and its kubelet to `1.35.0`, and keep the packages held. The apt source already points at the v1.35 repository, and the node is drained.
+**12. (Task)** `CKA` On the worker `node1`, which the control plane at v1.37.0 has already been upgraded for, upgrade the node's kubelet configuration and its kubelet to `1.37.0`, and keep the packages held. The apt source already points at the v1.35 repository, and the node is drained.
 
 **13. (Task)** `CKA` In namespace `shop`, create a PodDisruptionBudget named `api` that keeps at most one Pod labelled `app=api` unavailable during voluntary disruptions, and show how many disruptions it currently allows.
 
 <details>
 <summary>Answers</summary>
 
-**1. B.** kubeadm upgrades one minor version at a time, so the cluster goes to 1.34 first and then to 1.35. Patch versions inside a minor version can be skipped.
+**1. B.** kubeadm upgrades one minor version at a time, so the cluster goes to 1.36 first and then to 1.37. Patch versions inside a minor version can be skipped.
 
 **2. D.** A kubelet may be up to three minor versions older than the API server, but never newer. That is why the control plane is upgraded before the kubelets.
 
@@ -465,9 +465,9 @@ The node shows `Ready,SchedulingDisabled`, and only DaemonSet Pods, such as `kub
 ssh node1
 sudo apt-mark unhold kubeadm kubelet kubectl
 sudo apt-get update
-sudo apt-get install -y kubeadm=1.35.0-1.1
+sudo apt-get install -y kubeadm=1.37.0-1.1
 sudo kubeadm upgrade node
-sudo apt-get install -y kubelet=1.35.0-1.1 kubectl=1.35.0-1.1
+sudo apt-get install -y kubelet=1.37.0-1.1 kubectl=1.37.0-1.1
 sudo apt-mark hold kubeadm kubelet kubectl
 sudo systemctl daemon-reload
 sudo systemctl restart kubelet

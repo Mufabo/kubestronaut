@@ -14,18 +14,19 @@ kubectl -n ch27-trouble get pods
 ```
 
 ```text
-NAME    STATUS     ROLES           AGE    VERSION
-cp1     Ready      control-plane   3d1h   v1.35.0
-node1   NotReady   <none>          3d1h   v1.35.0
-node2   NotReady   <none>          3d1h   v1.35.0
-NAME                                       READY   STATUS             RESTARTS      AGE
-calico-kube-controllers-7bbf4599f5-h7762   1/1     Running            0             3d1h
-calico-node-pgrnp                          0/1     Running            0             3d1h
+NAME    STATUS     ROLES           AGE   VERSION
+cp1     Ready      control-plane   36m   v1.37.0
+node1   NotReady   <none>          32m   v1.37.0
+node2   NotReady   <none>          32m   v1.37.0
+NAME                                       READY   STATUS             RESTARTS       AGE
+calico-kube-controllers-846669895c-lg87b   1/1     Running            0              35m
+calico-node-h5vd2                          0/1     Running            0              32m
+calico-node-lr28v                          1/1     Running            0              35m
 ...
-kube-scheduler-cp1                         0/1     CrashLoopBackOff   2 (19s ago)   37s
-NAME                 READY   STATUS    RESTARTS   AGE
-web-7dbf7cc5-d2mck   0/1     Pending   0          44s
-web-7dbf7cc5-frjql   0/1     Pending   0          44s
+kube-scheduler-cp1                         0/1     CrashLoopBackOff   2 (23s ago)    37s
+NAME                   READY   STATUS    RESTARTS   AGE
+web-5c8597c5fb-2qf7h   0/1     Pending   0          48s
+web-5c8597c5fb-tvb2b   0/1     Pending   0          48s
 ```
 
 ## Task 1: bring node1 back
@@ -40,7 +41,7 @@ ssh node1 systemctl status kubelet --no-pager | head -6
 
 ```text
 ...
-  Ready                Unknown   Thu, 15 Oct 2026 19:23:22 +0000   Thu, 15 Oct 2026 19:24:16 +0000   NodeStatusUnknown   Kubelet stopped posting node status.
+  Ready                Unknown   Fri, 23 Oct 2026 17:33:00 +0000   Fri, 23 Oct 2026 17:33:51 +0000   NodeStatusUnknown   Kubelet stopped posting node status.
 ...
 ○ kubelet.service - kubelet: The Kubernetes Node Agent
      Loaded: loaded (/lib/systemd/system/kubelet.service; disabled; vendor preset: enabled)
@@ -74,7 +75,7 @@ ssh node2 systemctl status kubelet --no-pager | head -6
      Loaded: loaded (/lib/systemd/system/kubelet.service; enabled; vendor preset: enabled)
     Drop-In: /usr/lib/systemd/system/kubelet.service.d
              └─10-kubeadm.conf
-     Active: active (running) since Thu 2026-10-15 19:23:31 UTC; 50s ago
+     Active: active (running) since Fri 2026-10-23 17:33:07 UTC; 54s ago
        Docs: https://kubernetes.io/docs/
 ```
 
@@ -85,7 +86,7 @@ ssh node2 sudo journalctl -u kubelet --no-pager -n 200 | grep -m3 -E "connect|re
 ```
 
 ```text
-Oct 15 19:24:02 node2 kubelet[13432]: E1015 19:24:02.715355   13432 reconstruct.go:188] "Failed to get Node status to reconstruct device paths" err="Get \"https://192.168.56.10:6444/api/v1/nodes/node2\": dial tcp 192.168.56.10:6444: connect: connection refused"
+Oct 23 17:33:49 node2 kubelet[15879]: E1023 17:33:49.022165   15879 kubelet_node_status.go:108] "Unable to register node with API server" err="Post \"https://192.168.56.10:6444/api/v1/nodes\": dial tcp 192.168.56.10:6444: connect: connection refused" node="node2"
 ...
 ```
 
@@ -109,16 +110,17 @@ kubectl get nodes
 ```
 
 ```text
-NAME    STATUS   ROLES           AGE    VERSION
-cp1     Ready    control-plane   3d1h   v1.35.0
-node1   Ready    <none>          3d1h   v1.35.0
-node2   Ready    <none>          3d1h   v1.35.0
+NAME    STATUS   ROLES           AGE   VERSION
+cp1     Ready    control-plane   36m   v1.37.0
+node1   Ready    <none>          32m   v1.37.0
+node2   Ready    <none>          32m   v1.37.0
 ```
 
 ## Task 3: get web scheduled
 
-The nodes are back, but `web` is still `Pending`, with no events at all:
-nothing has looked at these Pods.
+The nodes are back, but `web` is still `Pending`. Nothing has looked at these
+Pods: `describe` shows no events for them (the first command below prints
+nothing), not even a `FailedScheduling`.
 
 ```bash
 kubectl -n ch27-trouble describe pod -l app=web | grep -A1 "^Events:"
@@ -127,12 +129,10 @@ kubectl -n kube-system logs kube-scheduler-cp1 --tail=5
 ```
 
 ```text
-Events:                      <none>
-...
-NAME                 READY   STATUS             RESTARTS      AGE
-kube-scheduler-cp1   0/1     CrashLoopBackOff   2 (27s ago)   45s
-I1015 19:23:58.929572       1 serving.go:386] Generated self-signed cert in-memory
-E1015 19:23:58.930289       1 run.go:72] "command failed" err="stat /etc/kubernetes/scheduler.config: no such file or directory"
+NAME                 READY   STATUS             RESTARTS     AGE
+kube-scheduler-cp1   0/1     CrashLoopBackOff   3 (5s ago)   44s
+I1023 17:34:00.347753       1 serving.go:411] Generated self-signed cert in-memory
+E1023 17:34:00.348236       1 run.go:72] "command failed" err="stat /etc/kubernetes/scheduler.config: no such file or directory"
 ```
 
 The same log is available without the API server, through the runtime:
@@ -165,9 +165,9 @@ kubectl -n ch27-trouble get pods -o wide        # repeat until both are Running
 ```
 
 ```text
-NAME                 READY   STATUS    RESTARTS   AGE    IP               NODE    NOMINATED NODE   READINESS GATES
-web-7dbf7cc5-d2mck   1/1     Running   0          114s   10.244.166.131   node1   <none>           <none>
-web-7dbf7cc5-frjql   1/1     Running   0          114s   10.244.104.2     node2   <none>           <none>
+NAME                   READY   STATUS    RESTARTS   AGE    IP               NODE    NOMINATED NODE   READINESS GATES
+web-5c8597c5fb-2qf7h   1/1     Running   0          118s   10.244.166.130   node1   <none>           <none>
+web-5c8597c5fb-tvb2b   1/1     Running   0          118s   10.244.104.4     node2   <none>           <none>
 ```
 
 It took about a minute: the kubelet waits out the crash back-off before it
@@ -180,7 +180,7 @@ sudo openssl x509 -enddate -noout -in /etc/kubernetes/pki/ca.crt
 ```
 
 ```text
-notAfter=Oct  9 17:43:57 2036 GMT
+notAfter=Oct 20 16:56:39 2036 GMT
 ```
 
 ```bash
@@ -189,10 +189,10 @@ cat /tmp/ch27-ca-expiry.txt
 ```
 
 ```text
-Oct  9 17:43:57 2036 GMT
+Oct 20 16:56:39 2036 GMT
 ```
 
-Keep the two spaces before a one-digit day: that is how `openssl` prints it.
+For a one-digit day, `openssl` pads with a second space (`Oct  9`); write the date exactly as it prints it.
 
 ## Task 5: renew the API server certificate
 
@@ -205,14 +205,14 @@ sudo openssl x509 -enddate -noout -serial -in /etc/kubernetes/pki/apiserver.crt
 ```
 
 ```text
-notAfter=Oct 12 17:43:57 2027 GMT
-serial=11D39BB0A26FB84A
+notAfter=Oct 23 16:56:39 2027 GMT
+serial=1BE3F104C92EA419
 [renew] Reading configuration from the "kubeadm-config" ConfigMap in namespace "kube-system"...
 [renew] Use 'kubeadm init phase upload-config kubeadm --config your-config-file' to re-upload it.
 
 certificate for serving the Kubernetes API renewed
-notAfter=Oct 15 19:25:28 2027 GMT
-serial=0FF61E78DD54A181
+notAfter=Oct 23 17:35:08 2027 GMT
+serial=3D7FF9CA3A811FA0
 ```
 
 A new serial number, and one year from today. Now check what the API server
@@ -223,8 +223,8 @@ openssl s_client -connect 192.168.56.10:6443 </dev/null 2>/dev/null | openssl x5
 ```
 
 ```text
-serial=0FF61E78DD54A181
-notAfter=Oct 15 19:25:28 2027 GMT
+serial=3D7FF9CA3A811FA0
+notAfter=Oct 23 17:35:08 2027 GMT
 ```
 
 The served serial matches the file: the API server reloaded its serving

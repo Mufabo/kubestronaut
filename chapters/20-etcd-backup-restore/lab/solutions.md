@@ -19,11 +19,11 @@ sudo etcdctl $E snapshot save /opt/kbook/etcd-backup.db
 ```
 
 ```text
-{"level":"info","ts":"2026-10-15T19:01:24.248780Z","caller":"snapshot/v3_snapshot.go:83","msg":"created temporary db file","path":"/opt/kbook/etcd-backup.db.part"}
+{"level":"info","ts":"2026-10-23T17:42:56.576113Z","caller":"snapshot/v3_snapshot.go:83","msg":"created temporary db file","path":"/opt/kbook/etcd-backup.db.part"}
 ...
-{"level":"info","ts":"2026-10-15T19:01:24.473217Z","caller":"snapshot/v3_snapshot.go:121","msg":"saved","path":"/opt/kbook/etcd-backup.db"}
+{"level":"info","ts":"2026-10-23T17:42:56.864437Z","caller":"snapshot/v3_snapshot.go:121","msg":"saved","path":"/opt/kbook/etcd-backup.db"}
 Snapshot saved at /opt/kbook/etcd-backup.db
-Server version 3.6.0
+Server version 3.7.0
 ```
 
 ## Task 2: record the backup's revision
@@ -33,11 +33,11 @@ sudo etcdutl snapshot status /opt/kbook/etcd-backup.db -w table
 ```
 
 ```text
-+----------+----------+------------+------------+---------+
-|   HASH   | REVISION | TOTAL KEYS | TOTAL SIZE | VERSION |
-+----------+----------+------------+------------+---------+
-| 83cc7122 |     1669 |        547 |     4.7 MB |   3.6.0 |
-+----------+----------+------------+------------+---------+
+┌──────────┬──────────┬────────────┬────────────┬─────────┐
+│   HASH   │ REVISION │ TOTAL KEYS │ TOTAL SIZE │ VERSION │
+├──────────┼──────────┼────────────┼────────────┼─────────┤
+│ 435cb074 │     1838 │        576 │     6.7 MB │   3.7.0 │
+└──────────┴──────────┴────────────┴────────────┴─────────┘
 ```
 
 Write the number into the file, by hand or from the JSON output:
@@ -47,11 +47,11 @@ sudo etcdutl snapshot status /opt/kbook/etcd-backup.db -w json
 ```
 
 ```text
-{"hash":2211213602,"revision":1669,"totalKey":547,"totalSize":4665344,"version":"3.6.0"}
+{"hash":1130147956,"revision":1838,"totalKey":576,"totalSize":6737920,"version":"3.7.0"}
 ```
 
 ```bash
-echo 1669 > /tmp/ch20-revision.txt
+echo 1838 > /tmp/ch20-revision.txt
 ```
 
 ## Task 3: restore the older backup
@@ -82,7 +82,7 @@ sudo etcdutl snapshot restore /opt/kbook/etcd-before.db --data-dir /var/lib/etcd
 
 ```text
 ...
-2026-10-15T19:01:25Z	info	snapshot/v3_snapshot.go:333	restored snapshot	{"path": "/opt/kbook/etcd-before.db", "wal-dir": "/var/lib/etcd-restore/member/wal", "data-dir": "/var/lib/etcd-restore", "snap-dir": "/var/lib/etcd-restore/member/snap", "initial-memory-map-size": 10737418240}
+2026-10-23T17:42:57Z	info	snapshot/v3_snapshot.go:334	restored snapshot	{"path": "/opt/kbook/etcd-before.db", "wal-dir": "/var/lib/etcd-restore/member/wal", "data-dir": "/var/lib/etcd-restore", "snap-dir": "/var/lib/etcd-restore/member/snap", "initial-memory-map-size": 10737418240}
 ```
 
 Then point the `etcd-data` volume at it. Edit
@@ -125,12 +125,10 @@ kubectl get nodes
 ```
 
 ```text
-NAME     DATA   AGE
-legacy   1      6m6s
-NAME    STATUS   ROLES           AGE    VERSION
-cp1     Ready    control-plane   3d1h   v1.35.0
-node1   Ready    <none>          3d1h   v1.35.0
-node2   Ready    <none>          3d1h   v1.35.0
+NAME               DATA   AGE
+current            1      4m11s
+kube-root-ca.crt   1      4m13s
+The connection to the server 192.168.56.10:6443 was refused - did you specify the right host or port?
 ```
 
 ### Why the API server has to restart
@@ -146,11 +144,11 @@ kubectl -n ch20-etcd get configmaps
 
 ```text
 NAME     DATA   AGE
-legacy   1      5m21s
+legacy   1      4m13s
 Error from server (NotFound): configmaps "current" not found
 NAME               DATA   AGE
-current            1      5m20s
-kube-root-ca.crt   1      5m21s
+current            1      4m9s
+kube-root-ca.crt   1      4m11s
 ```
 
 A restore moves etcd's revision backwards, and the running API server's watch

@@ -22,6 +22,15 @@ apt-get install -y -qq --allow-downgrades \
   "kubelet=${PKG_VERSION}" "kubeadm=${PKG_VERSION}" "kubectl=${PKG_VERSION}"
 apt-mark hold kubelet kubeadm kubectl >/dev/null
 
+# crictl talks to the container runtime directly (Chapters 20 and 27). Since
+# Kubernetes 1.37 the kubeadm package no longer pulls cri-tools in, so install the
+# version from the same minor-version repository, and point it at containerd.
+apt-get install -y -qq cri-tools
+cat > /etc/crictl.yaml <<'YAML'
+runtime-endpoint: unix:///run/containerd/containerd.sock
+image-endpoint: unix:///run/containerd/containerd.sock
+YAML
+
 # The kubelet uses this node's address on the private network, not the NAT one.
 echo "KUBELET_EXTRA_ARGS=--node-ip=${NODE_IP}" > /etc/default/kubelet
 systemctl enable kubelet

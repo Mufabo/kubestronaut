@@ -12,7 +12,7 @@ Chapters 17 to 28 teach, and it closes Part III: do it after Chapter 28.
 Unlike the Part I and Part II simulators, this one runs on the Tier 2 VMs,
 because a cluster administrator's work happens on the machines: upgrades,
 backups, kubelets, and static Pods. It starts from the `cluster-prev`
-snapshot, a kubeadm cluster at v1.34.12.
+snapshot, a kubeadm cluster at v1.36.5.
 
 ## How it works
 
@@ -104,12 +104,12 @@ Task weight: 12%
 
 Use context: `kubectl config use-context p3-a`
 
-The cluster runs v1.34.12. Upgrade the control plane node `cp1` to exactly
-`v1.35.0`:
+The cluster runs v1.36.5. Upgrade the control plane node `cp1` to exactly
+`v1.37.0`:
 
-- The control plane components (API server, controller manager, scheduler) run `v1.35.0`.
-- On `cp1`, the `kubeadm`, `kubelet`, and `kubectl` packages are at `1.35.0` and held.
-- `cp1` reports `v1.35.0` and is schedulable when you are done.
+- The control plane components (API server, controller manager, scheduler) run `v1.37.0`.
+- On `cp1`, the `kubeadm`, `kubelet`, and `kubectl` packages are at `1.37.0` and held.
+- `cp1` reports `v1.37.0` and is schedulable when you are done.
 
 Leave `node1` and `node2` at their current version.
 

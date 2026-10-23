@@ -25,14 +25,14 @@
 - id: ch20-q03
   type: mcq
   exams: [CKA]
-  question: "With etcd 3.6, which command restores a snapshot into a new data directory?"
+  question: "With etcd 3.6 or later, which command restores a snapshot into a new data directory?"
   choices:
     - "`etcdctl snapshot restore FILE --data-dir DIR`"
     - "`etcdutl snapshot restore FILE --data-dir DIR`"
     - "`kubeadm etcd restore FILE`"
     - "`etcdctl restore --from FILE`"
   answer: B
-  explanation: "etcd 3.5 moved `snapshot restore` and `snapshot status` to `etcdutl`, which works on files offline, and 3.6 removed them from `etcdctl`. `etcdctl` keeps `snapshot save`, which needs a running member."
+  explanation: "etcd 3.5 moved `snapshot restore` and `snapshot status` to `etcdutl`, which works on files offline, and 3.6 removed them from `etcdctl`; 3.7 keeps it that way. `etcdctl` keeps `snapshot save`, which needs a running member."
 
 - id: ch20-q04
   type: mcq

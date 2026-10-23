@@ -57,21 +57,21 @@ A fresh token, valid for 24 hours, and the CA hash, in one line (Chapter 18).
 As in Chapter 19, on `cp1`:
 
 ```bash
-sudo sed -i "s|/v1.34/|/v1.35/|" /etc/apt/sources.list.d/kubernetes.list
+sudo sed -i "s|/v1.36/|/v1.37/|" /etc/apt/sources.list.d/kubernetes.list
 sudo apt-get update
 sudo apt-mark unhold kubeadm
-sudo apt-get install -y kubeadm=1.35.0-1.1
+sudo apt-get install -y kubeadm=1.37.0-1.1
 sudo apt-mark hold kubeadm
 sudo kubeadm upgrade plan
-sudo kubeadm upgrade apply -y v1.35.0
+sudo kubeadm upgrade apply -y v1.37.0
 
 kubectl drain cp1 --ignore-daemonsets
 sudo apt-mark unhold kubelet kubectl
-sudo apt-get install -y kubelet=1.35.0-1.1 kubectl=1.35.0-1.1
+sudo apt-get install -y kubelet=1.37.0-1.1 kubectl=1.37.0-1.1
 sudo apt-mark hold kubelet kubectl
 sudo systemctl daemon-reload
 sudo systemctl restart kubelet
-kubectl get nodes          # repeat until it answers and cp1 shows v1.35.0
+kubectl get nodes          # repeat until it answers and cp1 shows v1.37.0
 kubectl uncordon cp1
 ```
 

@@ -214,9 +214,9 @@ systemctl is-active kubelet
 ```
 
 ```text
-v1.35.0
-Client Version: v1.35.0
-Kustomize Version: v5.7.1
+v1.37.0
+Client Version: v1.37.0
+Kustomize Version: v5.8.1
 inactive
 ```
 
@@ -236,7 +236,7 @@ cat /etc/default/kubelet
 
 ```text
                total        used        free      shared  buff/cache   available
-Mem:            1964         189         223           0        1551        1610
+Mem:            1964         201         207           0        1555        1598
 Swap:              0           0           0
 br_netfilter           32768  0
 overlay               151552  0
@@ -278,7 +278,7 @@ certificateValidityPeriod: 8760h0m0s
 caCertificateValidityPeriod: 87600h0m0s
 ...
 kind: ClusterConfiguration
-kubernetesVersion: 1.35.0
+kubernetesVersion: 1.37.0
 networking:
   dnsDomain: cluster.local
   serviceSubnet: 10.96.0.0/12
@@ -292,17 +292,17 @@ year (8760 hours) and CAs for ten, a Service network of `10.96.0.0/12`, and no
 The control plane runs from these images:
 
 ```bash
-kubeadm config images list --kubernetes-version v1.35.0
+kubeadm config images list --kubernetes-version v1.37.0
 ```
 
 ```text
-registry.k8s.io/kube-apiserver:v1.35.0
-registry.k8s.io/kube-controller-manager:v1.35.0
-registry.k8s.io/kube-scheduler:v1.35.0
-registry.k8s.io/kube-proxy:v1.35.0
-registry.k8s.io/coredns/coredns:v1.13.1
-registry.k8s.io/pause:3.10.1
-registry.k8s.io/etcd:3.6.6-0
+registry.k8s.io/kube-apiserver:v1.37.0
+registry.k8s.io/kube-controller-manager:v1.37.0
+registry.k8s.io/kube-scheduler:v1.37.0
+registry.k8s.io/kube-proxy:v1.37.0
+registry.k8s.io/coredns/coredns:v1.14.6
+registry.k8s.io/pause:3.10.2
+registry.k8s.io/etcd:3.7.0-0
 ```
 
 ### Run the preflight checks on their own
@@ -315,7 +315,6 @@ sudo kubeadm init phase preflight
 ```
 
 ```text
-I1012 19:22:39.798288   10543 version.go:260] remote version is much newer: v1.37.1; falling back to: stable-1.35
 [preflight] Running pre-flight checks
 [preflight] Some fatal errors occurred:
 	[ERROR NumCPU]: the number of available CPUs 1 is less than the required 2
@@ -324,18 +323,17 @@ error: error execution phase preflight: preflight checks failed
 To see the stack trace of this error execute with --v=5 or higher
 ```
 
-Two things to notice. Without `--kubernetes-version`, kubeadm asked the internet
-for the newest release; the first line shows it found a newer one. And the lab
-VMs have one CPU each (VirtualBox under Hyper-V hangs with more, see
-`envs/vagrant/README.md`), so the CPU check fails. It is safe to downgrade that
-one check to a warning:
+Without `--kubernetes-version`, kubeadm also asks the internet for the newest
+release of its own minor version, and prints a line about it when that is much
+newer than itself. The check that fails is the CPU count: the lab VMs have one
+CPU each (VirtualBox under Hyper-V hangs with more, see `envs/vagrant/README.md`).
+It is safe to downgrade that one check to a warning:
 
 ```bash
 sudo kubeadm init phase preflight --ignore-preflight-errors=NumCPU
 ```
 
 ```text
-I1012 19:22:40.882438   10563 version.go:260] remote version is much newer: v1.37.1; falling back to: stable-1.35
 [preflight] Running pre-flight checks
 	[WARNING NumCPU]: the number of available CPUs 1 is less than the required 2
 [preflight] Pulling images required for setting up a Kubernetes cluster
@@ -350,28 +348,28 @@ to a temporary folder:
 
 ```bash
 sudo kubeadm init --dry-run --apiserver-advertise-address=192.168.56.10 \
-  --pod-network-cidr=10.244.0.0/16 --kubernetes-version=v1.35.0 \
+  --pod-network-cidr=10.244.0.0/16 --kubernetes-version=v1.37.0 \
   --ignore-preflight-errors=NumCPU | grep -E "^\[[a-z-]+\]" | cut -c1-110 | awk '!seen[$1]++'
 ```
 
 ```text
-W1012 19:23:47.918318   10604 constants.go:621] Using dry-run directory /etc/kubernetes/tmp/kubeadm-init-dryrun227041471. To override it, set the environment variable KUBEADM_INIT_DRYRUN_DIR
+W1023 17:59:05.553690   10668 constants.go:627] Using dry-run directory /etc/kubernetes/tmp/kubeadm-init-dryrun1580617542. To override it, set the environment variable KUBEADM_INIT_DRYRUN_DIR
 	[WARNING NumCPU]: the number of available CPUs 1 is less than the required 2
-[init] Using Kubernetes version: v1.35.0
+[init] Using Kubernetes version: v1.37.0
 [preflight] Running pre-flight checks
-[certs] Using certificateDir folder "/etc/kubernetes/tmp/kubeadm-init-dryrun227041471"
-[kubeconfig] Using kubeconfig folder "/etc/kubernetes/tmp/kubeadm-init-dryrun227041471"
+[certs] Using certificateDir folder "/etc/kubernetes/tmp/kubeadm-init-dryrun1580617542"
+[kubeconfig] Using kubeconfig folder "/etc/kubernetes/tmp/kubeadm-init-dryrun1580617542"
 [etcd] Would ensure that "/var/lib/etcd" directory is present
 [dryrun] Would write file "/etc/kubernetes/manifests/etcd.yaml" with content:
-[control-plane] Using manifest folder "/etc/kubernetes/tmp/kubeadm-init-dryrun227041471"
-[kubelet-start] Writing kubelet environment file with flags to file "/etc/kubernetes/tmp/kubeadm-init-dryrun22
+[control-plane] Using manifest folder "/etc/kubernetes/tmp/kubeadm-init-dryrun1580617542"
+[kubelet-start] Writing kubelet environment file with flags to file "/etc/kubernetes/tmp/kubeadm-init-dryrun15
 [patches] Applied patch of type "application/strategic-merge-patch+json" to target "kubeletconfiguration"
 [wait-control-plane] Waiting for the kubelet to boot up the control plane as static Pods from directory "/etc/
 [upload-config] Storing the configuration used in ConfigMap "kubeadm-config" in the "kube-system" Namespace
 [kubelet] Creating a ConfigMap "kubelet-config" in namespace kube-system with the configuration for the kubele
 [upload-certs] Skipping phase. Please see --upload-certs
 [mark-control-plane] Marking the node cp1 as control-plane by adding the labels: [node-role.kubernetes.io/cont
-[bootstrap-token] Using token: 0eblfk.d1hxiym0s2can1w1
+[bootstrap-token] Using token: 6zhoed.en1lttojup57dedw
 [addons] Applied essential addon: CoreDNS
 ```
 
@@ -412,7 +410,7 @@ Initialize a control plane on `cp1` with kubeadm.
 - Node: `cp1`
 - API server advertise address: `192.168.56.10`
 - Pod network: `10.244.0.0/16`
-- Kubernetes version: `v1.35.0`
+- Kubernetes version: `v1.37.0`
 
 ### Task 2: kubectl for your user
 
@@ -426,7 +424,7 @@ kubeconfig file.
 
 Install Calico, the CNI plugin this book uses, so the nodes become `Ready`.
 
-- Calico version: `v3.32.2` (manifest: `https://raw.githubusercontent.com/projectcalico/calico/v3.32.2/manifests/calico.yaml`)
+- Calico version: `v3.33.0` (manifest: `https://raw.githubusercontent.com/projectcalico/calico/v3.33.0/manifests/calico.yaml`)
 - Calico IP pool: `10.244.0.0/16` (the manifest's default, `192.168.0.0/16`, would overlap the VM network)
 - Calico running on every node, and `cp1` `Ready`
 
@@ -435,7 +433,7 @@ Install Calico, the CNI plugin this book uses, so the nodes become `Ready`.
 Join both workers to the cluster.
 
 - Nodes: `node1` and `node2`
-- All three nodes `Ready`, at version `v1.35.0`
+- All three nodes `Ready`, at version `v1.37.0`
 
 ### Task 5: Label the workers
 
@@ -553,7 +551,7 @@ column.
 
 **12. (Task)** `CKA` On a kubeadm cluster, write the Pod network range the cluster was initialized with into `/tmp/ch18-q12.txt`, and nothing else.
 
-**13. (Task)** `CKA` A worker node `node1` has the container runtime installed but not the Kubernetes tools. Install `kubeadm`, `kubelet`, and `kubectl` at the cluster's exact version (here `1.35.0`) from the pkgs.k8s.io repository, and stop them from being upgraded by `apt upgrade`.
+**13. (Task)** `CKA` A worker node `node1` has the container runtime installed but not the Kubernetes tools. Install `kubeadm`, `kubelet`, and `kubectl` at the cluster's exact version (here `1.37.0`) from the pkgs.k8s.io repository, and stop them from being upgraded by `apt upgrade`.
 
 **14. (Task)** `CKA` A worker that joined the cluster stays `NotReady`. Find out why, starting from the control plane node, and name the two places you look first.
 
@@ -609,18 +607,19 @@ kubeadm stores the ClusterConfiguration it used in the `kubeadm-config` ConfigMa
 sudo apt-get update
 sudo apt-get install -y apt-transport-https ca-certificates curl gpg
 sudo mkdir -p -m 755 /etc/apt/keyrings
-curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.35/deb/Release.key |
+curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.37/deb/Release.key |
   sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
-echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.35/deb/ /' |
+echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.37/deb/ /' |
   sudo tee /etc/apt/sources.list.d/kubernetes.list
 sudo apt-get update
 apt-cache madison kubeadm | head -3
-sudo apt-get install -y kubelet=1.35.0-1.1 kubeadm=1.35.0-1.1 kubectl=1.35.0-1.1
+sudo apt-get install -y kubelet=1.37.0-1.1 kubeadm=1.37.0-1.1 kubectl=1.37.0-1.1
 sudo apt-mark hold kubelet kubeadm kubectl
+sudo apt-get install -y cri-tools
 sudo systemctl enable kubelet
 ```
 
-The repository is per minor version (`v1.35`), and `apt-cache madison` shows the exact package versions it offers. The commands come from the "Installing kubeadm" page, which the exam lets you open.
+The repository is per minor version (`v1.37`), and `apt-cache madison` shows the exact package versions it offers. Since Kubernetes 1.37 the kubeadm package no longer pulls in `cri-tools`, so install it yourself if you want `crictl` on the node. The commands come from the "Installing kubeadm" page, which the exam lets you open.
 
 **14.**
 
