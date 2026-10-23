@@ -23,6 +23,8 @@ the book cover everything?".
   - `planned`: no chapter written yet.
   - `partly`: some of the listed chapters are drafted; the rest are planned.
     Read the chapter column to see which.
+  - `partly (gap: ...)`: every listed chapter is written, but they do not yet
+    cover the whole bullet; the note says what is missing.
   - `drafted`: every listed chapter is written and its lab passes CI on a real
     cluster, but it has not been reviewed against the curriculum or completed by
     a beta reader.
@@ -45,18 +47,18 @@ The KCNA curriculum lists topics, not tasks, so each row is broad. Chapters
 | Domain | Bullet (verbatim) | Chapter | Lab | Questions | Status |
 | --- | --- | --- | --- | --- | --- |
 | Kubernetes Fundamentals | Kubernetes Core Concepts | 02, 04, 05, 06 | 02/T1-T5, 04/T1-T5, 05/T1-T6, 06/T1-T5; P1 Q15, Q18 | ch02-q01..q05, q08; ch04-q01, q02, q04; ch05-q01..q03; ch06-q01..q05 | drafted |
-| Kubernetes Fundamentals | Administration | 03, 06, 18, 19, 20 | 03/a, 03/b1, 03/b2p; 06/T2; 18/T1–T5; 19/T1–T5; 20/T1–T4; P1 Q15 | ch02-q10; ch03-q01, q08; ch06-q09; ch18-q10; ch19-q06; ch20-q01 | partly |
+| Kubernetes Fundamentals | Administration | 03, 06, 18, 19, 20 | 03/a, 03/b1, 03/b2p; 06/T2; 18/T1–T5; 19/T1–T5; 20/T1–T4; P1 Q15 | ch02-q10; ch03-q01, q08; ch06-q09; ch18-q10; ch19-q06; ch20-q01 | drafted |
 | Kubernetes Fundamentals | Scheduling | 02, 17 | 02/T4; 17/T1–T5 | ch02-q02, q12; ch17-q01–q07 | drafted |
 | Kubernetes Fundamentals | Containerization | 01, 04 | 04/T1, 04/T5 | ch01-q04..q06; ch04-q01 | drafted |
-| Container Orchestration | Networking | 11, 21 | 11/T1–T5; 21/T1–T5 | ch11-q01–q11; ch21-q01–q11 | partly (26 planned) |
-| Container Orchestration | Security | 23, 29, 33 | 03/b3 | ch03-q05 | partly |
-| Container Orchestration | Troubleshooting | 04, 26 | 04/T2; P1 Q3 | ch04-q03, q11 | partly |
+| Container Orchestration | Networking | 11, 21, 26 | 11/T1–T5; 21/T1–T5 | ch11-q01–q11; ch21-q01–q11 | drafted |
+| Container Orchestration | Security | 23, 29, 33 | 03/b3; 23/T1–T5 | ch03-q05; ch23-q01–q07 | partly (23 drafted; 29 and 33 planned) |
+| Container Orchestration | Troubleshooting | 04, 26 | 04/T2; 26/T1–T5; P1 Q3 | ch04-q03, q11; ch26-q01–q11 | drafted |
 | Container Orchestration | Storage | 13 | 13/T1–T5 | ch13-q01–q03, q05 | drafted |
 | Cloud Native Application Delivery | Application Delivery | 14, 16 | 16/T1–T5 | ch16-q06, q08–q11 | drafted |
-| Cloud Native Application Delivery | Debugging | 04, 15 | 04/T2, 04/T3; P1 Q4 | ch04-q03, q11 | partly |
-| Cloud Native Architecture | Observability | 01, 15, 28 | | ch01-q10; ch28-q01 | partly |
-| Cloud Native Architecture | Cloud Native Ecosystem and Principles | 01, 28 | 01 and 28 exploration exercises | ch01-q07..q11, q15; ch28-q01..q08 | partly |
-| Cloud Native Architecture | Could Native Community and Collaboration | 01, 28 | 01 and 28 exploration exercises | ch01-q02, q03, q12..q14; ch28-q09..q15 | partly |
+| Cloud Native Application Delivery | Debugging | 04, 15, 26 | 04/T2, 04/T3; 15/T1–T2; 26/T1–T5; P1 Q4 | ch04-q03, q11; ch15-q03; ch26-q01, q07, q10 | drafted |
+| Cloud Native Architecture | Observability | 01, 15, 28 | 15/T4 | ch01-q10; ch15-q05, q06; ch28-q01 | drafted |
+| Cloud Native Architecture | Cloud Native Ecosystem and Principles | 01, 28 | 01 and 28 exploration exercises | ch01-q07..q11, q15; ch28-q01..q08 | drafted |
+| Cloud Native Architecture | Could Native Community and Collaboration | 01, 28 | 01 and 28 exploration exercises | ch01-q02, q03, q12..q14; ch28-q09..q15 | drafted |
 
 ## CKA
 
@@ -75,28 +77,28 @@ The KCNA curriculum lists topics, not tasks, so each row is broad. Chapters
 | Storage | Manage persistent volumes and persistent volume claims | 13 | 13/T1–T3; P3 Q9 | ch13-q02, q08, q11 | drafted |
 | Troubleshooting | Troubleshoot clusters and nodes | 02, 27 | 02/T1, 02/T3; 27/T1–T2; P3 Q15 | ch02-q03, q07; ch27-q01–q03, q10 | drafted |
 | Troubleshooting | Troubleshoot cluster components | 02, 27 | 02/T2, 02/T3; 27/T3–T5; P1 Q14; P3 Q2, Q16 | ch02-q01..q05, q07; ch27-q04–q09, q11, q12 | drafted |
-| Troubleshooting | Monitor cluster and application resource usage | 10, 15, 25 | 25/T3 | ch15-q05, q06; ch25-q03, q11 | partly (application metrics described in 15) |
-| Troubleshooting | Manage and evaluate container output streams | 04, 15 | 04/T3; 15/T1; 26/T1 | ch04-q11, ch15-q01, q02, q04; ch26-q01 | partly |
+| Troubleshooting | Monitor cluster and application resource usage | 10, 15, 25 | 25/T3 | ch15-q05, q06; ch25-q03, q11 | drafted |
+| Troubleshooting | Manage and evaluate container output streams | 04, 15, 26 | 04/T3; 15/T1; 26/T1 | ch04-q11, ch15-q01, q02, q04; ch26-q01 | drafted |
 | Troubleshooting | Troubleshoot services and networking | 11, 21, 26 | 11/T5; 26/T2–T5; P3 Q5, Q14 | ch11-q02, q11; ch26-q02–q06 | drafted |
 | Workloads and Scheduling | Understand application deployments and how to perform rolling update and rollbacks | 05 | 05/T1-T6; P1 Q15-Q17 | ch05-q04..q08, q10..q14 | drafted |
 | Workloads and Scheduling | Use ConfigMaps and Secrets to configure applications | 03, 07 | 03/b2 C1, C2; 07/T1–T5; P1 Q11 | ch07-q01–q03, q08–q11 | drafted |
 | Workloads and Scheduling | Configure workload autoscaling | 25 | 25/T1–T5; P3 Q13 | ch25-q01–q03, q06, q07, q08, q09, q10, q11 | drafted (VPA and cluster autoscaler described, not installed) |
-| Workloads and Scheduling | Understand the primitives used to create robust, self-healing, application deployments | 04, 05, 10 | 04/T5; 05/T1, T2, T5; P1 Q18 | ch04-q04, q05; ch05-q01..q03, q06, q07 | partly |
-| Workloads and Scheduling | Configure Pod admission and scheduling (limits, node affinity, etc.) | 04, 06, 10, 17 | 04/T4; 06/T5; 17/T1–T2; P1 Q5; P3 Q1 | ch04-q07, q09; ch06-q12; ch17-q02–q05 | partly (17 covers affinity and taints; priority and static Pods in 17 too) |
-| Servicing and Networking | Understand connectivity between Pods | 11, 21 | 21/T1–T2; P3 Q8 | ch21-q01, q02 | partly (11 covers Services; 21 covers the CNI) |
-| Servicing and Networking | Define and enforce Network Policies | 21, 36 | 21/T3–T4; 36/T1–T3; P3 Q7 | ch21-q03–q06, q08, q09; ch36-q01–q05, q10, q11 | partly (36 covers default deny, DNS and flows across tiers) |
+| Workloads and Scheduling | Understand the primitives used to create robust, self-healing, application deployments | 04, 05, 10 | 04/T5; 05/T1, T2, T5; P1 Q18 | ch04-q04, q05; ch05-q01..q03, q06, q07 | drafted |
+| Workloads and Scheduling | Configure Pod admission and scheduling (limits, node affinity, etc.) | 04, 06, 10, 17 | 04/T4; 06/T5; 17/T1–T2; P1 Q5; P3 Q1 | ch04-q07, q09; ch06-q12; ch17-q02–q05 | drafted |
+| Servicing and Networking | Understand connectivity between Pods | 11, 21 | 21/T1–T2; P3 Q8 | ch21-q01, q02 | drafted |
+| Servicing and Networking | Define and enforce Network Policies | 21, 36 | 21/T3–T4; 36/T1–T3; P3 Q7 | ch21-q03–q06, q08, q09; ch36-q01–q05, q10, q11 | drafted |
 | Servicing and Networking | Use ClusterIP, NodePort, LoadBalancer service types and endpoints | 03, 11 | 03/b2 C5; 11/T1–T2; P1 Q11 | ch11-q01–q03, q08; LoadBalancer described only | drafted |
 | Servicing and Networking | Use the Gateway API to manage Ingress traffic | 12 | 12/T4–T5 | ch12-q05, q07, q10, q11 | drafted (checked against the API server; no controller runs) |
-| Servicing and Networking | Know how to use Ingress controllers and Ingress resources | 12 | 12/T1–T3 | ch12-q02–q04, q08 | partly (controllers described; none installed in the lab) |
-| Servicing and Networking | Understand and use CoreDNS | 11, 21 | 11/T3–T4; 21/T2 | ch11-q05–q07; ch21-q07, q11 | partly (21 covers CoreDNS in the walkthrough) |
-| Cluster Architecture, Installation and Configuration | Manage role based access control (RBAC) | 03, 23 | 03/b3; 23/T1–T2, T5; P3 Q10, Q11 | ch03-q05, q14; ch23-q02–q04, q06, q07 | partly (03 checks permissions; 23 manages RBAC) |
+| Servicing and Networking | Know how to use Ingress controllers and Ingress resources | 12 | 12/T1–T3 | ch12-q02–q04, q08 | partly (gap: no Ingress controller is installed, so no request goes through one) |
+| Servicing and Networking | Understand and use CoreDNS | 11, 21 | 11/T3–T4; 21/T2 | ch11-q05–q07; ch21-q07, q11 | drafted |
+| Cluster Architecture, Installation and Configuration | Manage role based access control (RBAC) | 03, 23 | 03/b3; 23/T1–T2, T5; P3 Q10, Q11 | ch03-q05, q14; ch23-q02–q04, q06, q07 | drafted |
 | Cluster Architecture, Installation and Configuration | Prepare underlying infrastructure for installing a Kubernetes cluster | 18 | 18 walkthrough (prepared on the `prereqs` snapshot) | ch18-q03, q04, q05, q13 | drafted (the reader inspects the preparation; `bootstrap-os.sh` and `bootstrap-tools.sh` script it) |
 | Cluster Architecture, Installation and Configuration | Create and manage Kubernetes clusters using kubeadm | 18 | 18/T1–T5; P3 Q3 | ch18-q01, q02, q06, q07, q10–q12, q14 | drafted (verified by hand on the Tier 2 VMs) |
 | Cluster Architecture, Installation and Configuration | Manage the lifecycle of Kubernetes clusters | 19, 20 | 19/T1–T5; 20/T1–T4; P3 Q4, Q6 | ch19-q01–q09, q11–q13; ch20-q01–q12 | drafted |
-| Cluster Architecture, Installation and Configuration | Implement and configure a highly-available control plane | 18 | | ch18-q08, q09 | partly (concepts and flags only; the lab cluster has one control plane node) |
-| Cluster Architecture, Installation and Configuration | Use Helm and Kustomize to install cluster components | 14 | 14/T1–T4 | ch14-q01, q06, q11 | partly (cluster components not installed in this chapter) |
-| Cluster Architecture, Installation and Configuration | Understand extension interfaces (CNI, CSI, CRI, etc.) | 01, 22, 24 | 21/T1–T2; 22/T5; 24/T5 | ch01-q04, q05; ch22-q01–q03; ch24-q03, q04 | partly (24 covers CRI, CNI and CSI; 36 planned) |
-| Cluster Architecture, Installation and Configuration | Understand CRDs, install and configure operators | 24 | 24/T1–T4; P3 Q12 | ch24-q01, q02, q05–q07 | drafted (no operator is installed; the controller part is described) |
+| Cluster Architecture, Installation and Configuration | Implement and configure a highly-available control plane | 18 | | ch18-q08, q09 | partly (gap: concepts and flags only; a lab needs a load balancer and more control plane nodes than Tier 2 has) |
+| Cluster Architecture, Installation and Configuration | Use Helm and Kustomize to install cluster components | 14 | 14/T1–T4 | ch14-q01, q06, q11 | partly (gap: 14 installs an application chart, not a cluster component) |
+| Cluster Architecture, Installation and Configuration | Understand extension interfaces (CNI, CSI, CRI, etc.) | 01, 22, 24 | 21/T1–T2; 22/T5; 24/T5 | ch01-q04, q05; ch22-q01–q03; ch24-q03, q04 | drafted |
+| Cluster Architecture, Installation and Configuration | Understand CRDs, install and configure operators | 24 | 24/T1–T4; P3 Q12 | ch24-q01, q02, q05–q07 | partly (gap: no operator is installed; the controller part is described) |
 
 ## CKAD
 
@@ -111,28 +113,28 @@ The KCNA curriculum lists topics, not tasks, so each row is broad. Chapters
 | Domain | Bullet (verbatim) | Chapter | Lab | Questions | Status |
 | --- | --- | --- | --- | --- | --- |
 | Application Design and Build | Define, build and modify container images | 01, 16 | 16/T1 | ch01-q05; ch16-q01–q03 | drafted |
-| Application Design and Build | Choose and use the right workload resource (Deployment, DaemonSet, CronJob, etc.) | 05, 08 | 05/T1; 08/T1–T5 | ch05-q09, ch08-q01–q07 | partly (08 drafted; DaemonSet and StatefulSet not yet) |
+| Application Design and Build | Choose and use the right workload resource (Deployment, DaemonSet, CronJob, etc.) | 05, 08 | 05/T1; 08/T1–T5 | ch05-q09, ch08-q01–q07 | partly (gap: DaemonSet and StatefulSet are described in 05, but no lab creates one) |
 | Application Design and Build | Understand multi-container Pod design patterns (e.g. sidecar, init and others) | 04, 09 | 09/T1–T5; P1 Q10 | ch04-q02, ch09-q01–q11 | drafted |
 | Application Design and Build | Utilize persistent and ephemeral volumes | 13 | 13/T1–T2, T4 | ch13-q01, q06, q09 | drafted |
-| Application Deployment | Use Kubernetes primitives to implement common deployment strategies (e.g. blue/green or canary) | 05, 16 | 05/T5; 16/T3–T4 | ch05-q06, q13; ch16-q07, q10, q11 | partly (16 describes blue/green and canary; no traffic splitter in the lab) |
+| Application Deployment | Use Kubernetes primitives to implement common deployment strategies (e.g. blue/green or canary) | 05, 16 | 05/T5; 16/T3–T4 | ch05-q06, q13; ch16-q07, q10, q11 | partly (gap: 16 describes blue/green and canary, but no task does one) |
 | Application Deployment | Understand Deployments and how to perform rolling updates | 05 | 05/T1-T6; P1 Q15-Q17 | ch05-q04..q08, q10..q14 | drafted |
 | Application Deployment | Use the Helm package manager to deploy existing packages | 14 | 14/T1–T3, T5 | ch14-q02–q04, q08–q10 | drafted |
 | Application Deployment | Kustomize | 14 | 14/T4 | ch14-q05, q06, q11 | drafted |
-| Application Observability and Maintenance | Understand API depreciations | 02, 15 | 02/T5; 15/T5; P1 Q12 | ch02-q09, q11; ch15-q07, q11 | partly (02 covers groups and versions; 15 covers deprecations) |
+| Application Observability and Maintenance | Understand API depreciations | 02, 15 | 02/T5; 15/T5; P1 Q12 | ch02-q09, q11; ch15-q07, q11 | drafted |
 | Application Observability and Maintenance | Implement probes and health checks | 10 | 10/T1–T2 | ch02-q13 (explain only), ch10-q01, q02, q08 | drafted |
-| Application Observability and Maintenance | Use built-in CLI tools to monitor Kubernetes applications | 03, 06, 15 | 03/a A1-A4; 03/final Q2, Q6; 06/T1, T4; P1 Q9 | ch03-q06, q07, q11; ch06-q08, q10 | partly |
-| Application Observability and Maintenance | Utilize container logs | 04, 15 | 04/T3; 15/T1, T3; P1 Q4 | ch04-q11, ch15-q01, q02, q04, q08 | partly |
-| Application Observability and Maintenance | Debugging in Kubernetes | 04, 15, 26 | 04/T2; 15/T1–T2; P1 Q3, Q6 | ch04-q03, q11; ch15-q03, q08, q09 | partly (26 planned) |
+| Application Observability and Maintenance | Use built-in CLI tools to monitor Kubernetes applications | 03, 06, 15 | 03/a A1-A4; 03/final Q2, Q6; 06/T1, T4; P1 Q9 | ch03-q06, q07, q11; ch06-q08, q10 | drafted |
+| Application Observability and Maintenance | Utilize container logs | 04, 15 | 04/T3; 15/T1, T3; P1 Q4 | ch04-q11, ch15-q01, q02, q04, q08 | drafted |
+| Application Observability and Maintenance | Debugging in Kubernetes | 04, 15, 26 | 04/T2; 15/T1–T2; 26/T1–T5; P1 Q3, Q6 | ch04-q03, q11; ch15-q03, q08, q09; ch26-q01, q05, q07, q10 | drafted |
 | Application Environment, Configuration and Security | Discover and use resources that extend Kubernetes (CRD, Operators) | 03, 24 | 03/a A6; 24/T2–T4; P1 Q12 | ch03-q12; ch24-q06, q07 | drafted |
-| Application Environment, Configuration and Security | Understand authentication, authorization and admission control | 03, 23, 31 | 03/b3; 23/T1–T5; 31/T1–T4 | ch03-q05, q14; ch23-q01, q06; ch31-q01–q04, q06, q10 | partly (31 covers authentication, the request path and admission; 33 and 36 go further) |
-| Application Environment, Configuration and Security | Understand requests, limits, quotas | 04, 10 | 04/T4; 10/T3–T4; P1 Q5 | ch04-q07, q09; ch10-q04, q05 | partly (quotas not yet in 10) |
+| Application Environment, Configuration and Security | Understand authentication, authorization and admission control | 03, 23, 31 | 03/b3; 23/T1–T5; 31/T1–T4 | ch03-q05, q14; ch23-q01, q06; ch31-q01–q04, q06, q10 | drafted |
+| Application Environment, Configuration and Security | Understand requests, limits, quotas | 04, 10 | 04/T4; 10/T3–T4; P1 Q5 | ch04-q07, q09; ch10-q04, q05 | partly (gap: ResourceQuota and LimitRange are only mentioned; no lab sets one) |
 | Application Environment, Configuration and Security | Define resource requirements | 04, 10 | 04/T4; 10/T3–T4; P1 Q5 | ch04-q07, q09; ch10-q03, q04, q09, q10 | drafted |
 | Application Environment, Configuration and Security | Understand ConfigMaps | 03, 07 | 03/b2 C1; 07/T1, T3–T5; P1 Q11 | ch07-q02, q03, q06, q08 | drafted |
 | Application Environment, Configuration and Security | Create & consume Secrets | 03, 07 | 03/b2 C2; 07/T2–T5; P1 Q11 | ch07-q01, q05, q09, q11 | drafted |
 | Application Environment, Configuration and Security | Understand ServiceAccounts | 03, 23 | 03/b2 C3; 23/T3–T4 | ch23-q05, q10 | drafted |
 | Application Environment, Configuration and Security | Understand Application Security (SecurityContexts, Capabilities, etc.) | 10, 33 | 10/T5 | ch10-q06, q07, q11 | partly (10 drafted; 33 planned) |
 | Services and Networking | Demonstrate basic understanding of NetworkPolicies | 21 | 21/T3–T4 | ch21-q03–q06, q08, q09 | drafted |
-| Services and Networking | Provide and troubleshoot access to applications via services | 03, 11, 26 | 03/b2 C5; 11/T1–T5; P1 Q11 | ch11-q01, q04, q06, q08–q11 | partly (26 planned) |
+| Services and Networking | Provide and troubleshoot access to applications via services | 03, 11, 26 | 03/b2 C5; 11/T1–T5; 26/T2–T3; P1 Q11; P3 Q14 | ch11-q01, q04, q06, q08–q11; ch26-q02–q05, q08, q11 | drafted |
 | Services and Networking | Use Ingress rules to expose applications | 12 | 12/T1–T3 | ch12-q02–q04, q08 | drafted |
 
 ## CKS
@@ -249,6 +251,22 @@ already reflect it.
    sat only in Chapter 33 (Part IV), which CKAD readers may never reach. Now
    introduced in **Chapter 10** (`securityContext`, users, capabilities,
    read-only root filesystem); Chapter 33 keeps the hardening view.
+
+### Open gaps in written chapters (reviewed 2026-10-23)
+
+A review of every KCNA, CKA, and CKAD row after Part III found these bullets
+marked `partly (gap: ...)`: the chapters exist, but no hands-on work covers the
+whole bullet yet.
+
+| Exam | Bullet | Planned fix |
+| --- | --- | --- |
+| CKAD | Choose and use the right workload resource | Tasks that create a StatefulSet (with a headless Service and volume claim templates) and a DaemonSet, in Chapter 05 or 08 |
+| CKAD | Requests, limits, quotas | A ResourceQuota and a LimitRange in Chapter 10's lab, including a Pod they reject |
+| CKAD | Deployment strategies (blue/green, canary) | A blue/green switch and a canary by replica ratio behind one Service, in Chapter 16 |
+| CKA | Ingress controllers | Install an Ingress controller with Helm and send real requests through it (Chapter 12, or a new lab) |
+| CKA | Helm and Kustomize to install cluster components | The same install closes this one: a cluster component installed from a chart |
+| CKA | CRDs and operators | Install a small operator and let it reconcile a custom resource (Chapter 24) |
+| CKA | Highly available control plane | Stays conceptual: a real one needs a load balancer and more control plane nodes than the Tier 2 VMs provide |
 
 ## Supporting skills (not curriculum bullets)
 
