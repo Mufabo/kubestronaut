@@ -245,9 +245,9 @@ Estimates assume one author working part-time; adjust for your pace and any co-a
 
 ### Phase 4: Part V and mock exams (~4 weeks)
 
-*Status (2026-10-15): 37 is drafted and tested. Missing: 38, 39, and the full CKAD, CKA, and CKS simulators.*
+*Status (2026-10-23): 37 is drafted and tested; 38 and 39 are drafted (concept chapters, no lab). Missing: the KCNA and KCSA question banks and the full CKAD, CKA, and CKS simulators.*
 
-- [ ] Chapters 37 to 39
+- [x] Chapters 37 to 39
 - [ ] Five mock exams; time-test each yourself and record how long it took
 - **Exit criterion:** mock exams reflect exam format and difficulty, and a beta reader finishes a mock within the allotted time on a first attempt only after studying the book.
 

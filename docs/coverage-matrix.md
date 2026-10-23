@@ -285,6 +285,7 @@ them. They are mapped here so their coverage stays visible.
 | Fast terminal: aliases, completion, `vim` | 03, 37 | 37 drills | ch37-q01, q07, q08 | partly (37 drills the habits; setup is in 03) |
 | Working under time pressure, context per question | 03, 37 | 03/final; 37 drills; P1 (whole exam) | ch37-q10 | partly |
 | Finding answers in the allowed documentation, `explain`, and `--help` | 38 | 38 exploration exercise | ch38-q01–q12 | drafted |
+| Exam logistics: booking, check-in, the exam environment, time strategy, study plans | 39 | 39 planning exercise | ch39-q01–q13 | drafted |
 
 ## Curriculum revisions checked
 
@@ -295,7 +296,7 @@ book claims to teach.
 | Exam | Curriculum file | Date checked | Source |
 | --- | --- | --- | --- |
 | KCNA | `KCNA_Curriculum.pdf` (4 domains: 44/28/16/12) | 2026-10-09 | cncf/curriculum, master |
-| CKA | `CKA_Curriculum_v1.35.pdf` (5 domains: 25/15/20/10/30) | 2026-10-09 | cncf/curriculum, master |
+| CKA | `CKA_Curriculum_v1.37.pdf` (5 domains: 25/15/20/10/30); byte-identical to the v1.35 file the mapping was first checked against | 2026-10-23 | cncf/curriculum, master |
 | CKAD | `CKAD_Curriculum_v1.37.pdf` (5 domains: 20/20/15/25/20); a v1.35 file also exists | 2026-10-09 | cncf/curriculum, master |
 | CKS | `CKS_Curriculum v1.34.pdf` (6 domains: 15/15/10/20/20/20) | 2026-10-09 | cncf/curriculum, master |
 | KCSA | `KCSA Curriculum.pdf` (6 domains: 14/22/22/16/16/10) | 2026-10-09 | cncf/curriculum, master |
