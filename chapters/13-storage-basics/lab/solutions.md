@@ -176,6 +176,67 @@ kubectl wait --for=condition=Ready pod/retained-user --timeout=120s
 The claim stays `Pending` until `retained-user` is scheduled, because the class
 uses `WaitForFirstConsumer`. The volume it creates has the reclaim policy `Retain`.
 
+## Task 6: `db`, a StatefulSet with a claim per replica
+
+There is no `kubectl create statefulset`, so write the YAML, for example from a
+Deployment skeleton (`kubectl create deployment db --image=busybox:1.36
+--dry-run=client -o yaml`) with the kind changed:
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: db
+spec:
+  clusterIP: None
+  selector:
+    app: db
+  ports:
+    - port: 80
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: db
+spec:
+  serviceName: db
+  replicas: 2
+  selector:
+    matchLabels:
+      app: db
+  template:
+    metadata:
+      labels:
+        app: db
+    spec:
+      containers:
+        - name: db
+          image: busybox:1.36
+          command: ["sh", "-c", "hostname > /data/id; sleep 3600"]
+          volumeMounts:
+            - name: data
+              mountPath: /data
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: [ReadWriteOnce]
+        resources:
+          requests:
+            storage: 50Mi
+```
+
+```bash
+kubectl apply -f db.yaml
+kubectl rollout status statefulset/db
+kubectl get pods,pvc -l app=db
+kubectl exec db-1 -- cat /data/id
+```
+
+The claims are `data-db-0` and `data-db-1`: the template's name, then the Pod's
+name. They carry the Pod template's labels too, which is why `-l app=db` lists
+them. Leave `storageClassName` out of the template to get the default class.
+
 ## Why these checks accept any correct method
 
 Each check reads the objects the API server stores: the claims' phases and

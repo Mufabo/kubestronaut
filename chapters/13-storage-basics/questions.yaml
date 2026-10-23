@@ -196,3 +196,68 @@
     A claim's `storageClassName` cannot be changed in place, so it must be recreated.
     Leaving the field out is enough: the API server fills in the cluster's default
     class, so the output is `standard` here. Read the field, not the claim's status.
+
+- id: ch13-q12
+  type: mcq
+  exams: [CKAD, CKA]
+  question: "A StatefulSet `cache` with a volume claim template `data` is scaled from 3 replicas to 1. What happens to the claims?"
+  choices:
+    - "`data-cache-1` and `data-cache-2` are deleted with their Pods"
+    - "All three claims stay; scaling back up reattaches `data-cache-1` and `data-cache-2` to Pods with the same names"
+    - "The claims are merged into `data-cache-0`"
+    - "The claims stay, but new Pods get new, empty claims when scaled up again"
+  answer: B
+  explanation: "A StatefulSet removes the highest ordinals first and keeps their claims. A Pod that comes back as `cache-1` mounts `data-cache-1` again, with its data. Deleting the claims is a separate, deliberate step."
+
+- id: ch13-q13
+  type: task
+  exams: [CKAD]
+  prompt: "In namespace `prod`, create a headless Service `kv` (selector `app=kv`, port 6379) and a StatefulSet `kv` with 3 replicas of `redis:7.4`, each with its own `1Gi` `ReadWriteOnce` claim mounted at `/data`. Show the Pods and claims."
+  solution: |
+    ```bash
+    cat <<'YAML' | kubectl -n prod apply -f -
+    apiVersion: v1
+    kind: Service
+    metadata:
+      name: kv
+    spec:
+      clusterIP: None
+      selector:
+        app: kv
+      ports:
+        - port: 6379
+    ---
+    apiVersion: apps/v1
+    kind: StatefulSet
+    metadata:
+      name: kv
+    spec:
+      serviceName: kv
+      replicas: 3
+      selector:
+        matchLabels:
+          app: kv
+      template:
+        metadata:
+          labels:
+            app: kv
+        spec:
+          containers:
+            - name: redis
+              image: redis:7.4
+              volumeMounts:
+                - name: data
+                  mountPath: /data
+      volumeClaimTemplates:
+        - metadata:
+            name: data
+          spec:
+            accessModes: [ReadWriteOnce]
+            resources:
+              requests:
+                storage: 1Gi
+    YAML
+    kubectl -n prod get pods,pvc -l app=kv
+    ```
+
+    The Pods are `kv-0` to `kv-2`, created in order, and the claims `data-kv-0` to `data-kv-2`. Each Pod is also reachable as `kv-0.kv.prod.svc.cluster.local`, through the headless Service.

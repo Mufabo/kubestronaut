@@ -153,6 +153,52 @@ spec:
         claimName: retained
 YAML
 
+# Task 6
+k apply -f - >/dev/null <<'YAML'
+apiVersion: v1
+kind: Service
+metadata:
+  name: db
+spec:
+  clusterIP: None
+  selector:
+    app: db
+  ports:
+    - port: 80
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: db
+spec:
+  serviceName: db
+  replicas: 2
+  selector:
+    matchLabels:
+      app: db
+  template:
+    metadata:
+      labels:
+        app: db
+    spec:
+      containers:
+        - name: db
+          image: busybox:1.36
+          command: ["sh", "-c", "hostname > /data/id; sleep 3600"]
+          volumeMounts:
+            - name: data
+              mountPath: /data
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: [ReadWriteOnce]
+        resources:
+          requests:
+            storage: 50Mi
+YAML
+k rollout status statefulset/db --timeout=300s >/dev/null
+
 info "Waiting for the Pods to run"
 for p in reader scratch retained-user; do
   k wait --for=condition=Ready "pod/${p}" --timeout=180s >/dev/null

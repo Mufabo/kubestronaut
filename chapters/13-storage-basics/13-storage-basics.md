@@ -17,6 +17,7 @@ After this chapter you can:
 - Explain the reclaim policies `Retain` and `Delete`, and what a `Released` volume means
 - Create a StorageClass, and explain `volumeBindingMode: WaitForFirstConsumer`
 - Read the status of PVs and PVCs, and recognize a claim that is waiting for a Pod
+- Run a StatefulSet that gives each replica its own claim and a stable name, and explain when to choose it over a Deployment
 
 ## Concepts
 
@@ -145,6 +146,28 @@ A Pod that mounts a claim sees the same files every time it runs, even when the
 Pod is deleted and a new one is created. The data belongs to the claim, not to
 the Pod. This is the property that makes databases and stateful workloads
 possible, and it is what the walkthrough below shows.
+
+### StatefulSets: a claim for every replica
+
+A Deployment's Pods are interchangeable: they share one Pod template, get random
+names, and any claim in the template is the same claim for all of them. A
+database with three members needs the opposite: each member keeps its own data
+and is found again under the same name. A **StatefulSet** provides that:
+
+- **Stable names**: its Pods are `NAME-0`, `NAME-1`, and so on, created in order
+  and replaced under the same name.
+- **A claim per replica**: `volumeClaimTemplates` creates one PVC per Pod, named
+  `TEMPLATE-NAME-ORDINAL` (for example `data-web-0`). A replacement Pod mounts the
+  same claim, so its data is still there.
+- **Stable DNS names**: with a **headless Service** (`clusterIP: None`) named in
+  `serviceName`, each Pod gets its own DNS record,
+  `NAME-0.SERVICE.NAMESPACE.svc.cluster.local`.
+
+Scaling down removes the highest ordinals first, and keeps their claims: scaling
+up again reattaches them. Deleting the StatefulSet does not delete the claims
+either, so data is never removed by accident. Choose a StatefulSet when each
+replica has an identity or data of its own; choose a Deployment when replicas are
+interchangeable.
 
 ## Guided walkthrough
 
@@ -463,6 +486,139 @@ kubectl -n ch13-storage get pod demo-scratch -o jsonpath='{.spec.volumes[0].empt
 The size limit belongs to the volume, not to the container. When the Pod
 exceeds it, the kubelet evicts the Pod.
 
+### Give each replica its own storage
+
+A headless Service and a StatefulSet whose Pods write their own name into their
+volume. Use a Namespace of its own:
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: web
+spec:
+  clusterIP: None
+  selector:
+    app: web
+  ports:
+    - port: 80
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: web
+spec:
+  serviceName: web
+  replicas: 2
+  selector:
+    matchLabels:
+      app: web
+  template:
+    metadata:
+      labels:
+        app: web
+    spec:
+      containers:
+        - name: web
+          image: busybox:1.36
+          command: ["sh", "-c", "hostname > /data/id; sleep 3600"]
+          volumeMounts:
+            - name: data
+              mountPath: /data
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: [ReadWriteOnce]
+        resources:
+          requests:
+            storage: 50Mi
+```
+
+```bash
+kubectl create namespace ch13-demo
+kubectl -n ch13-demo apply -f web-sts.yaml
+kubectl -n ch13-demo rollout status statefulset/web --timeout=180s
+kubectl -n ch13-demo get pods,pvc
+```
+
+```text
+namespace/ch13-demo created
+service/web created
+statefulset.apps/web created
+Waiting for 2 pods to be ready...
+Waiting for 1 pods to be ready...
+Waiting for 1 pods to be ready...
+partitioned roll out complete: 2 new pods have been updated...
+NAME        READY   STATUS    RESTARTS   AGE
+pod/web-0   1/1     Running   0          11s
+pod/web-1   1/1     Running   0          5s
+
+NAME                               STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
+persistentvolumeclaim/data-web-0   Bound    pvc-1a58b92b-7607-47ca-9d52-90a12924c416   50Mi       RWO            standard       <unset>                 11s
+persistentvolumeclaim/data-web-1   Bound    pvc-47a9ed1d-389d-4286-9d7a-15dc776cd979   50Mi       RWO            standard       <unset>                 5s
+```
+
+`web-1` started only after `web-0` was ready (look at their ages), and each has a
+claim of its own. The headless Service has no cluster IP; instead, every Pod has
+a DNS name:
+
+```bash
+kubectl -n ch13-demo get service web
+kubectl -n ch13-demo run dns --image=busybox:1.36 --restart=Never --rm -i --quiet -- nslookup web-0.web.ch13-demo.svc.cluster.local
+```
+
+```text
+NAME   TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE
+web    ClusterIP   None         <none>        80/TCP    12s
+Server:		10.96.0.10
+Address:	10.96.0.10:53
+
+
+Name:	web-0.web.ch13-demo.svc.cluster.local
+Address: 192.168.146.37
+```
+
+Delete `web-0`. The StatefulSet replaces it under the same name: a new Pod, with
+a new UID, but the same claim, and so the same data:
+
+```bash
+kubectl -n ch13-demo get pod web-0 -o jsonpath='{.metadata.uid}{"\n"}'
+kubectl -n ch13-demo delete pod web-0
+kubectl -n ch13-demo wait --for=condition=Ready pod/web-0 --timeout=120s
+kubectl -n ch13-demo get pod web-0 -o jsonpath='{.metadata.uid}{"\n"}'
+kubectl -n ch13-demo exec web-0 -- cat /data/id
+```
+
+```text
+52d6d479-0544-46ec-acc2-141fea791743
+pod "web-0" deleted from ch13-demo namespace
+pod/web-0 condition met
+eb506d75-33e2-480c-bfb8-fc4b177a0d77
+web-0
+```
+
+Scale down to one replica. `web-1` goes, and its claim stays:
+
+```bash
+kubectl -n ch13-demo scale statefulset web --replicas=1
+kubectl -n ch13-demo wait --for=delete pod/web-1 --timeout=120s
+kubectl -n ch13-demo get pods,pvc
+```
+
+```text
+statefulset.apps/web scaled
+pod/web-1 condition met
+NAME        READY   STATUS    RESTARTS   AGE
+pod/web-0   1/1     Running   0          33s
+
+NAME                               STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
+persistentvolumeclaim/data-web-0   Bound    pvc-1a58b92b-7607-47ca-9d52-90a12924c416   50Mi       RWO            standard       <unset>                 79s
+persistentvolumeclaim/data-web-1   Bound    pvc-47a9ed1d-389d-4286-9d7a-15dc776cd979   50Mi       RWO            standard       <unset>                 73s
+```
+
+Deleting the Namespace removes the claims with it: `kubectl delete namespace ch13-demo`.
+
 ## Hands-on lab
 
 The lab works like a KodeKloud lab: one task at a time, a check after each, and
@@ -529,6 +685,16 @@ Create a StorageClass and a claim that uses it, with the following specification
 - Pod name: `retained-user`, image `busybox:1.36`, running `sleep 3600`, mounts `retained` at `/data`
 - The claim is `Bound`, and its volume has the reclaim policy `Retain`
 
+### Task 6: Storage for each replica
+
+Run a small stateful service whose replicas each keep their own data under a
+stable name.
+
+- Headless Service `db`: no cluster IP, selector `app=db`, port `80`
+- StatefulSet `db`: Service name `db`, `2` replicas, labels `app=db`, image `busybox:1.36` running `sh -c "hostname > /data/id; sleep 3600"`
+- A volume claim template `data`: `ReadWriteOnce`, `50Mi`, the default storage class, mounted at `/data`
+- Both Pods `Running`, each with its own `Bound` claim (`data-db-0`, `data-db-1`), and each Pod's `/data/id` holds its own name
+
 ## Exam tips
 
 > **Exam tip:** `kubectl get pv,pvc` in one command shows both sides of a binding. A `Pending` claim is almost always a missing or mismatched storage class, capacity, or access mode, or a `WaitForFirstConsumer` class with no Pod yet.
@@ -546,6 +712,7 @@ Create a StorageClass and a claim that uses it, with the following specification
 - Assuming a `Released` PV can be claimed again. It cannot, until an administrator clears its claim reference.
 - Using `hostPath` for application data. The data stays on one node and is not protected by the claim lifecycle.
 - Reading `ReadWriteOnce` as "one Pod only". It limits the volume to one node; several Pods on that node may mount it.
+- Putting a claim in a Deployment's Pod template and expecting one claim per replica. Only a StatefulSet's `volumeClaimTemplates` creates a claim for each Pod.
 
 <!-- QUESTIONS:START -->
 
@@ -607,6 +774,15 @@ Create a StorageClass and a claim that uses it, with the following specification
 **10. (Task)** `CKA` Create a StorageClass named `fast-local` with the provisioner `rancher.io/local-path`, reclaim policy `Retain`, and volume binding mode `WaitForFirstConsumer`. Show its reclaim policy and binding mode.
 
 **11. (Task)** `CKAD` `CKA` In namespace `prod`, a PersistentVolumeClaim named `reports` is stuck in `Pending`, because it asks for storage class `slow-disk`, which does not exist. Change the claim so that it uses the default storage class instead. The claim is not yet bound to any volume, so you may delete and recreate it. Show its storage class.
+
+**12.** `CKAD` `CKA` A StatefulSet `cache` with a volume claim template `data` is scaled from 3 replicas to 1. What happens to the claims?
+
+- **A.** `data-cache-1` and `data-cache-2` are deleted with their Pods
+- **B.** All three claims stay; scaling back up reattaches `data-cache-1` and `data-cache-2` to Pods with the same names
+- **C.** The claims are merged into `data-cache-0`
+- **D.** The claims stay, but new Pods get new, empty claims when scaled up again
+
+**13. (Task)** `CKAD` In namespace `prod`, create a headless Service `kv` (selector `app=kv`, port 6379) and a StatefulSet `kv` with 3 replicas of `redis:7.4`, each with its own `1Gi` `ReadWriteOnce` claim mounted at `/data`. Show the Pods and claims.
 
 <details>
 <summary>Answers</summary>
@@ -727,6 +903,58 @@ kubectl -n prod get pvc reports -o jsonpath='{.spec.storageClassName}{"\n"}'
 A claim's `storageClassName` cannot be changed in place, so it must be recreated.
 Leaving the field out is enough: the API server fills in the cluster's default
 class, so the output is `standard` here. Read the field, not the claim's status.
+
+**12. B.** A StatefulSet removes the highest ordinals first and keeps their claims. A Pod that comes back as `cache-1` mounts `data-cache-1` again, with its data. Deleting the claims is a separate, deliberate step.
+
+**13.**
+
+```bash
+cat <<'YAML' | kubectl -n prod apply -f -
+apiVersion: v1
+kind: Service
+metadata:
+  name: kv
+spec:
+  clusterIP: None
+  selector:
+    app: kv
+  ports:
+    - port: 6379
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: kv
+spec:
+  serviceName: kv
+  replicas: 3
+  selector:
+    matchLabels:
+      app: kv
+  template:
+    metadata:
+      labels:
+        app: kv
+    spec:
+      containers:
+        - name: redis
+          image: redis:7.4
+          volumeMounts:
+            - name: data
+              mountPath: /data
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: [ReadWriteOnce]
+        resources:
+          requests:
+            storage: 1Gi
+YAML
+kubectl -n prod get pods,pvc -l app=kv
+```
+
+The Pods are `kv-0` to `kv-2`, created in order, and the claims `data-kv-0` to `data-kv-2`. Each Pod is also reachable as `kv-0.kv.prod.svc.cluster.local`, through the headless Service.
 
 </details>
 
