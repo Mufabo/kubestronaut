@@ -179,3 +179,41 @@
     ```
 
     `runAsUser` and `runAsNonRoot` are Pod-level fields here. `allowPrivilegeEscalation` is container-level, so it sits under the container's `securityContext`.
+
+- id: ch10-q12
+  type: mcq
+  exams: [CKAD, CKA]
+  question: "A Namespace has a ResourceQuota that caps `requests.cpu` and `requests.memory`, and no LimitRange. What happens when you create a Pod whose container sets no resources?"
+  choices:
+    - "The Pod is created with no requests and runs as BestEffort"
+    - "The API server rejects the Pod, because the quota requires every Pod to state the resources it caps"
+    - "The Pod is created, but stays Pending until resources are added"
+    - "The quota fills in default requests"
+  answer: B
+  explanation: "Once a quota covers CPU or memory, new Pods must state those values, or admission rejects them with `must specify ...`. A LimitRange with defaults fills them in at creation time; a quota never does."
+
+- id: ch10-q13
+  type: task
+  exams: [CKAD]
+  prompt: "In namespace `team-a`, make every container that declares no resources get a CPU request of `50m` and a CPU limit of `250m`, and cap the Namespace at 5 Pods. Show both objects."
+  solution: |
+    ```bash
+    cat <<'YAML' | kubectl -n team-a apply -f -
+    apiVersion: v1
+    kind: LimitRange
+    metadata:
+      name: cpu-defaults
+    spec:
+      limits:
+        - type: Container
+          defaultRequest:
+            cpu: 50m
+          default:
+            cpu: 250m
+    YAML
+    kubectl -n team-a create quota pod-count --hard=pods=5
+    kubectl -n team-a describe limitrange cpu-defaults
+    kubectl -n team-a describe quota pod-count
+    ```
+
+    `defaultRequest` sets the request and `default` sets the limit. The defaults apply to Pods created from now on; running Pods keep what they have.

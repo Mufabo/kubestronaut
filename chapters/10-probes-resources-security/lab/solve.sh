@@ -107,7 +107,28 @@ spec:
           drop: ["ALL"]
 YAML
 
+# Task 6: the LimitRange first, so plain (and any later Pod) gets its defaults
+k apply -f - >/dev/null <<'YAML'
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: defaults
+spec:
+  limits:
+    - type: Container
+      defaultRequest:
+        cpu: 100m
+        memory: 64Mi
+      default:
+        cpu: 200m
+        memory: 128Mi
+YAML
+k create quota compute --hard=pods=10,requests.cpu=2,requests.memory=2Gi,limits.cpu=4,limits.memory=4Gi >/dev/null
+k run plain --image=nginx:1.27 >/dev/null
+quota_counted() { [[ -n "$(k get resourcequota compute -o jsonpath='{.status.used.pods}' 2>/dev/null)" ]]; }
+wait_for "quota compute in force" 120 quota_counted
+
 info "Waiting for the Pods to be ready"
-for p in gate healthy sized pinned hardened; do
+for p in gate healthy sized pinned hardened plain; do
   k wait --for=condition=Ready "pod/${p}" --timeout=180s >/dev/null
 done

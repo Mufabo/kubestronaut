@@ -56,6 +56,16 @@ t5() {
   [[ "$(k exec hardened -- grep CapEff /proc/1/status 2>/dev/null | awk '{print $2}')" == 0000000000000000 ]]
 }
 
+t6() {
+  [[ "$(jp limitrange/defaults '{.spec.limits[?(@.type=="Container")].defaultRequest.cpu} {.spec.limits[?(@.type=="Container")].defaultRequest.memory} {.spec.limits[?(@.type=="Container")].default.cpu} {.spec.limits[?(@.type=="Container")].default.memory}')" == "100m 64Mi 200m 128Mi" ]] &&
+  [[ "$(jp resourcequota/compute '{.spec.hard.pods} {.spec.hard.requests\.cpu} {.spec.hard.requests\.memory} {.spec.hard.limits\.cpu} {.spec.hard.limits\.memory}')" == "10 2 2Gi 4 4Gi" ]] &&
+  # the quota is in force: its controller has filled in what is used
+  [[ -n "$(jp resourcequota/compute '{.status.used.pods}')" ]] &&
+  [[ "$(jp pod/plain '{.spec.containers[0].image}')" == nginx:1.27 ]] &&
+  [[ "$(jp pod/plain '{.spec.containers[0].resources.requests.cpu} {.spec.containers[0].resources.requests.memory} {.spec.containers[0].resources.limits.cpu} {.spec.containers[0].resources.limits.memory}')" == "100m 64Mi 200m 128Mi" ]] &&
+  [[ "$(jp pod/plain '{.status.phase}')" == Running ]]
+}
+
 check 1 "Pod gate: readiness probe runs cat /tmp/ready; the file exists and the Pod is Ready" \
   "the probe is exec-based: it only passes when /tmp/ready exists inside the container" t1
 check 2 "Pod healthy: nginx:1.27, liveness httpGet / on port 80, initialDelay 5s, period 10s; Ready" \
@@ -66,5 +76,7 @@ check 4 "Pod pinned: requests equal limits (250m, 128Mi), QoS class Guaranteed, 
   "Guaranteed needs both CPU and memory requests equal to limits in every container" t4
 check 5 "Pod hardened: runs as uid 1000, non-root, no privilege escalation, all capabilities dropped" \
   "pod-level securityContext for runAsUser and runAsNonRoot; container-level for capabilities" t5
+
+check 6 "LimitRange defaults (100m/64Mi requests, 200m/128Mi limits), ResourceQuota compute (10 pods, 2/2Gi requests, 4/4Gi limits), Pod plain runs with the defaults"   "a LimitRange's default and defaultRequest are filled in when a Pod is created; create the LimitRange before the Pod" t6
 
 finish_checks

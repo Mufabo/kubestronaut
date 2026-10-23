@@ -5,3 +5,6 @@ mock-exams/*/lab/.state/
 __pycache__/
 envs/vagrant/.state/
 envs/vagrant/.vagrant/
+
+# Scratch scripts that capture real command output for the chapters
+.capture/

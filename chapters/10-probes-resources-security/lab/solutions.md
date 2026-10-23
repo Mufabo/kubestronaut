@@ -138,6 +138,38 @@ kubectl exec hardened -- grep CapEff /proc/1/status
 `capabilities` are container-level. `CapEff` is all zeros when every
 capability is dropped.
 
+## Task 6: limit the Namespace
+
+Create the LimitRange first. Admission fills in its defaults when a Pod is
+created, so a Pod created before it gets none, and once the quota exists, a Pod
+without resources is rejected.
+
+```bash
+kubectl apply -f - <<'YAML'
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: defaults
+spec:
+  limits:
+    - type: Container
+      defaultRequest:
+        cpu: 100m
+        memory: 64Mi
+      default:
+        cpu: 200m
+        memory: 128Mi
+YAML
+kubectl create quota compute --hard=pods=10,requests.cpu=2,requests.memory=2Gi,limits.cpu=4,limits.memory=4Gi
+kubectl run plain --image=nginx:1.27
+kubectl get pod plain -o jsonpath='{.spec.containers[0].resources}'; echo
+kubectl describe quota compute
+```
+
+`plain` shows `"requests":{"cpu":"100m","memory":"64Mi"}` and the matching
+limits, although its manifest named none. `describe quota` shows the Pods and
+resources already counted against each cap.
+
 ## Why these checks accept any correct method
 
 Each check reads the outcome: the Pod's readiness and QoS class, the spec fields
