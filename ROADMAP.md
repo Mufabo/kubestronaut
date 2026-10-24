@@ -238,7 +238,7 @@ Estimates assume one author working part-time; adjust for your pace and any co-a
 
 ### Phase 3: Part IV (~8 weeks)
 
-*Status (2026-10-24): 31, 33, 34, and 36 are drafted and tested (33 on the Tier 2 VMs); 29 is drafted (concept chapter, no lab). Missing: 30, 32, 35.*
+*Status (2026-10-24): 30, 31, 33, 34, and 36 are drafted and tested (30 and 33 on the Tier 2 VMs); 29 is drafted (concept chapter, no lab). Missing: 32, 35.*
 
 - [ ] Chapters 29 to 36; pin and test Trivy, Falco, kube-bench, Kyverno/Gatekeeper versions
 - **Exit criterion:** every CKS and KCSA bullet in the coverage matrix is mapped and tested.
@@ -282,6 +282,6 @@ Estimates assume one author working part-time; adjust for your pace and any co-a
 1. ~~Decide the Kubernetes version~~ Decided 2026-10-15 to stay on v1.35; on 2026-10-23 the Linux Foundation moved the CKA and the CKAD to v1.37, and the book moved its pin to v1.37.0 (previous version v1.36.5), re-running every lab and re-capturing the output that depends on the version. Check again before the beta.
 2. ~~Finish Part III on the VMs~~ Done 2026-10-15: Chapters 18, 19, 20, and 27.
 3. ~~Write the Part III mock exam~~ Done 2026-10-15 (`mock-exams/part3`).
-4. Finish Part IV: 30, 32, 35 (29 and 33 drafted 2026-10-24). Close the "Minimize base image footprint" gap in 34 (or 16).
+4. Finish Part IV: 32, 35 (29, 30, and 33 drafted 2026-10-24). Close the "Minimize base image footprint" gap in 34 (or 16).
 5. Build the Tier 3 devcontainer, so readers without the hardware for Tier 2 have a path.
 6. Find the first outside reader, starting with the pilot chapter (04).

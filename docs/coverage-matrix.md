@@ -163,13 +163,13 @@ and Maintenance Q9–Q12 (15%), Environment, Configuration and Security Q13–Q1
 | Domain | Bullet (verbatim) | Chapter | Lab | Questions | Status |
 | --- | --- | --- | --- | --- | --- |
 | Cluster Setup | Use Network security policies to restrict cluster level access | 21, 36 | 21/T3–T4; 36/T1–T3 | ch21-q03–q06, q08, q09; ch36-q01–q06, q10, q11 | drafted |
-| Cluster Setup | Use CIS benchmark to review the security configuration of Kubernetes components (etcd, kubelet, kubedns, kubeapi) | 30 | | | planned |
-| Cluster Setup | Properly set up Ingress objects with TLS | 12, 30 | 12/T2 | ch12-q06, q09 | partly (30 planned) |
-| Cluster Setup | Protect node metadata and endpoints | 30, 36 | | | planned |
-| Cluster Setup | Verify platform binaries before deploying | 30 | | | planned |
+| Cluster Setup | Use CIS benchmark to review the security configuration of Kubernetes components (etcd, kubelet, kubedns, kubeapi) | 30 | 30/T1–T2 | ch30-q01–q04, q11, q13 | drafted |
+| Cluster Setup | Properly set up Ingress objects with TLS | 12, 30 | 12/T2 | ch12-q06, q09 | drafted |
+| Cluster Setup | Protect node metadata and endpoints | 30, 36 | 30/T3, 30/T5 | ch30-q05, q10 | drafted |
+| Cluster Setup | Verify platform binaries before deploying | 30 | 30/T4 | ch30-q09 | drafted |
 | Cluster Hardening | Use Role Based Access Controls to minimize exposure | 23, 31 | 23/T1–T2, T5; 31/T4 | ch23-q02–q04, q07–q09; ch31-q03, q04, q13 | drafted |
 | Cluster Hardening | Exercise caution in using service accounts e.g. disable defaults, minimize permissions on newly created ones | 23, 31 | 23/T3–T4; 31/T3 | ch23-q05, q06, q08, q10, q11; ch31-q10 | drafted |
-| Cluster Hardening | Restrict access to Kubernetes API | 30, 31 | | | planned |
+| Cluster Hardening | Restrict access to Kubernetes API | 30, 31 | 30/T3; 31/T1–T5 | ch30-q06, q08, q12 | drafted |
 | Cluster Hardening | Upgrade Kubernetes to avoid vulnerabilities | 19 | 19/T1–T4 | ch19-q01, q02, q10 | drafted |
 | System Hardening | Minimize host OS footprint (reduce attack surface) | 32 | | | planned |
 | System Hardening | Using least-privilege identity and access management | 23, 32 | | | planned |
@@ -203,21 +203,21 @@ and Maintenance Q9–Q12 (15%), Environment, Configuration and Security Q13–Q1
 | Domain | Bullet (verbatim) | Chapter | Lab | Questions | Status |
 | --- | --- | --- | --- | --- | --- |
 | Overview of Cloud Native Security | The 4Cs of Cloud Native Security | 29 | 29 exploration exercise | ch29-q01–q03 | drafted |
-| Overview of Cloud Native Security | Cloud Provider and Infrastructure Security | 29, 30 | | ch29-q04, q05 | partly (29 drafted; 30 planned) |
+| Overview of Cloud Native Security | Cloud Provider and Infrastructure Security | 29, 30 | 30/T5 | ch29-q04, q05; ch30-q10 | drafted |
 | Overview of Cloud Native Security | Controls and Frameworks | 29 | 29 exploration exercise | ch29-q10, q11 | drafted |
 | Overview of Cloud Native Security | Isolation Techniques | 33 | 33/T5 | ch33-q11, q12 | drafted |
 | Overview of Cloud Native Security | Artifact Repository and Image Security | 34 | 34/T1–T3 | ch34-q01, q09, q11, q12 | drafted |
 | Overview of Cloud Native Security | Workload and Application Code Security | 33, 34 | 33/T2–T3 | ch33-q06, q07 | drafted |
-| Kubernetes Cluster Component Security | API Server | 02, 30 | 02/T2, 02/T3 | ch02-q01, q06 | partly (02 explains its role; 30 secures it) |
-| Kubernetes Cluster Component Security | Controller Manager | 02, 30 | 02/T3 | ch02-q05 | partly |
-| Cluster Component Security | Scheduler | 02, 30 | 02/T4; 17/T5 | ch02-q02; ch17-q01, q06, q07 | partly (30 planned) |
-| Kubernetes Cluster Component Security | Kubelet | 02, 30 | | ch02-q03, q07 | partly |
+| Kubernetes Cluster Component Security | API Server | 02, 30 | 02/T2, 02/T3; 30/T2 | ch02-q01, q06; ch30-q03, q06, q08 | drafted |
+| Kubernetes Cluster Component Security | Controller Manager | 02, 30 | 02/T3; 30/T2 | ch02-q05 | drafted |
+| Cluster Component Security | Scheduler | 02, 30 | 02/T4; 17/T5; 30/T2 | ch02-q02; ch17-q01, q06, q07; ch30-q13 | drafted |
+| Kubernetes Cluster Component Security | Kubelet | 02, 30 | 30/T1, 30/T3 | ch02-q03, q07; ch30-q05, q11 | drafted |
 | Kubernetes Cluster Component Security | Container Runtime | 01, 33 | 33/T5 | ch01-q04, q05; ch33-q11, q12 | drafted |
 | Kubernetes Cluster Component Security | KubeProxy | 02, 21 | P1 Q14 | | partly |
 | Kubernetes Cluster Component Security | Pod | 04, 33 | 04/T1-T5; 33/T2–T3 | ch04-q01, q02; ch33-q06 | drafted |
-| Kubernetes Cluster Component Security | Etcd | 02, 20, 30 | 02/T2 | ch02-q01, q08 | partly |
+| Kubernetes Cluster Component Security | Etcd | 02, 20, 30, 33 | 02/T2; 20/T1–T4; 33/T4 | ch02-q01, q08; ch30-q04 | drafted |
 | Kubernetes Cluster Component Security | Container Networking | 21, 36 | 21/T1–T2 | ch21-q01, q02 | partly (36 planned) |
-| Kubernetes Cluster Component Security | Client Security | 03, 30 | 03/b1 | ch02-q10; ch03-q08 | partly (03 covers kubeconfig; 30 secures it) |
+| Kubernetes Cluster Component Security | Client Security | 03, 30 | 03/b1 | ch02-q10; ch03-q08; ch30-q07 | drafted |
 | Kubernetes Cluster Component Security | Storage | 13, 22, 33, 36 | 13/T5; 22/T2; 33/T4 | ch13-q05; ch22-q07; ch33-q09, q10; ch36-q09 | drafted |
 | Kubernetes Security Fundamentals | Pod Security Standards | 33 | 33/T1–T2 | ch33-q01–q06 | drafted |
 | Kubernetes Security Fundamentals | Pod Security Admissions | 31, 33 | 31/T2; 33/T1–T2 | ch31-q08, q09, q12; ch33-q03–q05 | drafted |
@@ -237,13 +237,13 @@ and Maintenance Q9–Q12 (15%), Environment, Configuration and Security Q13–Q1
 | Platform Security | Image Repository | 34 | 34/T1–T2 | ch34-q10 | partly |
 | Platform Security | Observability | 15, 35 | | | planned |
 | Platform Security | Service Mesh | 28, 36 | | ch28-q01–q04; ch36-q07 | drafted (concepts only, no mesh installed) |
-| Platform Security | PKI | 18, 27, 30 | 27/T4–T5 | ch18-q06, q07; ch27-q07–q09, q11 | partly (kubeadm certificates in 18 and 27; TLS hardening planned in 30) |
+| Platform Security | PKI | 18, 27, 30 | 27/T4–T5 | ch18-q06, q07; ch27-q07–q09, q11; ch30-q07 | drafted |
 | Platform Security | Connectivity | 21, 36 | 21/T3–T4; 36/T1–T4 | ch21-q01–q05; ch36-q03–q08, q12 | drafted |
 | Platform Security | Admission Control | 31 | 31/T1–T2, T4 | ch31-q05–q07, q11 | drafted |
 | Compliance and Security Frameworks | Compliance Frameworks | 29 | | ch29-q11 | drafted |
 | Compliance and Security Frameworks | Threat Modeling Frameworks | 29 | 29 exploration exercise | ch29-q09 | drafted |
 | Compliance and Security Frameworks | Supply Chain Compliance | 34 | 34/T1–T3 | ch34-q03–q05, q08 | partly (SBOMs, signing and provenance described; compliance frameworks come with 29) |
-| Compliance and Security Frameworks | Automation and Tooling | 30, 34 | | | planned |
+| Compliance and Security Frameworks | Automation and Tooling | 30, 34 | 30/T1 | ch29-q10; ch30-q02 | drafted |
 
 ## Gaps found and how they were closed
 

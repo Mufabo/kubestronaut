@@ -1,0 +1,158 @@
+- id: ch30-q01
+  type: mcq
+  exams: [KCSA, CKS]
+  question: "What does a recommendation marked Automated in the CIS Kubernetes Benchmark mean?"
+  choices:
+    - "Kubernetes applies it automatically"
+    - "Its audit can be checked by a tool such as kube-bench; Manual ones need a person's judgment"
+    - "It is mandatory, unlike Manual ones"
+    - "It only applies to managed clusters"
+  answer: B
+  explanation: "Automated means the audit can be checked by a tool, not that the setting is applied for you or that it is mandatory. Manual recommendations need judgment; kube-bench reports them as WARN."
+
+- id: ch30-q02
+  type: mcq
+  exams: [CKS]
+  question: "You run sudo kube-bench run --targets master on a v1.37 control plane and get a warning that it assumes version 1.18. What do you do?"
+  choices:
+    - "Nothing; the version does not matter"
+    - "Run it without sudo"
+    - "Name the benchmark (for example --benchmark cis-1.12) or the version, so that it checks against current recommendations"
+    - "Upgrade the cluster to 1.18"
+  answer: C
+  explanation: "As root, kube-bench often cannot reach the API server to detect the version and falls back to an old benchmark. Passing --benchmark (or --version) makes it use the right checks."
+
+- id: ch30-q03
+  type: mcq
+  exams: [CKS]
+  question: "kube-bench reports FAIL for 1.2.15 (the API server's --profiling). Where do you fix it on a kubeadm cluster?"
+  choices:
+    - "In /etc/kubernetes/manifests/kube-apiserver.yaml, by adding - --profiling=false to the command"
+    - "With kubectl edit deployment kube-apiserver -n kube-system"
+    - "In /var/lib/kubelet/config.yaml on the control plane node"
+    - "In the kubeadm-config ConfigMap only"
+  answer: A
+  explanation: "The API server is a static Pod: the kubelet runs it from the manifest and restarts it when the file changes. There is no Deployment to edit, and changing kubeadm-config alone affects only future kubeadm operations."
+
+- id: ch30-q04
+  type: mcq
+  exams: [KCSA, CKS]
+  question: "A kube-bench finding says the etcd data directory should be owned by etcd:etcd, but kubeadm runs etcd as root and there is no etcd user. What is the right response?"
+  choices:
+    - "Create an etcd user and change the ownership anyway"
+    - "Disable the check in kube-bench and forget about it"
+    - "Uninstall etcd"
+    - "Record it as not applicable, with the reason and the compensating controls (restrictive permissions, no other access to the node)"
+  answer: D
+  explanation: "A benchmark is a set of recommendations. Findings that do not fit the deployment are documented with a reason; that record is part of what auditors ask for. Changing ownership alone would not make etcd run as another user."
+
+- id: ch30-q05
+  type: mcq
+  exams: [KCSA, CKS]
+  question: "Which kubelet settings stop anyone on the network from listing the node's Pods without credentials?"
+  choices:
+    - "rotateCertificates: true"
+    - "authentication.anonymous.enabled: false, authorization.mode: Webhook, and readOnlyPort: 0"
+    - "protectKernelDefaults: true"
+    - "serializeImagePulls: false"
+  answer: B
+  explanation: "Anonymous authentication off rejects requests without credentials on port 10250, Webhook makes the API server authorize the rest, and readOnlyPort 0 closes the unauthenticated port 10255. kubeadm sets all three by default."
+
+- id: ch30-q06
+  type: mcq
+  exams: [KCSA, CKS]
+  question: "An unauthenticated client sends GET /version and GET /api/v1/namespaces to a kubeadm API server. What happens?"
+  choices:
+    - "Both are rejected with 401"
+    - "Both succeed"
+    - "The version is returned; listing Namespaces is forbidden for system:anonymous"
+    - "The connection is refused"
+  answer: C
+  explanation: "kubeadm leaves anonymous requests on. They are authenticated as system:anonymous, and RBAC lets that user read only public information such as the version (system:public-info-viewer). Never bind more to system:anonymous."
+
+- id: ch30-q07
+  type: mcq
+  exams: [KCSA, CKS]
+  question: "What is the difference between kubeadm's admin.conf and super-admin.conf?"
+  choices:
+    - "admin.conf's identity is in the group kubeadm:cluster-admins, bound to cluster-admin by a ClusterRoleBinding; super-admin.conf's is in system:masters, which bypasses RBAC"
+    - "There is none; super-admin.conf is a backup copy"
+    - "admin.conf has read-only access"
+    - "super-admin.conf can only be used from the control plane node"
+  answer: A
+  explanation: "Removing the kubeadm:cluster-admins binding takes admin.conf's power away. system:masters cannot be restricted by RBAC, so super-admin.conf belongs offline, for emergencies only."
+
+- id: ch30-q08
+  type: mcq
+  exams: [KCSA, CKS]
+  question: "Which admission plugin limits a kubelet to modifying only its own Node object and the Pods bound to its node?"
+  choices:
+    - "PodSecurity"
+    - "AlwaysPullImages"
+    - "LimitRanger"
+    - "NodeRestriction"
+  answer: D
+  explanation: "NodeRestriction, together with the Node authorizer, keeps a compromised kubelet from changing other nodes or Pods elsewhere. kubeadm enables it by default; the CIS Benchmark checks for it."
+
+- id: ch30-q09
+  type: mcq
+  exams: [CKS]
+  question: "How do you check that a downloaded kubelet binary is the official v1.37.0 release for linux/amd64?"
+  choices:
+    - "Run kubelet --version"
+    - "Compare its file size with the one on the website"
+    - "Download kubelet.sha512 for that version and platform from dl.k8s.io and compare it with sha512sum of the binary"
+    - "Check its modification date"
+  answer: C
+  explanation: "--version prints whatever the binary says, and sizes and dates prove nothing. The published SHA-512 checksum must match exactly; a single changed byte makes it fail."
+
+- id: ch30-q10
+  type: mcq
+  exams: [CKS]
+  question: "A NetworkPolicy selects every Pod in a Namespace, with policyTypes [Egress] and one egress rule to ipBlock 0.0.0.0/0 except 169.254.169.254/32. What is the effect?"
+  choices:
+    - "The Pods can reach any address except the metadata endpoint"
+    - "The Pods can reach only the metadata endpoint"
+    - "All egress is blocked, including DNS"
+    - "Nothing, because ipBlock only applies to ingress"
+  answer: A
+  explanation: "The rule allows all destinations but the excepted one. Because everything else is allowed, DNS and Services keep working; only 169.254.169.254 becomes unreachable."
+
+- id: ch30-q11
+  type: mcq
+  exams: [CKS]
+  question: "After you fix the kubeadm drop-in's permissions, kube-bench still fails 4.1.1 (kubelet service file permissions). What is the most likely reason?"
+  choices:
+    - "kube-bench caches old results"
+    - "The check audits another file, the kubelet's own unit file; its audit command names it"
+    - "The kubelet must be restarted first"
+    - "4.1.1 can never pass on kubeadm clusters"
+  answer: B
+  explanation: "Each check runs a specific audit command. On these nodes 4.1.1 stats /lib/systemd/system/kubelet.service, not the kubeadm drop-in. Reading the audit (--json) shows exactly what is checked."
+
+- id: ch30-q12
+  type: mcq
+  exams: [KCSA, CKS]
+  question: "Which statement about restricting access to the Kubernetes API is true?"
+  choices:
+    - "RBAC alone is enough; the API server can be exposed to the internet safely"
+    - "Exposing the API server through a NodePort Service is the recommended pattern"
+    - "Anonymous auth must always be on so that kubectl works"
+    - "Combine network controls (private endpoint, firewall) with authentication and RBAC; do not expose the API server more than necessary"
+  answer: D
+  explanation: "Defense in depth: keep the API server off the public internet, admit only known networks, then authenticate and authorize every request. kubectl uses credentials and does not need anonymous auth."
+
+- id: ch30-q13
+  type: task
+  exams: [CKS]
+  prompt: "On a kubeadm control plane node, check whether the scheduler runs with profiling disabled, and fix it if not."
+  solution: |
+    ```bash
+    sudo kube-bench run --targets master --benchmark cis-1.12 --check 1.4.1 2>/dev/null | grep -E '^\[(PASS|FAIL)\]'
+    sudo cp /etc/kubernetes/manifests/kube-scheduler.yaml /root/kube-scheduler.yaml.bak
+    sudo vim /etc/kubernetes/manifests/kube-scheduler.yaml      # add: - --profiling=false
+    sudo crictl ps --name kube-scheduler
+    kubectl -n kube-system get pod -l component=kube-scheduler -o jsonpath='{.items[0].spec.containers[0].command}'
+    ```
+
+    The backup goes outside /etc/kubernetes/manifests: a second manifest there would start a second scheduler.
