@@ -53,7 +53,7 @@ curriculum's weights: 26, 17, 10, and 7 of its 60 questions.
 | Kubernetes Fundamentals | Scheduling | 02, 17 | 02/T4; 17/T1–T5 | ch02-q02, q12; ch17-q01–q07 | drafted |
 | Kubernetes Fundamentals | Containerization | 01, 04 | 04/T1, 04/T5 | ch01-q04..q06; ch04-q01 | drafted |
 | Container Orchestration | Networking | 11, 21, 26 | 11/T1–T5; 21/T1–T5 | ch11-q01–q11; ch21-q01–q11 | drafted |
-| Container Orchestration | Security | 23, 29, 33 | 03/b3; 23/T1–T5 | ch03-q05; ch23-q01–q07 | partly (23 drafted; 29 and 33 planned) |
+| Container Orchestration | Security | 23, 29, 31, 33 | 03/b3; 23/T1–T5; 29 exploration exercise | ch03-q05; ch23-q01–q07; ch29-q01, q02, q12 | partly (23, 29, 31 drafted; 33 planned) |
 | Container Orchestration | Troubleshooting | 04, 26 | 04/T2; 26/T1–T5; P1 Q3 | ch04-q03, q11; ch26-q01–q11 | drafted |
 | Container Orchestration | Storage | 13 | 13/T1–T5 | ch13-q01–q03, q05 | drafted |
 | Cloud Native Application Delivery | Application Delivery | 14, 16 | 16/T1–T5 | ch16-q06, q08–q11 | drafted |
@@ -202,9 +202,9 @@ and Maintenance Q9–Q12 (15%), Environment, Configuration and Security Q13–Q1
 
 | Domain | Bullet (verbatim) | Chapter | Lab | Questions | Status |
 | --- | --- | --- | --- | --- | --- |
-| Overview of Cloud Native Security | The 4Cs of Cloud Native Security | 29 | | | planned |
-| Overview of Cloud Native Security | Cloud Provider and Infrastructure Security | 29, 30 | | | planned |
-| Overview of Cloud Native Security | Controls and Frameworks | 29 | | | planned |
+| Overview of Cloud Native Security | The 4Cs of Cloud Native Security | 29 | 29 exploration exercise | ch29-q01–q03 | drafted |
+| Overview of Cloud Native Security | Cloud Provider and Infrastructure Security | 29, 30 | | ch29-q04, q05 | partly (29 drafted; 30 planned) |
+| Overview of Cloud Native Security | Controls and Frameworks | 29 | 29 exploration exercise | ch29-q10, q11 | drafted |
 | Overview of Cloud Native Security | Isolation Techniques | 33 | | | planned |
 | Overview of Cloud Native Security | Artifact Repository and Image Security | 34 | 34/T1–T3 | ch34-q01, q09, q11, q12 | drafted |
 | Overview of Cloud Native Security | Workload and Application Code Security | 33, 34 | | | planned |
@@ -226,13 +226,13 @@ and Maintenance Q9–Q12 (15%), Environment, Configuration and Security Q13–Q1
 | Kubernetes Security Fundamentals | Isolation and Segmentation | 06, 33, 36 | 06/T2 | ch06-q02 | partly (06 explains what namespaces do not isolate) |
 | Kubernetes Security Fundamentals | Audit Logging | 35 | | | planned |
 | Kubernetes Security Fundamentals | Network Policy | 21, 36 | 21/T3–T4; 36/T1–T3 | ch21-q03–q06, q08, q09; ch36-q01–q05, q10, q11 | drafted |
-| Kubernetes Threat Model | Kubernetes Trust Boundaries and Data Flow | 29 | | | planned |
-| Kubernetes Threat Model | Persistence | 29, 35 | | | planned |
-| Kubernetes Threat Model | Denial of Service | 10, 29 | | | planned |
-| Kubernetes Threat Model | Malicious Code Execution and Compromised Applications in Containers | 29, 35 | | | planned |
-| Kubernetes Threat Model | Attacker on the Network | 29, 36 | | | planned |
-| Kubernetes Threat Model | Access to Sensitive Data | 29, 33 | | | planned |
-| Kubernetes Threat Model | Privilege Escalation | 29, 33 | | | planned |
+| Kubernetes Threat Model | Kubernetes Trust Boundaries and Data Flow | 29 | 29 exploration exercise | ch29-q13 | drafted |
+| Kubernetes Threat Model | Persistence | 29, 35 | | ch29-q06, q08 | partly (29 drafted; 35 planned) |
+| Kubernetes Threat Model | Denial of Service | 10, 29 | 10/T6 | | drafted |
+| Kubernetes Threat Model | Malicious Code Execution and Compromised Applications in Containers | 29, 35 | | ch29-q12 | partly (29 drafted; 35 planned) |
+| Kubernetes Threat Model | Attacker on the Network | 29, 36 | 36/T1–T4 | ch29-q04 | drafted |
+| Kubernetes Threat Model | Access to Sensitive Data | 29, 33 | | ch29-q07 | partly (29 drafted; 33 planned) |
+| Kubernetes Threat Model | Privilege Escalation | 29, 33 | | ch29-q07, q08 | partly (29 drafted; 33 planned) |
 | Platform Security | Supply Chain Security | 34 | 34/T1–T3 | ch34-q01–q12 | drafted |
 | Platform Security | Image Repository | 34 | 34/T1–T2 | ch34-q10 | partly |
 | Platform Security | Observability | 15, 35 | | | planned |
@@ -240,8 +240,8 @@ and Maintenance Q9–Q12 (15%), Environment, Configuration and Security Q13–Q1
 | Platform Security | PKI | 18, 27, 30 | 27/T4–T5 | ch18-q06, q07; ch27-q07–q09, q11 | partly (kubeadm certificates in 18 and 27; TLS hardening planned in 30) |
 | Platform Security | Connectivity | 21, 36 | 21/T3–T4; 36/T1–T4 | ch21-q01–q05; ch36-q03–q08, q12 | drafted |
 | Platform Security | Admission Control | 31 | 31/T1–T2, T4 | ch31-q05–q07, q11 | drafted |
-| Compliance and Security Frameworks | Compliance Frameworks | 29 | | | planned |
-| Compliance and Security Frameworks | Threat Modeling Frameworks | 29 | | | planned |
+| Compliance and Security Frameworks | Compliance Frameworks | 29 | | ch29-q11 | drafted |
+| Compliance and Security Frameworks | Threat Modeling Frameworks | 29 | 29 exploration exercise | ch29-q09 | drafted |
 | Compliance and Security Frameworks | Supply Chain Compliance | 34 | 34/T1–T3 | ch34-q03–q05, q08 | partly (SBOMs, signing and provenance described; compliance frameworks come with 29) |
 | Compliance and Security Frameworks | Automation and Tooling | 30, 34 | | | planned |
 
