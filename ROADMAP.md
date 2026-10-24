@@ -245,7 +245,7 @@ Estimates assume one author working part-time; adjust for your pace and any co-a
 
 ### Phase 4: Part V and mock exams (~4 weeks)
 
-*Status (2026-10-23): 37 is drafted and tested; 38 and 39 are drafted (concept chapters, no lab). The KCNA practice exam (`mock-exams/kcna`, 60 questions, `make quiz`) is done, and so is the full CKAD simulator (`mock-exams/ckad`, 20 questions over every CKAD domain). Missing: the KCSA practice exam and the full CKA and CKS simulators.*
+*Status (2026-10-23): 37 is drafted and tested; 38 and 39 are drafted (concept chapters, no lab). The KCNA practice exam (`mock-exams/kcna`, 60 questions, `make quiz`) is done, and so are the full CKAD simulator (`mock-exams/ckad`, 20 questions over every CKAD domain) and the full CKA simulator (`mock-exams/cka`, 18 questions over every CKA domain, on the Tier 2 VMs). Missing: the KCSA practice exam and the full CKS simulator.*
 
 - [x] Chapters 37 to 39
 - [ ] Five mock exams; time-test each yourself and record how long it took

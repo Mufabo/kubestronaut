@@ -72,6 +72,11 @@ curriculum's weights: 26, 17, 10, and 7 of its 60 questions.
 | Servicing and Networking | 20% |
 | Cluster Architecture, Installation and Configuration | 25% |
 
+The CKA simulator (`mock-exams/cka`, on the Tier 2 VMs) covers every domain in one
+timed exam, at the curriculum's weights: Cluster Architecture Q1–Q4 (25%),
+Workloads and Scheduling Q5–Q7 (15%), Services and Networking Q8–Q11 (20%),
+Storage Q12–Q13 (10%), Troubleshooting Q14–Q18 (30%).
+
 | Domain | Bullet (verbatim) | Chapter | Lab | Questions | Status |
 | --- | --- | --- | --- | --- | --- |
 | Storage | Implement storage classes and dynamic volume provisioning | 13, 22 | 13/T1, T5; 22/T1, T4 | ch13-q04, q10; ch22-q01–q04, q08 | drafted |
