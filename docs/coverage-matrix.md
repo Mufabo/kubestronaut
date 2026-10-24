@@ -53,7 +53,7 @@ curriculum's weights: 26, 17, 10, and 7 of its 60 questions.
 | Kubernetes Fundamentals | Scheduling | 02, 17 | 02/T4; 17/T1–T5 | ch02-q02, q12; ch17-q01–q07 | drafted |
 | Kubernetes Fundamentals | Containerization | 01, 04 | 04/T1, 04/T5 | ch01-q04..q06; ch04-q01 | drafted |
 | Container Orchestration | Networking | 11, 21, 26 | 11/T1–T5; 21/T1–T5 | ch11-q01–q11; ch21-q01–q11 | drafted |
-| Container Orchestration | Security | 23, 29, 31, 33 | 03/b3; 23/T1–T5; 29 exploration exercise | ch03-q05; ch23-q01–q07; ch29-q01, q02, q12 | partly (23, 29, 31 drafted; 33 planned) |
+| Container Orchestration | Security | 23, 29, 31, 33 | 03/b3; 23/T1–T5; 33/T1–T5 | ch03-q05; ch23-q01–q07; ch29-q01, q02, q12; ch33-q01 | drafted |
 | Container Orchestration | Troubleshooting | 04, 26 | 04/T2; 26/T1–T5; P1 Q3 | ch04-q03, q11; ch26-q01–q11 | drafted |
 | Container Orchestration | Storage | 13 | 13/T1–T5 | ch13-q01–q03, q05 | drafted |
 | Cloud Native Application Delivery | Application Delivery | 14, 16 | 16/T1–T5 | ch16-q06, q08–q11 | drafted |
@@ -144,7 +144,7 @@ and Maintenance Q9–Q12 (15%), Environment, Configuration and Security Q13–Q1
 | Application Environment, Configuration and Security | Understand ConfigMaps | 03, 07 | 03/b2 C1; 07/T1, T3–T5; P1 Q11 | ch07-q02, q03, q06, q08 | drafted |
 | Application Environment, Configuration and Security | Create & consume Secrets | 03, 07 | 03/b2 C2; 07/T2–T5; P1 Q11 | ch07-q01, q05, q09, q11 | drafted |
 | Application Environment, Configuration and Security | Understand ServiceAccounts | 03, 23 | 03/b2 C3; 23/T3–T4 | ch23-q05, q10 | drafted |
-| Application Environment, Configuration and Security | Understand Application Security (SecurityContexts, Capabilities, etc.) | 10, 33 | 10/T5 | ch10-q06, q07, q11 | partly (10 drafted; 33 planned) |
+| Application Environment, Configuration and Security | Understand Application Security (SecurityContexts, Capabilities, etc.) | 10, 33 | 10/T5; 33/T2–T3 | ch10-q06, q07, q11; ch33-q06 | drafted |
 | Services and Networking | Demonstrate basic understanding of NetworkPolicies | 21 | 21/T3–T4 | ch21-q03–q06, q08, q09 | drafted |
 | Services and Networking | Provide and troubleshoot access to applications via services | 03, 11, 26 | 03/b2 C5; 11/T1–T5; 26/T2–T3; P1 Q11; P3 Q14 | ch11-q01, q04, q06, q08–q11; ch26-q02–q05, q08, q11 | drafted |
 | Services and Networking | Use Ingress rules to expose applications | 12 | 12/T1–T3 | ch12-q02–q04, q08 | drafted |
@@ -175,9 +175,9 @@ and Maintenance Q9–Q12 (15%), Environment, Configuration and Security Q13–Q1
 | System Hardening | Using least-privilege identity and access management | 23, 32 | | | planned |
 | System Hardening | Minimize external access to the network | 32, 36 | | | planned |
 | System Hardening | Appropriately use kernel hardening tools such as AppArmor, seccomp | 32 | | | planned |
-| Minimize Microservice Vulnerabilities | Use appropriate pod security standards | 33 | | | planned |
-| Minimize Microservice Vulnerabilities | Manage kubernetes secrets | 07, 33 | 07/T2 | ch07-q01, q09 | partly (07 drafted; 33 planned) |
-| Minimize Microservice Vulnerabilities | Understand and implement isolation techniques (multi-tenancy, sandboxed containers, etc.) | 33 | | | planned |
+| Minimize Microservice Vulnerabilities | Use appropriate pod security standards | 33 | 33/T1–T2 | ch33-q01–q06 | drafted |
+| Minimize Microservice Vulnerabilities | Manage kubernetes secrets | 07, 33 | 07/T2; 33/T3–T4 | ch07-q01, q09; ch33-q07–q10 | drafted |
+| Minimize Microservice Vulnerabilities | Understand and implement isolation techniques (multi-tenancy, sandboxed containers, etc.) | 33 | 33/T5 | ch33-q11, q12 | drafted |
 | Minimize Microservice Vulnerabilities | Implement Pod-to-Pod encryption (Cilium, Istio) | 36 | | ch36-q07 (concept) | partly (encryption explained; no mesh or CNI encryption lab) |
 | Supply Chain Security | Minimize base image footprint | 34 | | | partly (gap: 34 is written but covers digests, not base image size; add distroless, multi-stage and scratch images to 34 or 16) |
 | Supply Chain Security | Understand your supply chain (e.g. SBOM, CI/CD, artifact repositories) | 16, 34 | 34/T1–T3 | ch16-q06; ch34-q01–q03, q08 | partly (16 covers CI/CD and GitOps; 34 covers SBOMs and artifacts) |
@@ -205,25 +205,25 @@ and Maintenance Q9–Q12 (15%), Environment, Configuration and Security Q13–Q1
 | Overview of Cloud Native Security | The 4Cs of Cloud Native Security | 29 | 29 exploration exercise | ch29-q01–q03 | drafted |
 | Overview of Cloud Native Security | Cloud Provider and Infrastructure Security | 29, 30 | | ch29-q04, q05 | partly (29 drafted; 30 planned) |
 | Overview of Cloud Native Security | Controls and Frameworks | 29 | 29 exploration exercise | ch29-q10, q11 | drafted |
-| Overview of Cloud Native Security | Isolation Techniques | 33 | | | planned |
+| Overview of Cloud Native Security | Isolation Techniques | 33 | 33/T5 | ch33-q11, q12 | drafted |
 | Overview of Cloud Native Security | Artifact Repository and Image Security | 34 | 34/T1–T3 | ch34-q01, q09, q11, q12 | drafted |
-| Overview of Cloud Native Security | Workload and Application Code Security | 33, 34 | | | planned |
+| Overview of Cloud Native Security | Workload and Application Code Security | 33, 34 | 33/T2–T3 | ch33-q06, q07 | drafted |
 | Kubernetes Cluster Component Security | API Server | 02, 30 | 02/T2, 02/T3 | ch02-q01, q06 | partly (02 explains its role; 30 secures it) |
 | Kubernetes Cluster Component Security | Controller Manager | 02, 30 | 02/T3 | ch02-q05 | partly |
 | Cluster Component Security | Scheduler | 02, 30 | 02/T4; 17/T5 | ch02-q02; ch17-q01, q06, q07 | partly (30 planned) |
 | Kubernetes Cluster Component Security | Kubelet | 02, 30 | | ch02-q03, q07 | partly |
-| Kubernetes Cluster Component Security | Container Runtime | 01, 33 | | ch01-q04, q05 | partly |
+| Kubernetes Cluster Component Security | Container Runtime | 01, 33 | 33/T5 | ch01-q04, q05; ch33-q11, q12 | drafted |
 | Kubernetes Cluster Component Security | KubeProxy | 02, 21 | P1 Q14 | | partly |
-| Kubernetes Cluster Component Security | Pod | 04, 33 | 04/T1-T5 | ch04-q01, q02 | partly |
+| Kubernetes Cluster Component Security | Pod | 04, 33 | 04/T1-T5; 33/T2–T3 | ch04-q01, q02; ch33-q06 | drafted |
 | Kubernetes Cluster Component Security | Etcd | 02, 20, 30 | 02/T2 | ch02-q01, q08 | partly |
 | Kubernetes Cluster Component Security | Container Networking | 21, 36 | 21/T1–T2 | ch21-q01, q02 | partly (36 planned) |
 | Kubernetes Cluster Component Security | Client Security | 03, 30 | 03/b1 | ch02-q10; ch03-q08 | partly (03 covers kubeconfig; 30 secures it) |
-| Kubernetes Cluster Component Security | Storage | 13, 22, 36 | 13/T5; 22/T2 | ch13-q05; ch22-q07; ch36-q09 | partly (storage security, such as encryption at rest, needs 30 or 33) |
-| Kubernetes Security Fundamentals | Pod Security Standards | 33 | | | planned |
-| Kubernetes Security Fundamentals | Pod Security Admissions | 31, 33 | 31/T2 | ch31-q08, q09, q12 | partly (33 planned) |
+| Kubernetes Cluster Component Security | Storage | 13, 22, 33, 36 | 13/T5; 22/T2; 33/T4 | ch13-q05; ch22-q07; ch33-q09, q10; ch36-q09 | drafted |
+| Kubernetes Security Fundamentals | Pod Security Standards | 33 | 33/T1–T2 | ch33-q01–q06 | drafted |
+| Kubernetes Security Fundamentals | Pod Security Admissions | 31, 33 | 31/T2; 33/T1–T2 | ch31-q08, q09, q12; ch33-q03–q05 | drafted |
 | Kubernetes Security Fundamentals | Authentication | 31 | 31/T3 | ch31-q01, q02, q10, q13 | drafted |
-| Kubernetes Security Fundamentals | Secrets | 07, 33 | 03/b2 C2 | | partly |
-| Kubernetes Security Fundamentals | Isolation and Segmentation | 06, 33, 36 | 06/T2 | ch06-q02 | partly (06 explains what namespaces do not isolate) |
+| Kubernetes Security Fundamentals | Secrets | 07, 33 | 03/b2 C2; 33/T3–T4 | ch33-q07–q10 | drafted |
+| Kubernetes Security Fundamentals | Isolation and Segmentation | 06, 33, 36 | 06/T2; 33/T5; 36/T1–T3 | ch06-q02; ch33-q11 | drafted |
 | Kubernetes Security Fundamentals | Audit Logging | 35 | | | planned |
 | Kubernetes Security Fundamentals | Network Policy | 21, 36 | 21/T3–T4; 36/T1–T3 | ch21-q03–q06, q08, q09; ch36-q01–q05, q10, q11 | drafted |
 | Kubernetes Threat Model | Kubernetes Trust Boundaries and Data Flow | 29 | 29 exploration exercise | ch29-q13 | drafted |
@@ -231,8 +231,8 @@ and Maintenance Q9–Q12 (15%), Environment, Configuration and Security Q13–Q1
 | Kubernetes Threat Model | Denial of Service | 10, 29 | 10/T6 | | drafted |
 | Kubernetes Threat Model | Malicious Code Execution and Compromised Applications in Containers | 29, 35 | | ch29-q12 | partly (29 drafted; 35 planned) |
 | Kubernetes Threat Model | Attacker on the Network | 29, 36 | 36/T1–T4 | ch29-q04 | drafted |
-| Kubernetes Threat Model | Access to Sensitive Data | 29, 33 | | ch29-q07 | partly (29 drafted; 33 planned) |
-| Kubernetes Threat Model | Privilege Escalation | 29, 33 | | ch29-q07, q08 | partly (29 drafted; 33 planned) |
+| Kubernetes Threat Model | Access to Sensitive Data | 29, 33 | 33/T3–T4 | ch29-q07; ch33-q07–q10 | drafted |
+| Kubernetes Threat Model | Privilege Escalation | 29, 33 | 33/T1–T2 | ch29-q07, q08; ch33-q02, q06 | drafted |
 | Platform Security | Supply Chain Security | 34 | 34/T1–T3 | ch34-q01–q12 | drafted |
 | Platform Security | Image Repository | 34 | 34/T1–T2 | ch34-q10 | partly |
 | Platform Security | Observability | 15, 35 | | | planned |
