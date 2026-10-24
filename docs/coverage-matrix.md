@@ -112,6 +112,11 @@ curriculum's weights: 26, 17, 10, and 7 of its 60 questions.
 | Application Environment, Configuration and Security | 25% |
 | Services and Networking | 20% |
 
+The CKAD simulator (`mock-exams/ckad`) covers every domain in one timed exam.
+By domain: Design and Build Q1–Q4 (20%), Deployment Q5–Q8 (21%), Observability
+and Maintenance Q9–Q12 (15%), Environment, Configuration and Security Q13–Q17
+(25%), Services and Networking Q18–Q20 (19%).
+
 | Domain | Bullet (verbatim) | Chapter | Lab | Questions | Status |
 | --- | --- | --- | --- | --- | --- |
 | Application Design and Build | Define, build and modify container images | 01, 16 | 16/T1 | ch01-q05; ch16-q01–q03 | drafted |

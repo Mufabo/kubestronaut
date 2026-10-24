@@ -189,8 +189,8 @@ the vocabulary stick.
 | 2 | 07, 08, 09 | Labs; mock exam `part1`, timed |
 | 3 | 10, 11, 12 | Labs |
 | 4 | 13, 14, 15, 16 | Labs; mock exam `part2`, timed |
-| 5 | 37, 38; review | Terminal drills; redo every lab you needed the solution for; killer.sh session 1 |
-| 6 | Review | Mocks `part1` and `part2` again until both pass in time; killer.sh session 2 |
+| 5 | 37, 38; review | Terminal drills; redo every lab you needed the solution for; the CKAD simulator (`make mock EXAM=ckad`), timed; killer.sh session 1 |
+| 6 | Review | Redo the missed questions of the CKAD simulator, then take it again from a reset until it passes in time; killer.sh session 2 |
 
 #### CKA (six to eight weeks; four to five after the CKAD)
 

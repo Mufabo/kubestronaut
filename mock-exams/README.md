@@ -1,7 +1,7 @@
 # Mock exams
 
-Timed, scored exam simulators. The full CKAD, CKA, and CKS simulators and the
-KCSA practice exam come with Part V; see `ROADMAP.md`.
+Timed, scored exam simulators. The full CKA and CKS simulators and the KCSA
+practice exam come with Part V; see `ROADMAP.md`.
 
 ## Multiple-choice practice exams
 
@@ -30,6 +30,7 @@ it asks for is right.
 | [`part1`](part1/part1.md) | Part I (Chapters 02 to 06), CKAD/CKA style | 18 | 120 min | 66% |
 | [`part2`](part2/part2.md) | Part II (Chapters 07 to 16), CKAD/CKA style | 14 | 120 min | 66% |
 | [`part3`](part3/part3.md) | Part III (Chapters 17 to 28), CKA style, on the Tier 2 VMs | 16 | 120 min | 66% |
+| [`ckad`](ckad/ckad.md) | The full CKAD: every domain, weighted as in the curriculum | 20 | 120 min | 66% |
 
 ```bash
 make cluster                       # once

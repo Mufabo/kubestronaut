@@ -12,6 +12,7 @@
 #      the checks one to one; and for step-by-step labs, make check accepts
 #      every task in order
 #   5. reset returns the lab to a failing starting state, task by task
+#   6. teardown works, and leaves the cluster for the next lab (Tier 1 only)
 # and, across the whole run, that the lab never touches unrelated cluster state
 # (sentinel namespace, ConfigMap, and ClusterRole created before the run must
 # survive with the same UIDs).
@@ -179,6 +180,11 @@ for part in "${list[@]}"; do
   if ((guard_cluster)); then
     [[ "$(sentinel_uids)" == "$sentinel_before" ]] ||
       fail "the lab changed or deleted unrelated cluster state (sentinel resources differ)"
+  fi
+  # Leave the cluster as the next lab expects it: a lab may change cluster-scoped
+  # state (Chapter 17 taints a node), which only its teardown takes back.
+  if [[ "$tier" != 2 ]]; then
+    echo "### teardown";                   run "$ch" teardown "$part" || fail "teardown failed"
   fi
 done
 part=""
