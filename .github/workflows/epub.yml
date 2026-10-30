@@ -31,11 +31,12 @@ jobs:
           pandoc --version | head -1
       - name: Install the pinned mermaid-cli
         run: |
-          npm install -g "@mermaid-js/mermaid-cli@${MERMAID_CLI_VERSION}"
+          # The global npm prefix belongs to root on the runner; install next to the job.
+          npm install --no-fund --no-audit --prefix "${RUNNER_TEMP}/mmdc" "@mermaid-js/mermaid-cli@${MERMAID_CLI_VERSION}"
           # The runner's sandbox does not allow Chromium's own sandbox.
           echo '{"args": ["--no-sandbox"]}' > /tmp/puppeteer.json
           echo "MMDC_PUPPETEER_CONFIG=/tmp/puppeteer.json" >> "$GITHUB_ENV"
-          echo "MMDC=mmdc" >> "$GITHUB_ENV"
+          echo "MMDC=${RUNNER_TEMP}/mmdc/node_modules/.bin/mmdc" >> "$GITHUB_ENV"
       - name: Build the EPUB
         run: make epub
       - name: Publish the release
