@@ -8,3 +8,7 @@ envs/vagrant/.vagrant/
 
 # Scratch scripts that capture real command output for the chapters
 .capture/
+
+# The EPUB build (make epub)
+dist/
+build/

@@ -1,0 +1,51 @@
+name: epub
+
+# Every push to main (a merge included) builds the book as an EPUB and publishes it
+# as a GitHub release, tagged book-<date>-<commit>. Tool versions come from
+# versions.env, as in labs.yml.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: epub-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  epub:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Read versions.env
+        run: grep -v '^#' versions.env | grep . >> "$GITHUB_ENV"
+      - name: Install the pinned pandoc
+        run: |
+          tarball="pandoc-${PANDOC_VERSION}-linux-amd64.tar.gz"
+          curl -fsSLo "/tmp/${tarball}" "https://github.com/jgm/pandoc/releases/download/${PANDOC_VERSION}/${tarball}"
+          echo "${PANDOC_SHA256}  /tmp/${tarball}" | sha256sum --check
+          sudo tar -xzf "/tmp/${tarball}" -C /usr/local --strip-components=1
+          pandoc --version | head -1
+      - name: Install the pinned mermaid-cli
+        run: |
+          npm install -g "@mermaid-js/mermaid-cli@${MERMAID_CLI_VERSION}"
+          # The runner's sandbox does not allow Chromium's own sandbox.
+          echo '{"args": ["--no-sandbox"]}' > /tmp/puppeteer.json
+          echo "MMDC_PUPPETEER_CONFIG=/tmp/puppeteer.json" >> "$GITHUB_ENV"
+          echo "MMDC=mmdc" >> "$GITHUB_ENV"
+      - name: Build the EPUB
+        run: make epub
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          short="$(git rev-parse --short HEAD)"
+          tag="book-$(date -u +%Y%m%d)-${short}"
+          cp dist/kubestronaut-book.epub "dist/kubestronaut-book-${tag#book-}.epub"
+          gh release create "$tag" "dist/kubestronaut-book-${tag#book-}.epub" \
+            --target "$GITHUB_SHA" \
+            --title "Kubestronaut book, $(date -u +%Y-%m-%d) (${short})" \
+            --notes "EPUB built from ${GITHUB_SHA} on main. Labs, mock exams, and solutions live in the repository."

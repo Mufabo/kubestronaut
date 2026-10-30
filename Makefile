@@ -7,7 +7,7 @@ PART ?=
 EXAM ?=
 SHELL := /usr/bin/env bash
 
-.PHONY: help cluster cluster-recreate cluster-delete cluster-pause cluster-resume test-tier2-env lab question check skip use-namespace reset verify solve teardown test test-lib test-harness test-render test-shell test-examples test-tier1 mock mock-score mock-reset mock-solve mock-teardown mock-test test-mocks quiz quiz-reset test-quiz questions questions-check lint
+.PHONY: help cluster cluster-recreate cluster-delete cluster-pause cluster-resume test-tier2-env lab question check skip use-namespace reset verify solve teardown test test-lib test-harness test-render test-shell test-examples test-tier1 mock mock-score mock-reset mock-solve mock-teardown mock-test test-mocks quiz quiz-reset test-quiz epub questions questions-check lint
 
 help: ## Show this help
 	@grep -hE '^[a-zA-Z_-]+:.*## ' Makefile | awk -F':.*## ' '{printf "  %-16s %s\n", $$1, $$2}'
@@ -119,6 +119,9 @@ quiz: ## Take (or resume) the timed multiple-choice exam EXAM, e.g. EXAM=kcna
 
 quiz-reset: ## Throw away the current attempt of quiz EXAM
 	@python3 tools/quiz.py "$(EXAM)" --reset
+
+epub: ## Build the book as an EPUB in dist/ (needs pandoc, and npx or mmdc for the diagrams)
+	@bash tools/build-epub.sh
 
 questions: ## Render questions.yaml into every chapter file and question-only mock exam
 	@python3 tools/render-questions.py

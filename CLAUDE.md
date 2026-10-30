@@ -30,6 +30,7 @@ make test-quiz               # unit tests for tools/quiz.py, and validates every
 make test-lib                # kubeconfig helper tests (needs kubectl, no cluster)
 make test-shell              # envs/shell helpers/vimrc/install
 make test-examples           # every jq/yq example in Chapter 03 against pinned jq/yq
+make epub                    # the book as dist/kubestronaut-book.epub (pandoc + mermaid-cli, pinned in versions.env)
 LAB_DEBUG=1 make verify CH=4 # shell trace for failing checks
 ```
 
@@ -54,7 +55,7 @@ cd envs\vagrant; vagrant ssh cp1 -c "cd /kbook && make test CH=19"        # or: 
 
 No cluster needed: `make lint`, `make questions-check`, `make test-render`, `make test-quiz`, `make test-harness`, `make test-shell`, `make test-lib`, `make test-examples`. Local tools for these: bash, make, shellcheck, yamllint, `markdownlint-cli2` at the version pinned in `versions.env`, pinned `jq` and `yq`, Python 3 with `tools/requirements.txt` (PyYAML), and vim. Labs and `make test*` on a cluster also need docker, kind, and kubectl.
 
-CI (`.github/workflows/labs.yml`) installs the same pinned tools, runs lint, questions-check, test-render, test-quiz, test-harness, test-shell, test-examples, then creates a kind cluster and runs test-lib, test-tier1, and test-mocks. It also runs weekly to catch upstream drift.
+CI (`.github/workflows/labs.yml`) installs the same pinned tools, runs lint, questions-check, test-render, test-quiz, test-harness, test-shell, test-examples, then creates a kind cluster and runs test-lib, test-tier1, and test-mocks. It also runs weekly to catch upstream drift. A second workflow (`.github/workflows/epub.yml`) builds the EPUB on every push to `main` and publishes it as a GitHub release tagged `book-<date>-<commit>`. `tools/build-epub.sh` takes the README, Chapters 01–39, and the mock exams' question pages (never their solutions); `tools/epub/filter.lua` renders Mermaid blocks to PNG and turns links to repo files into plain text.
 
 ## Architecture
 
