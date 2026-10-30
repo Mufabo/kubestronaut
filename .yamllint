@@ -8,3 +8,4 @@ ignore: |
   # Helm templates are Go templates until they are rendered, so they are not YAML yet.
   chapters/*/manifests/charts/*/templates/*
   chapters/*/lab/.state/**
+  mock-exams/*/lab/.state/**

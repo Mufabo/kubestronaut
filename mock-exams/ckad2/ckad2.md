@@ -128,9 +128,9 @@ Task weight: 5%
 Use context: `kubectl config use-context ckad2-b`
 
 In Namespace `ckad2-deploy`, the latest upgrade of the Helm release `catalog` points
-at an image tag that does not exist. Roll the release back to the revision that ran
-image tag `1.26`. The release must be `deployed`, with 1 ready replica of
-`nginx:1.26`.
+at an image tag that does not exist (its chart is in `/tmp/kbook/ckad2/7/chart`).
+Roll the release back to the revision that ran image tag `1.26`. The release must be
+`deployed`, with 1 ready replica of `nginx:1.26`.
 
 ---
 

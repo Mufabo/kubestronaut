@@ -147,10 +147,9 @@ spec:
 YAML
 
 # Question 7: catalog at revision 1 works; revision 2 points at an image that does not exist.
-rm -rf "${STATE}/chart"
-cp -r "${here}/../../../chapters/14-helm-kustomize/manifests/charts/shop" "${STATE}/chart"
-helm -n ckad2-deploy install catalog "${STATE}/chart" --set image.tag=1.26 --wait --timeout 180s >/dev/null
-helm -n ckad2-deploy upgrade catalog "${STATE}/chart" --reuse-values --set image.tag=1.99-missing >/dev/null
+cp -r "${here}/../../../chapters/14-helm-kustomize/manifests/charts/shop" "${C}/7/chart"
+helm -n ckad2-deploy install catalog "${C}/7/chart" --set image.tag=1.26 --wait --timeout 180s >/dev/null
+helm -n ckad2-deploy upgrade catalog "${C}/7/chart" --reuse-values --set image.tag=1.99-missing >/dev/null
 
 # ---- ckad2-ops -----------------------------------------------------------------
 kubectl -n ckad2-ops apply -f - >/dev/null <<'YAML'
