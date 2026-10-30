@@ -1,0 +1,219 @@
+- id: ch10-q01
+  type: mcq
+  exams: [CKAD, CKA]
+  question: "A container's readiness probe fails for several checks in a row. What does the kubelet do?"
+  choices:
+    - "It restarts the container, following the Pod's restart policy"
+    - "It removes the Pod from the endpoints of its Services, and leaves the container running"
+    - "It deletes the Pod and lets its controller create a new one"
+    - "It stops the Pod's other containers until the probe passes"
+  answer: B
+  explanation: "A failing readiness probe only takes the Pod out of traffic. Restarting is the liveness probe's job. Use readiness for 'can this Pod serve requests right now?' and liveness for 'is this container stuck?'"
+
+- id: ch10-q02
+  type: mcq
+  exams: [CKAD, CKA]
+  question: "Which probe field sets how many consecutive failed checks are needed before the kubelet acts on a probe?"
+  choices:
+    - "`timeoutSeconds`"
+    - "`periodSeconds`"
+    - "`failureThreshold`"
+    - "`initialDelaySeconds`"
+  answer: C
+  explanation: "`failureThreshold` (default 3) is the number of consecutive failures before the probe counts as failed. `timeoutSeconds` is how long one check may take, `periodSeconds` is the interval between checks, and `initialDelaySeconds` is the wait before the first check."
+
+- id: ch10-q03
+  type: mcq
+  exams: [CKAD, CKA]
+  question: "A container uses more CPU than its limit. A second container uses more memory than its limit. What happens to each?"
+  choices:
+    - "Both are killed and restarted"
+    - "The CPU user is throttled and runs more slowly; the memory user is OOM-killed"
+    - "The CPU user is killed; the memory user is throttled"
+    - "Neither is affected, because limits are advisory"
+  answer: B
+  explanation: "CPU is a compressible resource: exceeding the limit slows the container down. Memory is not: exceeding the limit gets the container OOM-killed, and the kubelet restarts it with the reason `OOMKilled`."
+
+- id: ch10-q04
+  type: mcq
+  exams: [CKAD, CKA]
+  question: "A Pod has one container with requests of 100m CPU and 64Mi memory, and no limits. What is its QoS class?"
+  choices:
+    - "Guaranteed, because it has requests"
+    - "Burstable, because it has a request and no matching limit"
+    - "BestEffort, because it has no limits"
+    - "Burstable only if a second container exists"
+  answer: B
+  explanation: "Guaranteed requires requests equal to limits for every container. A Pod with any request or limit that is not Guaranteed is Burstable. BestEffort is only for Pods with no requests and no limits at all."
+
+- id: ch10-q05
+  type: mcq
+  exams: [CKAD, CKA]
+  question: "A Pod has two containers. The first has CPU and memory requests equal to its limits. The second has no resources at all. What is the QoS class of the Pod?"
+  choices:
+    - "Guaranteed, because most containers are Guaranteed"
+    - "Burstable, because the Pod is not Guaranteed unless every container is"
+    - "BestEffort, because one container has no resources"
+    - "Guaranteed, because the Pod-level resources are used"
+  answer: B
+  explanation: "Guaranteed applies to the whole Pod and requires every container to have equal CPU and memory requests and limits. The second container has none, so the Pod is not Guaranteed. It is not BestEffort either, because the first container has resources set."
+
+- id: ch10-q06
+  type: mcq
+  exams: [CKAD, CKA]
+  question: "Which setting makes the kubelet refuse to start a container whose image would run as root?"
+  choices:
+    - "`spec.securityContext.runAsUser: 0`"
+    - "`spec.securityContext.runAsNonRoot: true`"
+    - "`spec.containers[].securityContext.privileged: false`"
+    - "`spec.securityContext.fsGroup: 1000`"
+  answer: B
+  explanation: "`runAsNonRoot: true` makes the kubelet check the user and refuse root. `runAsUser` picks a user but does not refuse root on its own, `privileged: false` is about device access, and `fsGroup` is about volume group ownership."
+
+- id: ch10-q07
+  type: mcq
+  exams: [CKAD]
+  question: "Where do `capabilities: {drop: [\"ALL\"]}` belong in a Pod spec?"
+  choices:
+    - "In `spec.securityContext` at the Pod level"
+    - "In `spec.containers[].securityContext` for the container"
+    - "In `spec.initContainers` only"
+    - "In the namespace's LimitRange"
+  answer: B
+  explanation: "Capabilities are a container-level setting, under `spec.containers[].securityContext`. The API server rejects them at the Pod level with an unknown-field error, which you can check with `kubectl apply --dry-run=server`."
+
+- id: ch10-q08
+  type: task
+  exams: [CKAD, CKA]
+  prompt: "In namespace `prod`, create a Pod named `api-probe` with image `nginx:1.27`. Give it a readiness probe that does an HTTP GET on path `/` and port `80`, every 5 seconds. Wait until the Pod is Ready, and show its readiness status."
+  solution: |
+    ```bash
+    cat <<'YAML' | kubectl -n prod apply -f -
+    apiVersion: v1
+    kind: Pod
+    metadata:
+      name: api-probe
+    spec:
+      containers:
+        - name: api
+          image: nginx:1.27
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            periodSeconds: 5
+    YAML
+    kubectl -n prod wait --for=condition=Ready pod/api-probe --timeout=120s
+    kubectl -n prod get pod api-probe -o jsonpath='{.status.containerStatuses[0].ready}{"\n"}'
+    ```
+
+    The probe is an `httpGet` on `/`, which nginx answers with 200. The readiness field is `periodSeconds`, not `interval`.
+
+- id: ch10-q09
+  type: task
+  exams: [CKAD, CKA]
+  prompt: "In namespace `prod`, create a Pod named `guaranteed` running `busybox:1.36` with the command `sleep 3600`. Give it CPU and memory requests equal to its limits: CPU `100m`, memory `64Mi`. Show the Pod's QoS class."
+  solution: |
+    ```bash
+    cat <<'YAML' | kubectl -n prod apply -f -
+    apiVersion: v1
+    kind: Pod
+    metadata:
+      name: guaranteed
+    spec:
+      containers:
+        - name: app
+          image: busybox:1.36
+          command: ["sleep", "3600"]
+          resources:
+            requests:
+              cpu: 100m
+              memory: 64Mi
+            limits:
+              cpu: 100m
+              memory: 64Mi
+    YAML
+    kubectl -n prod wait --for=condition=Ready pod/guaranteed --timeout=120s
+    kubectl -n prod get pod guaranteed -o jsonpath='{.status.qosClass}{"\n"}'
+    ```
+
+    Guaranteed needs both CPU and memory, with requests equal to limits in every container.
+
+- id: ch10-q10
+  type: task
+  exams: [CKAD, CKA]
+  prompt: "In namespace `prod`, the Deployment `api` runs a container named `httpd`. Set its resources to CPU request `50m`, memory request `32Mi`, CPU limit `100m`, and memory limit `64Mi`. Wait until the rollout finishes, then show the container's resources."
+  solution: |
+    ```bash
+    kubectl -n prod set resources deployment api -c=httpd --requests=cpu=50m,memory=32Mi --limits=cpu=100m,memory=64Mi
+    kubectl -n prod rollout status deployment/api
+    kubectl -n prod get deployment api -o jsonpath='{.spec.template.spec.containers[0].resources}{"\n"}'
+    ```
+
+    `kubectl set resources` changes the Pod template, so the Deployment rolls out new Pods with the new resources. `-c` names the container.
+
+- id: ch10-q11
+  type: task
+  exams: [CKAD]
+  prompt: "In namespace `prod`, create a Pod named `locked` running `busybox:1.36` with the command `sleep 3600`. It must run as user 2000, refuse to start as root, and not allow privilege escalation. Show the user ID the container runs as."
+  solution: |
+    ```bash
+    cat <<'YAML' | kubectl -n prod apply -f -
+    apiVersion: v1
+    kind: Pod
+    metadata:
+      name: locked
+    spec:
+      securityContext:
+        runAsUser: 2000
+        runAsNonRoot: true
+      containers:
+        - name: app
+          image: busybox:1.36
+          command: ["sleep", "3600"]
+          securityContext:
+            allowPrivilegeEscalation: false
+    YAML
+    kubectl -n prod wait --for=condition=Ready pod/locked --timeout=120s
+    kubectl -n prod exec locked -- id -u
+    ```
+
+    `runAsUser` and `runAsNonRoot` are Pod-level fields here. `allowPrivilegeEscalation` is container-level, so it sits under the container's `securityContext`.
+
+- id: ch10-q12
+  type: mcq
+  exams: [CKAD, CKA]
+  question: "A Namespace has a ResourceQuota that caps `requests.cpu` and `requests.memory`, and no LimitRange. What happens when you create a Pod whose container sets no resources?"
+  choices:
+    - "The Pod is created with no requests and runs as BestEffort"
+    - "The API server rejects the Pod, because the quota requires every Pod to state the resources it caps"
+    - "The Pod is created, but stays Pending until resources are added"
+    - "The quota fills in default requests"
+  answer: B
+  explanation: "Once a quota covers CPU or memory, new Pods must state those values, or admission rejects them with `must specify ...`. A LimitRange with defaults fills them in at creation time; a quota never does."
+
+- id: ch10-q13
+  type: task
+  exams: [CKAD]
+  prompt: "In namespace `team-a`, make every container that declares no resources get a CPU request of `50m` and a CPU limit of `250m`, and cap the Namespace at 5 Pods. Show both objects."
+  solution: |
+    ```bash
+    cat <<'YAML' | kubectl -n team-a apply -f -
+    apiVersion: v1
+    kind: LimitRange
+    metadata:
+      name: cpu-defaults
+    spec:
+      limits:
+        - type: Container
+          defaultRequest:
+            cpu: 50m
+          default:
+            cpu: 250m
+    YAML
+    kubectl -n team-a create quota pod-count --hard=pods=5
+    kubectl -n team-a describe limitrange cpu-defaults
+    kubectl -n team-a describe quota pod-count
+    ```
+
+    `defaultRequest` sets the request and `default` sets the limit. The defaults apply to Pods created from now on; running Pods keep what they have.

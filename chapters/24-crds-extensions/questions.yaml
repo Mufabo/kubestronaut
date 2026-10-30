@@ -1,0 +1,213 @@
+- id: ch24-q01
+  type: mcq
+  exams: [KCNA, CKA]
+  question: "What does a CustomResourceDefinition add to a cluster?"
+  choices:
+    - "A new container runtime"
+    - "A new kind in the Kubernetes API, served and stored like a built-in type"
+    - "A new node in the cluster"
+    - "A replacement for Deployments"
+  answer: B
+  explanation: "A CRD registers a new kind with the API server, which then serves it at its own path, stores its objects in etcd and validates them against the CRD's schema. It does not change the runtime, add nodes, or replace built-in controllers."
+
+- id: ch24-q02
+  type: mcq
+  exams: [KCNA, CKA]
+  question: "Which pairing defines an operator?"
+  choices:
+    - "A DaemonSet and a Service"
+    - "A CRD describing the desired state, and a controller that reconciles the cluster toward it"
+    - "A ConfigMap and a Secret"
+    - "A ServiceAccount and a RoleBinding"
+  answer: B
+  explanation: "An operator is a CRD, which defines a new kind of desired state, plus a controller that watches those objects and acts to make the cluster match them. A CRD alone only stores data, and it does nothing until a controller acts on it."
+
+- id: ch24-q03
+  type: mcq
+  exams: [KCNA, CKA]
+  question: "Which interface lets the kubelet start and stop containers through a runtime such as containerd?"
+  choices:
+    - "CNI"
+    - "CSI"
+    - "CRI"
+    - "OCI only"
+  answer: C
+  explanation: "The Container Runtime Interface (CRI) is the gRPC interface between the kubelet and the container runtime. CNI gives Pods networks, and CSI handles storage volumes."
+
+- id: ch24-q04
+  type: mcq
+  exams: [KCNA, CKA]
+  question: "Which interface configures a Pod's network and routes, typically with a configuration file in /etc/cni/net.d?"
+  choices:
+    - "CRI"
+    - "CNI"
+    - "CSI"
+    - "RBAC"
+  answer: B
+  explanation: "The Container Network Interface (CNI) is the plugin interface for Pod networking. Each node reads the plugin's configuration from /etc/cni/net.d. CRI runs containers, CSI handles volumes, and RBAC is an authorization mode."
+
+- id: ch24-q05
+  type: mcq
+  exams: [CKA]
+  question: "A CRD serves two versions, and one of them is the storage version. What does that mean?"
+  choices:
+    - "Only that version can be served to clients"
+    - "The API server writes objects to etcd in that version, and converts others to and from it"
+    - "Objects in that version are never validated"
+    - "That version is deleted when the CRD is updated"
+  answer: B
+  explanation: "Exactly one version is the storage version. The API server persists objects in that version, and it converts between the stored form and the other served versions. Each served version has its own schema, and `served` decides which versions clients can use."
+
+- id: ch24-q06
+  type: mcq
+  exams: [CKA]
+  question: "A custom object does not satisfy the CRD's schema. Where is it refused?"
+  choices:
+    - "In the kubectl client, before the request is sent"
+    - "By the API server, which validates the object against the schema on create and update"
+    - "By the kubelet on the node where the object would run"
+    - "By CoreDNS, when the object's name is resolved"
+  answer: B
+  explanation: "The API server enforces the CRD's schema, so the refusal comes back as an error from the server. A client-side check cannot be relied on, which is why `kubectl apply --dry-run=server` is the reliable test."
+
+- id: ch24-q07
+  type: mcq
+  exams: [KCNA]
+  question: "Which command reads the schema of a custom kind, so you can see its fields and which are required?"
+  choices:
+    - "kubectl get crd"
+    - "kubectl explain KIND.FIELD --api-version=GROUP/VERSION"
+    - "kubectl describe node"
+    - "kubectl top"
+  answer: B
+  explanation: "`kubectl explain` reads the schema the API server serves for a kind, including the required fields. `kubectl get crd` lists the CRDs, and `describe node` and `top` show other information."
+
+- id: ch24-q08
+  type: task
+  exams: [CKA]
+  prompt: "Create a CustomResourceDefinition named `caches.perf.example.com`: group `perf.example.com`, kind `Cache`, plural `caches`, singular `cache`, namespaced, one version `v1` that is served and stored. Its schema requires `spec.ttl`, an integer with a minimum of 0. Wait until it is Established, and show its kind."
+  solution: |
+    ```bash
+    cat <<'YAML' | kubectl apply -f -
+    apiVersion: apiextensions.k8s.io/v1
+    kind: CustomResourceDefinition
+    metadata:
+      name: caches.perf.example.com
+    spec:
+      group: perf.example.com
+      scope: Namespaced
+      names:
+        plural: caches
+        singular: cache
+        kind: Cache
+      versions:
+        - name: v1
+          served: true
+          storage: true
+          schema:
+            openAPIV3Schema:
+              type: object
+              properties:
+                spec:
+                  type: object
+                  required: [ttl]
+                  properties:
+                    ttl:
+                      type: integer
+                      minimum: 0
+    YAML
+    kubectl wait --for=condition=Established crd/caches.perf.example.com --timeout=60s
+    kubectl get crd caches.perf.example.com -o jsonpath='{.spec.names.kind}{"\n"}'
+    ```
+
+    The group and the plural name form the resource's name, `caches.perf.example.com`.
+    The CRD itself is cluster-scoped, so it has no namespace.
+
+- id: ch24-q09
+  type: task
+  exams: [CKA]
+  prompt: "In namespace `prod`, create a Cache named `hot` with `spec.ttl` set to `300`, using the CRD `caches.perf.example.com` from the previous question. Show its ttl."
+  solution: |
+    ```bash
+    cat <<'YAML' | kubectl -n prod apply -f -
+    apiVersion: perf.example.com/v1
+    kind: Cache
+    metadata:
+      name: hot
+    spec:
+      ttl: 300
+    YAML
+    kubectl -n prod get cache hot -o jsonpath='{.spec.ttl}{"\n"}'
+    ```
+
+    The object's `apiVersion` is the group and version of the CRD, `perf.example.com/v1`.
+
+- id: ch24-q10
+  type: task
+  exams: [CKA]
+  prompt: "Write the name of the storage version of the CRD `caches.perf.example.com` into `/tmp/ch24-q10.txt`, and nothing else."
+  solution: |
+    ```bash
+    kubectl get crd caches.perf.example.com -o jsonpath='{.spec.versions[?(@.storage==true)].name}' > /tmp/ch24-q10.txt
+    cat /tmp/ch24-q10.txt
+    ```
+
+    The storage version is the one with `storage: true`. The JSONPath filter selects it,
+    and the answer is `v1`.
+
+- id: ch24-q11
+  type: task
+  exams: [CKA]
+  prompt: "List the resources that the group `perf.example.com` provides, by their names, with `kubectl api-resources`, and write them to `/tmp/ch24-q11.txt`."
+  solution: |
+    ```bash
+    kubectl api-resources --api-group=perf.example.com -o name > /tmp/ch24-q11.txt
+    cat /tmp/ch24-q11.txt
+    ```
+
+    `-o name` prints one resource per line, in the form `caches.perf.example.com`.
+
+- id: ch24-q12
+  type: mcq
+  exams: [CKA]
+  question: "cert-manager is installed, and a Certificate `api` names the Secret `api-tls`. Someone deletes `api-tls`. What happens?"
+  choices:
+    - "Nothing until the Certificate is deleted and created again"
+    - "The operator notices the Secret is missing and issues the certificate again into a new `api-tls`"
+    - "The Certificate is deleted too, by garbage collection"
+    - "The API server refuses the deletion"
+  answer: B
+  explanation: "The Certificate is the desired state; the Secret is actual state the operator maintains. Reconciliation detects the difference and issues the certificate again. That is the operator pattern: a custom resource, and a controller that keeps the cluster in line with it."
+
+- id: ch24-q13
+  type: task
+  exams: [CKA]
+  prompt: "cert-manager is running. In namespace `web`, create a self-signed `Issuer` named `local` and a `Certificate` named `portal` for `portal.example.test`, stored in the Secret `portal-tls`. Show that the operator issued it."
+  solution: |
+    ```bash
+    cat <<'YAML' | kubectl -n web apply -f -
+    apiVersion: cert-manager.io/v1
+    kind: Issuer
+    metadata:
+      name: local
+    spec:
+      selfSigned: {}
+    ---
+    apiVersion: cert-manager.io/v1
+    kind: Certificate
+    metadata:
+      name: portal
+    spec:
+      secretName: portal-tls
+      dnsNames:
+        - portal.example.test
+      issuerRef:
+        kind: Issuer
+        name: local
+    YAML
+    kubectl -n web wait --for=condition=Ready certificate/portal --timeout=120s
+    kubectl -n web get certificate,secret
+    kubectl -n web describe certificate portal
+    ```
+
+    `kubectl explain certificate.spec` lists the fields, served by the operator's CRD. The Secret appears without anyone creating it, and the Certificate's events name the `CertificateRequest` the operator made.

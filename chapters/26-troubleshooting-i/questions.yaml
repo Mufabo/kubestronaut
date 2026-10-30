@@ -1,0 +1,141 @@
+- id: ch26-q01
+  type: mcq
+  exams: [CKA]
+  question: "A Pod shows `ImagePullBackOff`. Where is the most specific evidence of what went wrong?"
+  choices:
+    - "In the container's logs, which are empty"
+    - "In the Pod's events, which name the image and the pull error"
+    - "In the node's kubelet configuration file"
+    - "In the Service that routes to the Pod"
+  answer: B
+  explanation: "The kubelet records each failed pull as an event on the Pod, with the image name and the error. Container logs do not exist yet, because the container never started. The node configuration and the Service are unrelated to the pull."
+
+- id: ch26-q02
+  type: mcq
+  exams: [CKA]
+  question: "A Service has a cluster IP and its Pods are ready, but its EndpointSlice list is empty. What is the most likely fault?"
+  choices:
+    - "The Service's targetPort is wrong"
+    - "The Service's selector does not match the labels of the ready Pods"
+    - "CoreDNS is down"
+    - "The container image is missing"
+  answer: B
+  explanation: "Endpoints are the ready Pods that match the Service's selector. An empty list means no ready Pod matches. A wrong targetPort still leaves the endpoints in place, and a DNS fault affects names, not endpoints."
+
+- id: ch26-q03
+  type: mcq
+  exams: [CKA]
+  question: "A client's request to a Service times out after a few seconds, and nothing answers. Which fault is most likely?"
+  choices:
+    - "A NetworkPolicy that does not admit the client"
+    - "A container that exited with code 0"
+    - "A missing ServiceAccount"
+    - "A wrong image tag"
+  answer: A
+  explanation: "A NetworkPolicy that blocks a source makes the packets disappear, so the client times out. A refused connection, by contrast, means something answered and rejected it. A missing ServiceAccount or a wrong image tag does not affect network traffic that reaches a running Pod."
+
+- id: ch26-q04
+  type: mcq
+  exams: [CKA]
+  question: "A container listens on port 8080, but its Service's targetPort is 80. Which symptom do you expect from a client?"
+  choices:
+    - "The Service has no endpoints"
+    - "Connections to the Service are refused, while the endpoints still exist"
+    - "The Pod is not scheduled"
+    - "DNS cannot resolve the Service's name"
+  answer: B
+  explanation: "The endpoints are correct, because the selector matches the ready Pods. The traffic is sent to port 80 on the Pod, where nothing listens, so the connection is refused. A selector problem would leave the endpoints empty."
+
+- id: ch26-q05
+  type: mcq
+  exams: [CKA]
+  question: "A Pod is Running but not Ready. What happens to its traffic?"
+  choices:
+    - "It keeps receiving traffic, because it is Running"
+    - "It is removed from the endpoints of its Services until its readiness probe passes"
+    - "It is restarted immediately"
+    - "It is deleted by the scheduler"
+  answer: B
+  explanation: "Readiness decides whether a Pod is an endpoint. A Pod that is Running but not Ready is removed from its Services' endpoints, and the kubelet keeps it running. A failing liveness probe is what restarts a container."
+
+- id: ch26-q06
+  type: mcq
+  exams: [CKA]
+  question: "A Pod has `dnsPolicy: None` and a `dnsConfig` that names a nameserver that does not answer. Which lookups fail?"
+  choices:
+    - "Only lookups of external names"
+    - "Name lookups of every kind, while IP addresses still work"
+    - "Only lookups of Services in other namespaces"
+    - "None, because dnsPolicy None uses the node's resolver"
+  answer: B
+  explanation: "With `dnsPolicy: None`, the Pod uses exactly the nameservers in its dnsConfig. If none of them answers, every name lookup fails. Connections to IP addresses do not need DNS, so they still work."
+
+- id: ch26-q07
+  type: mcq
+  exams: [CKA]
+  question: "Why is an ephemeral debug container useful for a Pod whose image has no shell or `ps`?"
+  choices:
+    - "It restarts the Pod with the debug tools built in"
+    - "It shares the Pod's process namespace and runs beside the application without changing its image"
+    - "It copies the application's image and runs it as root"
+    - "It replaces the application's container"
+  answer: B
+  explanation: "An ephemeral container is added to a running Pod, and with `--target` it can see the application's processes. The Pod is not restarted, and the application's image is unchanged. Ephemeral containers cannot be removed from the Pod, so the Pod is replaced to clear them."
+
+- id: ch26-q08
+  type: task
+  exams: [CKA]
+  prompt: "In namespace `prod`, the Service `cart` has no ready endpoints. Its Deployment `cart` runs Pods labelled `app=cart`, and the Service's selector reads `app=carts`. Fix the Service so that its ready endpoints are the Deployment's Pods. Show the Service's selector."
+  solution: |
+    ```bash
+    kubectl -n prod patch service cart -p '{"spec":{"selector":{"app":"cart"}}}'
+    kubectl -n prod get service cart -o jsonpath='{.spec.selector.app}{"\n"}'
+    ```
+
+    The selector is the only link between the Service and its Pods. The value `carts`
+    matched no Pod, and `cart` matches the Deployment's labels.
+
+- id: ch26-q09
+  type: task
+  exams: [CKA]
+  prompt: "In namespace `prod`, the Pod `broken` cannot start, because its image cannot be pulled. Write the image name that the Pod is configured to use into `/tmp/ch26-q09.txt`, and nothing else."
+  solution: |
+    ```bash
+    kubectl -n prod run broken --image=nginx:1.27-missing --restart=Never
+    kubectl -n prod get pod broken -o jsonpath='{.spec.containers[0].image}' > /tmp/ch26-q09.txt
+    cat /tmp/ch26-q09.txt
+    ```
+
+    The image name is in the Pod's spec, and the event that says why it failed names the
+    same image. The answer comes from the spec, because the question asks what the Pod is configured to use.
+
+- id: ch26-q10
+  type: task
+  exams: [CKA]
+  prompt: "In namespace `prod`, the Pod `app` runs a container named `app` with no shell. Attach an ephemeral debug container named `dbg` that uses the image `busybox:1.36`, and targets the container `app`. Then write the number of ephemeral containers in the Pod to `/tmp/ch26-q10.txt`, and nothing else."
+  solution: |
+    ```bash
+    kubectl -n prod run app --image=busybox:1.36 --command -- sh -c 'sleep 3600'
+    kubectl -n prod wait --for=condition=Ready pod/app --timeout=120s
+    kubectl -n prod debug pod/app --image=busybox:1.36 --target=app -c dbg --profile=general -- sleep 600
+    sleep 5
+    kubectl -n prod get pod app -o jsonpath='{.spec.ephemeralContainers[*].name}' | wc -w | tr -d '[:space:]' > /tmp/ch26-q10.txt
+    cat /tmp/ch26-q10.txt
+    ```
+
+    The debug container is added to the spec, so the count is one. `--target` makes it
+    share the process namespace of the application's container.
+
+- id: ch26-q11
+  type: task
+  exams: [CKA]
+  prompt: "In namespace `prod`, the Service `app` forwards traffic to a target port. Write that target port's number into `/tmp/ch26-q11.txt`, and nothing else."
+  solution: |
+    ```bash
+    kubectl -n prod expose pod app --name=app --port=80 --target-port=8080
+    kubectl -n prod get service app -o jsonpath='{.spec.ports[0].targetPort}' > /tmp/ch26-q11.txt
+    cat /tmp/ch26-q11.txt
+    ```
+
+    The Service's `targetPort` is the port on the Pod that receives the traffic. The
+    answer comes from the spec, not from the container's image.

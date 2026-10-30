@@ -1,0 +1,143 @@
+- id: ch38-q01
+  type: mcq
+  exams: [CKAD, CKA, CKS]
+  question: "Which documentation may you open during the CKA exam?"
+  choices:
+    - "Any site, as long as you do not ask anyone for help"
+    - "The Kubernetes docs and blog, the Helm docs, and the Gateway API docs"
+    - "Nothing; the CKA is closed-book"
+    - "The Kubernetes docs and any blog post they link to"
+  answer: B
+  explanation: "The Linux Foundation's list for the CKA (as of October 2026) is kubernetes.io/docs, kubernetes.io/blog, helm.sh/docs, and gateway-api.sigs.k8s.io, plus links in a task's Quick Reference box. The list changes, so read it before the exam."
+
+- id: ch38-q02
+  type: mcq
+  exams: [CKAD, CKA, CKS]
+  question: "During the exam, a search on kubernetes.io suggests a page on a third-party blog. What do you do?"
+  choices:
+    - "Open it, because the search was on an allowed site"
+    - "Do not open it; only results on the allowed sites may be opened"
+    - "Open it in a new tab, which is not monitored"
+    - "Copy its URL into the terminal and read it with curl"
+  answer: B
+  explanation: "The rules allow searching the Kubernetes documentation, but not opening external results. Everything you open must be on the allowed list."
+
+- id: ch38-q03
+  type: mcq
+  exams: [KCNA]
+  question: "Which documentation may you use during the KCNA exam?"
+  choices:
+    - "The Kubernetes docs only"
+    - "None: the KCNA is a multiple-choice exam without documentation"
+    - "The CNCF landscape and the Kubernetes docs"
+    - "Anything on kubernetes.io"
+  answer: B
+  explanation: "The KCNA and KCSA are online, proctored, multiple-choice exams. The documentation rules in this chapter apply to the performance-based CKAD, CKA, and CKS."
+
+- id: ch38-q04
+  type: mcq
+  exams: [CKAD, CKA]
+  question: "Which section of kubernetes.io/docs gives step-by-step procedures, such as upgrading a kubeadm cluster or backing up etcd?"
+  choices:
+    - "Concepts"
+    - "Tasks"
+    - "Reference"
+    - "Tutorials"
+  answer: B
+  explanation: "Tasks are procedures with commands and manifests. Concepts explain behavior, Reference holds exact syntax (kubectl, API fields, RBAC), and Tutorials walk through longer learning examples."
+
+- id: ch38-q05
+  type: mcq
+  exams: [CKAD, CKA]
+  question: "Where do you find kubectl's output options and a JSONPath example quickly?"
+  choices:
+    - "In the Concepts section, under Overview"
+    - "In the Reference section: the kubectl quick reference and the JSONPath page"
+    - "In the Kubernetes blog"
+    - "Only in `kubectl --help`"
+  answer: B
+  explanation: "`/docs/reference/kubectl/quick-reference/` collects common commands, and `/docs/reference/kubectl/jsonpath/` explains the syntax with examples. `kubectl get --help` lists the output formats too."
+
+- id: ch38-q06
+  type: mcq
+  exams: [CKAD, CKA]
+  question: "You need the exact name and type of a field in a Pod's `securityContext`. What is usually fastest?"
+  choices:
+    - "`kubectl explain pod.spec.securityContext`"
+    - "Searching the docs for \"how to secure a pod\""
+    - "The Kubernetes blog"
+    - "Reading the Pod Security Standards page from the top"
+  answer: A
+  explanation: "`kubectl explain` prints the schema for the cluster's own version, in the terminal you are already using. Use the docs for rules and procedures, which `explain` does not give."
+
+- id: ch38-q07
+  type: mcq
+  exams: [CKAD, CKA, CKS]
+  question: "Which search on kubernetes.io is most likely to land on the right page?"
+  choices:
+    - "how do I stop pods from talking to each other"
+    - "NetworkPolicy"
+    - "kubernetes security best practices"
+    - "pod traffic problem"
+  answer: B
+  explanation: "Searching for the kind or a field name finds the page that defines it. Questions in plain language return long overview pages."
+
+- id: ch38-q08
+  type: mcq
+  exams: [CKAD, CKA]
+  question: "You pasted a NetworkPolicy from the docs into a file. How do you check it before it takes effect?"
+  choices:
+    - "`kubectl apply --dry-run=server -f policy.yaml`"
+    - "`kubectl create -f policy.yaml --validate=false`"
+    - "Open it in the browser"
+    - "There is no way; apply it and test"
+  answer: A
+  explanation: "A server-side dry run sends the object to the API server, which validates and defaults it as for a real request, but stores nothing. Indentation and field errors show up immediately."
+
+- id: ch38-q09
+  type: mcq
+  exams: [CKAD, CKA]
+  question: "A manifest copied from the docs works, but the task's check fails. What is the most likely cause?"
+  choices:
+    - "The docs use an outdated API"
+    - "It still carries the example's names, labels, or extra fields that the task did not ask for"
+    - "Copied YAML is never accepted"
+    - "The exam blocks manifests from the docs"
+  answer: B
+  explanation: "Examples show names like my-pod, the default Namespace, and optional fields. Replace every name and label with the task's, and remove what the task did not state."
+
+- id: ch38-q10
+  type: mcq
+  exams: [CKA]
+  question: "Which site describes the fields of an HTTPRoute in full?"
+  choices:
+    - "helm.sh/docs"
+    - "gateway-api.sigs.k8s.io, under the API reference"
+    - "kubernetes.io/blog only"
+    - "None of the allowed sites"
+  answer: B
+  explanation: "The Gateway API project documents its kinds at gateway-api.sigs.k8s.io (for example /reference/api-types/httproute/), which the CKA allows. kubernetes.io/docs explains the concepts on /docs/concepts/services-networking/gateway/."
+
+- id: ch38-q11
+  type: task
+  exams: [CKAD, CKA]
+  prompt: "Using only `kubectl`, find the field that limits how long a Job may run in total, and its type."
+  solution: |
+    ```bash
+    kubectl explain job.spec | grep -i -A3 deadline
+    kubectl explain job.spec.activeDeadlineSeconds
+    ```
+
+    The field is `spec.activeDeadlineSeconds`, an integer number of seconds. The Jobs page (`/docs/concepts/workloads/controllers/job/`) explains how it interacts with `backoffLimit`, which `explain` does not.
+
+- id: ch38-q12
+  type: task
+  exams: [CKA]
+  prompt: "Without the browser, show the flags that `etcdctl snapshot save` needs to reach a kubeadm cluster's etcd, and where on the control plane node their values come from."
+  solution: |
+    ```bash
+    etcdctl --help | grep -E -- '--(endpoints|cacert|cert|key)'
+    sudo grep -E -- '--(listen-client-urls|trusted-ca-file|cert-file|key-file)' /etc/kubernetes/manifests/etcd.yaml
+    ```
+
+    `--endpoints`, `--cacert`, `--cert`, and `--key`; their values are the etcd manifest's client URL, trusted CA, certificate, and key (Chapter 20). The docs page *Operating etcd clusters for Kubernetes* shows the same procedure.

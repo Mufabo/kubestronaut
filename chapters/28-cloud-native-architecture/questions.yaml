@@ -1,0 +1,179 @@
+- id: ch28-q01
+  type: mcq
+  exams: [KCNA]
+  question: "What is the main problem a service mesh addresses that a Kubernetes Service does not?"
+  choices:
+    - "Choosing which node a Pod runs on"
+    - "Applying mTLS, traffic policy, and telemetry between services without changing application code"
+    - "Storing cluster state durably"
+    - "Building container images from source"
+  answer: B
+  explanation: "A Service gives a stable name and basic load balancing. A mesh adds security, traffic management, and observability between workloads, using proxies, and the application code stays the same. Scheduling is the scheduler's job, state is etcd's, and image builds are a CI concern."
+
+- id: ch28-q02
+  type: mcq
+  exams: [KCNA]
+  question: "In the sidecar model of a service mesh, where does the data-plane proxy run?"
+  choices:
+    - "On a dedicated proxy node outside the cluster"
+    - "In the same Pod as the application container, as a separate container"
+    - "Inside etcd, next to the API server"
+    - "In the kubelet on each node"
+  answer: B
+  explanation: "In sidecar mode, the mesh injects a proxy container into each Pod. Application traffic passes through that proxy. The other options place the proxy somewhere the sidecar model does not use."
+
+- id: ch28-q03
+  type: mcq
+  exams: [KCNA]
+  question: "How does Istio's ambient mode split the proxy work?"
+  choices:
+    - "A node-level component for secure transport (mTLS) and optional waypoint proxies for layer-7 policy"
+    - "A kernel module only, with no proxy at any layer"
+    - "A required sidecar in every Pod, plus a separate control plane per Namespace"
+    - "A single proxy for the whole cluster that handles every request in one process"
+  answer: A
+  explanation: "Ambient mode moves basic mTLS to a per-node component (ztunnel) and adds waypoint proxies only where HTTP-level features are needed. Applications that need only mTLS run without a sidecar."
+
+- id: ch28-q04
+  type: mcq
+  exams: [KCNA]
+  question: "Which is the most characteristic cost of running a sidecar proxy in every Pod?"
+  choices:
+    - "Each Pod carries extra CPU and memory, and the proxy's lifecycle must be handled"
+    - "Pods can no longer communicate with a Service"
+    - "The cluster can no longer run more than one replica"
+    - "Container images must be built without a Dockerfile"
+  answer: A
+  explanation: "Sidecars add per-Pod resource use and a lifecycle to manage: the proxy must start before the application and stop after it. This is the main reason ambient mode exists. The other options describe failures that a sidecar does not cause."
+
+- id: ch28-q05
+  type: mcq
+  exams: [KCNA]
+  question: "What does scale to zero mean in a serverless platform on Kubernetes?"
+  choices:
+    - "The cluster shuts down when no one is using it"
+    - "No workload runs when there are no requests or events, and one starts again when a request or event arrives"
+    - "Pods keep running but receive no CPU"
+    - "The nodes are removed permanently and never added back"
+  answer: B
+  explanation: "Scale to zero means the replica count drops to zero when idle, and the platform starts the workload on demand. The first request after idle pays a cold-start delay. The cluster itself is not affected."
+
+- id: ch28-q06
+  type: mcq
+  exams: [KCNA]
+  question: "Which statement best describes Knative?"
+  choices:
+    - "A container runtime that replaces containerd"
+    - "A CNI plugin that provides pod networking"
+    - "A layer on Kubernetes that adds request-driven serving, including scale to zero, and eventing"
+    - "A metrics database that stores time series"
+  answer: C
+  explanation: "Knative adds a serving layer (request-driven services that can scale to zero, with revisions and traffic splitting) and an eventing layer on top of Kubernetes. The other options name different kinds of components."
+
+- id: ch28-q07
+  type: mcq
+  exams: [KCNA]
+  question: "What is KEDA used for?"
+  choices:
+    - "Scaling workloads based on event sources such as queues, including scaling to zero when the source is empty"
+    - "Storing and rotating Secrets"
+    - "Issuing TLS certificates to Services"
+    - "Building container images in a pipeline"
+  answer: A
+  explanation: "KEDA (Kubernetes Event-driven Autoscaling) reads counts from event sources and drives the autoscaling of ordinary workloads, including to zero. The other tasks belong to different tools."
+
+- id: ch28-q08
+  type: mcq
+  exams: [KCNA]
+  question: "Which statement about event-driven architecture is correct?"
+  choices:
+    - "A producer waits for every consumer to finish before it continues"
+    - "Producers must know every consumer by name in advance"
+    - "Producers and consumers are loosely coupled: a producer publishes an event and does not depend on who consumes it"
+    - "Events can never arrive more than once"
+  answer: C
+  explanation: "In event-driven designs the producer publishes events without knowing the consumers, which lets teams add consumers without changing the producer. Delivery semantics, such as duplicates and reordering, must be handled by the consumers."
+
+- id: ch28-q09
+  type: mcq
+  exams: [KCNA]
+  question: "Which persona typically builds the internal platform, with golden paths and guardrails, that application developers deploy to?"
+  choices:
+    - "Platform engineer"
+    - "Security auditor"
+    - "Product manager"
+    - "FinOps practitioner"
+  answer: A
+  explanation: "Platform engineers build the shared platform: templates, CI/CD, shared services, and guardrails. Security, product, and cost roles matter, but they do not usually build the deployment platform itself."
+
+- id: ch28-q10
+  type: mcq
+  exams: [KCNA]
+  question: "Which persona most often owns cluster upgrades, node capacity, and control plane health?"
+  choices:
+    - "Application developer"
+    - "Cluster administrator (operator)"
+    - "Marketing lead"
+    - "Container image author"
+  answer: B
+  explanation: "Cluster administrators run and upgrade clusters, nodes, and the control plane. Developers consume the platform, and the other two roles are not infrastructure owners."
+
+- id: ch28-q11
+  type: mcq
+  exams: [KCNA]
+  question: "What does a CNCF project reaching the graduated level indicate?"
+  choices:
+    - "The project becomes a Kubernetes SIG"
+    - "The project has wide production adoption and a mature governance model"
+    - "The project is removed from the landscape"
+    - "The project is the newest in the landscape"
+  answer: B
+  explanation: "Graduation reflects adoption and governance maturity. It does not mean the project is finished or perfect, and it does not turn the project into a SIG. The other options misstate what the level means."
+
+- id: ch28-q12
+  type: mcq
+  exams: [KCNA]
+  question: "Which Kubernetes community group owns an area of the codebase over the long term, such as SIG Node?"
+  choices:
+    - "A Special Interest Group (SIG)"
+    - "A working group"
+    - "A Kubernetes Enhancement Proposal (KEP)"
+    - "A release team"
+  answer: A
+  explanation: "SIGs own areas of the project over the long term and have charters and public meetings. Working groups are formed for a time-limited cross-cutting goal, a KEP is a design proposal, and release teams coordinate one release."
+
+- id: ch28-q13
+  type: mcq
+  exams: [KCNA]
+  question: "What does KEP stand for in the Kubernetes project?"
+  choices:
+    - "Kubernetes Extension Plan"
+    - "Kubernetes Enhancement Proposal"
+    - "Kernel Event Protocol"
+    - "Kubelet Endpoint Proposal"
+  answer: B
+  explanation: "A KEP is a Kubernetes Enhancement Proposal. It describes the motivation, design, risks, and graduation criteria for a significant change, and it is reviewed in public."
+
+- id: ch28-q14
+  type: mcq
+  exams: [KCNA]
+  question: "How many minor releases does Kubernetes ship per year?"
+  choices:
+    - "One"
+    - "Two"
+    - "Three"
+    - "Four"
+  answer: C
+  explanation: "Kubernetes ships three minor releases per year. Each minor release receives patch releases for a limited time, so operators must upgrade regularly."
+
+- id: ch28-q15
+  type: mcq
+  exams: [KCNA]
+  question: "Under the Kubernetes deprecation policy, how long must a deprecated GA API version remain served?"
+  choices:
+    - "Three months"
+    - "One release"
+    - "At least 12 months or 3 releases, whichever is longer"
+    - "Until the next major version of Kubernetes"
+  answer: C
+  explanation: "A deprecated GA API version remains served for at least 12 months or 3 releases, whichever is longer. Alpha APIs carry no such guarantee, which is why they are off by default."

@@ -8,6 +8,9 @@ spec:
   containers:
     - name: logger
       image: busybox:1.36
+      resources:            # helper workloads stay small
+        requests: {cpu: 5m, memory: 8Mi}
+        limits: {cpu: 50m, memory: 32Mi}
       command:
         - sh
         - -c

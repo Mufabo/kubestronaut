@@ -1,0 +1,138 @@
+- id: ch15-q01
+  type: mcq
+  exams: [KCNA, CKAD]
+  question: "Which signal answers the question 'what did the application print?'"
+  choices:
+    - "Metrics, because they are sampled numbers"
+    - "Events, because they record what the cluster did"
+    - "Logs, the output a container wrote to standard output and standard error"
+    - "The Pod's status conditions"
+  answer: C
+  explanation: "Logs are the output of the container's process. Metrics are numbers over time, events are the cluster's record of its own actions, and status conditions summarise the Pod's state. Each of the other three answers a different question."
+
+- id: ch15-q02
+  type: mcq
+  exams: [CKAD]
+  question: "A Pod has two containers, and you want the logs of only the second one. Which command is correct?"
+  choices:
+    - "`kubectl logs POD second`"
+    - "`kubectl logs POD -c SECOND_CONTAINER_NAME`"
+    - "`kubectl describe logs POD --container=second`"
+    - "`kubectl logs -l POD`"
+  answer: B
+  explanation: "`-c` (or `--container`) selects the container. Without it, `kubectl logs` uses the first container in the Pod. `describe` shows configuration and events rather than logs."
+
+- id: ch15-q03
+  type: mcq
+  exams: [CKAD]
+  question: "A container restarted and its status shows `lastState.terminated.exitCode: 137`. What does that exit code most likely mean?"
+  choices:
+    - "The application exited normally after an error it logged"
+    - "The process was killed with SIGKILL, often by the out-of-memory killer or a failing liveness probe"
+    - "The image could not be pulled"
+    - "The Pod was deleted by a user"
+  answer: B
+  explanation: "Exit code 137 is 128 plus 9, which is SIGKILL. It is commonly sent by the kubelet after a failed liveness probe, or by the kernel when the container exceeds its memory limit. An application's own errors usually produce small codes such as 1 or 2."
+
+- id: ch15-q04
+  type: mcq
+  exams: [CKAD]
+  question: "You want the logs of a container from before its last restart. Which option asks for them?"
+  choices:
+    - "`--since`"
+    - "`--tail`"
+    - "`--previous`"
+    - "`--follow`"
+  answer: C
+  explanation: "`--previous` reads the logs of the last terminated container of the same Pod. `--since` filters by time, `--tail` limits lines, and `--follow` streams new output. Previous logs can be unavailable if the kubelet has already removed the old container."
+
+- id: ch15-q05
+  type: mcq
+  exams: [KCNA, CKAD]
+  question: "Which component provides the resource metrics that `kubectl top` shows?"
+  choices:
+    - "The kubelet alone, through its own API"
+    - "metrics-server, which serves the metrics.k8s.io API"
+    - "The container runtime, through the CRI"
+    - "etcd, which stores the metrics"
+  answer: B
+  explanation: "metrics-server collects CPU and memory from the kubelets and serves them through the `metrics.k8s.io` API, which `kubectl top` uses. Without it, `kubectl top` reports that the Metrics API is not available. Application metrics are a different pipeline, usually scraped by Prometheus."
+
+- id: ch15-q06
+  type: mcq
+  exams: [CKAD]
+  question: "You want a Prometheus scraper to find the Pods of a Deployment through an annotation. Where must the annotation go?"
+  choices:
+    - "On the Deployment's metadata only"
+    - "On the Deployment's `spec.template.metadata`, which becomes the Pods' annotations"
+    - "On the Namespace"
+    - "On the Service's selector"
+  answer: B
+  explanation: "The scraper looks at Pods, and Pod annotations come from the Deployment's template. A change to the template creates new Pods with the annotation. An annotation on the Deployment's own metadata does not reach the Pods."
+
+- id: ch15-q07
+  type: mcq
+  exams: [CKAD, KCNA]
+  question: "A manifest uses `apiVersion: policy/v1beta1` for a PodDisruptionBudget, and the server refuses it with `no matches for kind`. What should you do first?"
+  choices:
+    - "Install a CRD named PodDisruptionBudget"
+    - "Run `kubectl api-resources --api-group=policy` to find the served version, and use it"
+    - "Restart the API server, because the version is stored in etcd"
+    - "Add `--force` to the apply command"
+  answer: B
+  explanation: "`no matches for kind` means the cluster does not serve that version. `kubectl api-resources` shows the versions it does serve. PodDisruptionBudgets are served at `policy/v1`, and `policy/v1beta1` was removed in Kubernetes 1.25. PodDisruptionBudget is a built-in kind, so no CRD is involved."
+
+- id: ch15-q08
+  type: task
+  exams: [CKAD]
+  prompt: "In namespace `prod`, the Pod `api-0` is failing. Save the exit code of its last termination to `/tmp/prod-exit.txt`, and the last 5 lines of its logs to `/tmp/prod-logs.txt`."
+  solution: |
+    ```bash
+    kubectl -n prod get pod api-0 -o jsonpath='{.status.containerStatuses[0].lastState.terminated.exitCode}' > /tmp/prod-exit.txt
+    kubectl -n prod logs api-0 --tail=5 > /tmp/prod-logs.txt
+    ```
+
+    The exit code is in `lastState`, because the current state is the one in progress.
+    Logs without `--previous` show the current run, which is the one to read for a
+    running Pod.
+
+- id: ch15-q09
+  type: task
+  exams: [CKAD]
+  prompt: "In namespace `prod`, list the events about the Pod `api-0`, newest last, and save them to `/tmp/prod-events.txt`."
+  solution: |
+    ```bash
+    kubectl -n prod get events --field-selector involvedObject.name=api-0 --sort-by=.lastTimestamp > /tmp/prod-events.txt
+    ```
+
+    `--field-selector involvedObject.name` narrows the events to one object, and
+    `--sort-by=.lastTimestamp` puts the most recent last.
+
+- id: ch15-q10
+  type: task
+  exams: [CKAD]
+  prompt: "In namespace `prod`, the Deployment `api` runs the container `httpd`. Add the annotation `prometheus.io/scrape` with the value `true` to its Pods, and wait for the rollout. Show the annotation on the Pod template."
+  solution: |
+    ```bash
+    kubectl -n prod patch deployment api -p '{"spec":{"template":{"metadata":{"annotations":{"prometheus.io/scrape":"true"}}}}}'
+    kubectl -n prod rollout status deployment/api
+    kubectl -n prod get deployment api -o jsonpath='{.spec.template.metadata.annotations.prometheus\.io/scrape}{"\n"}'
+    ```
+
+    The template is what becomes the Pods' metadata, so the annotation reaches the Pods
+    once the rollout creates them. The dot in the annotation name is escaped in the
+    jsonpath.
+
+- id: ch15-q11
+  type: task
+  exams: [CKAD]
+  prompt: "In namespace `prod`, the manifest `./old-pdb.yaml` uses `apiVersion: policy/v1beta1` for a PodDisruptionBudget, and the server rejects it. Find the version the cluster serves, change the file to use it, and apply the file."
+  solution: |
+    ```bash
+    kubectl api-resources --api-group=policy
+    sed -i 's#policy/v1beta1#policy/v1#' old-pdb.yaml
+    kubectl -n prod apply -f old-pdb.yaml
+    ```
+
+    `kubectl api-resources` shows `policy/v1` as the served version. Replace the
+    `apiVersion` in the file, then apply it.

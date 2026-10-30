@@ -1,0 +1,92 @@
+# cka-ops: questions 15 to 18.
+# Question 16: three Pods; meter-b holds about 100 MiB in a shell variable.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: meter-a
+  labels:
+    app: meter
+spec:
+  containers:
+    - name: meter
+      image: busybox:1.36
+      command: ["sleep", "infinity"]
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: meter-b
+  labels:
+    app: meter
+spec:
+  containers:
+    - name: meter
+      image: busybox:1.36
+      command: ["sh", "-c", "x=$(head -c 100m /dev/zero | tr '\\0' a); sleep infinity"]
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: meter-c
+  labels:
+    app: meter
+spec:
+  containers:
+    - name: meter
+      image: busybox:1.36
+      command: ["sh", "-c", "x=$(head -c 20m /dev/zero | tr '\\0' a); sleep infinity"]
+---
+# Question 17: no Pod in cka-ops may send anything, until a policy allows it.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: lockdown
+spec:
+  podSelector: {}
+  policyTypes: [Egress]
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: client
+  labels:
+    app: client
+spec:
+  containers:
+    - name: client
+      image: busybox:1.36
+      command: ["sleep", "infinity"]
+---
+# Question 18: no node has the label role=infra.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: infra-agent
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: infra-agent
+  template:
+    metadata:
+      labels:
+        app: infra-agent
+    spec:
+      nodeSelector:
+        role: infra
+      containers:
+        - name: agent
+          image: busybox:1.36
+          command: ["sleep", "infinity"]
+---
+# Question 15: a Pod for the second scheduler, which is broken.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: waiting
+spec:
+  schedulerName: cka-scheduler
+  containers:
+    - name: waiting
+      image: busybox:1.36
+      command: ["sleep", "infinity"]

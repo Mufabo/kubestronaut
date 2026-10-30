@@ -1,0 +1,150 @@
+- id: ch39-q01
+  type: mcq
+  exams: [CKS]
+  question: "You want to take the CKS. What must you have done first?"
+  choices:
+    - "Passed the KCSA"
+    - "Passed the CKA"
+    - "Passed the CKAD"
+    - "Nothing; the CKS has no prerequisite"
+  answer: B
+  explanation: "The CKS requires a passed CKA before you can attempt it. The KCSA covers similar concepts and is a good preparation, but it is not a prerequisite."
+
+- id: ch39-q02
+  type: mcq
+  exams: [KCNA, KCSA]
+  question: "What score do you need to pass the KCNA or the KCSA?"
+  choices:
+    - "66%"
+    - "67%"
+    - "75%"
+    - "80%"
+  answer: C
+  explanation: "The multiple-choice exams need 75%. The CKA and CKAD need 66%, and the CKS 67%."
+
+- id: ch39-q03
+  type: mcq
+  exams: [KCNA, KCSA]
+  question: "How much time do you have per question in the KCNA, on average?"
+  choices:
+    - "About 30 seconds"
+    - "About 1.5 minutes"
+    - "About 3 minutes"
+    - "About 6 minutes"
+  answer: B
+  explanation: "The multiple-choice exams have 60 questions in 90 minutes, so 1.5 minutes each. Answer every question on the first pass and flag the uncertain ones for review."
+
+- id: ch39-q04
+  type: mcq
+  exams: [CKAD, CKA, CKS]
+  question: "Your connection drops for five minutes during the CKA. What happens to the timer?"
+  choices:
+    - "It pauses until you reconnect"
+    - "It keeps running, and the time is added back at the end"
+    - "It keeps running, and no time is added back"
+    - "The exam is cancelled and rescheduled"
+  answer: C
+  explanation: "The timer never stops, not for a break and not for a disconnect, and the Linux Foundation cannot add time back. Reconnect at once and carry on."
+
+- id: ch39-q05
+  type: mcq
+  exams: [CKAD, CKA, CKS]
+  question: "How do you paste text into the terminal of the exam's remote desktop?"
+  choices:
+    - "Ctrl+V"
+    - "Ctrl+Shift+V, or the right-click menu"
+    - "Pasting is not possible in the exam"
+    - "Cmd+V on a Mac, Ctrl+V elsewhere"
+  answer: B
+  explanation: "The remote desktop is Linux, and its terminal uses Ctrl+Shift+C and Ctrl+Shift+V (or the right-click menu). Other applications on the desktop, such as Firefox, use Ctrl+C and Ctrl+V."
+
+- id: ch39-q06
+  type: mcq
+  exams: [KCNA, KCSA, CKAD, CKA, CKS]
+  question: "Which computer setup is allowed for the online exam?"
+  choices:
+    - "A virtual machine that passes PSI's system check"
+    - "A laptop with an external monitor, both screens active"
+    - "A personal computer with one active monitor"
+    - "Any computer, as long as the webcam works"
+  answer: C
+  explanation: "Only one active monitor is supported, and a virtual machine is not allowed even if the system check passes. A personal computer avoids the security software of work devices that often breaks the PSI Secure Browser."
+
+- id: ch39-q07
+  type: mcq
+  exams: [KCNA, KCSA, CKAD, CKA, CKS]
+  question: "The name on your ID is \"Maria Lopez Garcia\"; your exam checklist says \"Maria Lopez\". What should you do?"
+  choices:
+    - "Nothing; a partial match is accepted"
+    - "Explain the difference to the proctor at check-in"
+    - "Correct the name in your exam checklist well before the exam, so that first and last name match exactly"
+    - "Bring a second ID"
+  answer: C
+  explanation: "The first and last name on the ID must match the verified name on the exam checklist exactly. Fix it days before; at check-in it is too late."
+
+- id: ch39-q08
+  type: mcq
+  exams: [KCNA, CKAD, CKA]
+  question: "You hold the KCNA and pass the CKAD. What happens to your KCNA?"
+  choices:
+    - "Nothing; it expires on its own date"
+    - "It is renewed, under the Linux Foundation's CARE program"
+    - "It is replaced by the CKAD and no longer listed"
+    - "It must be retaken within 12 months"
+  answer: B
+  explanation: "Passing the CKA or the CKAD renews the KCNA; passing the CKS renews the KCSA. That is why the associate exams are best taken first."
+
+- id: ch39-q09
+  type: mcq
+  exams: [KCNA, KCSA, CKAD, CKA, CKS]
+  question: "You fail your first attempt at the CKAD, three months after buying it. What does the purchase still include?"
+  choices:
+    - "Nothing; a new attempt must be bought"
+    - "One retake, to be taken within 12 months of the purchase"
+    - "Unlimited retakes for a year"
+    - "One retake, but only after a waiting period of 12 months"
+  answer: B
+  explanation: "Each purchase includes one retake, and it must be taken within 12 months of the original purchase."
+
+- id: ch39-q10
+  type: mcq
+  exams: [CKAD, CKA, CKS]
+  question: "In a two-hour exam with 17 tasks, task 4 is still not working after eight minutes. What is the best move?"
+  choices:
+    - "Keep going until it works; leaving it costs its whole weight"
+    - "Note its number, move on, and come back in a second pass"
+    - "Delete what you did and start it over"
+    - "End the exam early and use the retake"
+  answer: B
+  explanation: "At seven minutes per task on average, one stuck task can cost two or three easier ones. Note it, finish the tasks you can, and return to it with the time that is left."
+
+- id: ch39-q11
+  type: mcq
+  exams: [CKAD, CKA, CKS]
+  question: "What is the killer.sh simulator best used for?"
+  choices:
+    - "Predicting your exam score exactly"
+    - "Finding gaps in the last weeks before the exam, under time pressure"
+    - "Learning Kubernetes from the start"
+    - "Seeing the real exam's questions"
+  answer: B
+  explanation: "The simulator is harder than the exam on purpose, and its questions are its own. Use each 36-hour session late in your preparation: answer under time pressure, then study the solutions."
+
+- id: ch39-q12
+  type: mcq
+  exams: [KCSA, CKA, CKS]
+  question: "You will take all five exams. Which order makes the most of the renewal rules and respects the prerequisites?"
+  choices:
+    - "CKS, CKA, CKAD, KCSA, KCNA"
+    - "CKA, CKS, KCNA, KCSA, CKAD"
+    - "KCNA, CKAD, CKA, KCSA, CKS"
+    - "KCSA, CKS, KCNA, CKA, CKAD"
+  answer: C
+  explanation: "The CKS needs the CKA, which rules out A and D. Taking the associates first lets the later exams renew them: the CKAD and CKA renew the KCNA, and the CKS renews the KCSA and extends the CKA."
+
+- id: ch39-q13
+  type: task
+  exams: [KCNA, KCSA, CKAD, CKA, CKS]
+  prompt: "You pass the KCNA on 2026-11-10 and the CKA on 2027-03-15. When does each expire, if you do nothing else?"
+  solution: |
+    Both are valid for two years from the exam you pass. The CKA expires on 2029-03-15. Passing the CKA renews the KCNA under the CARE program, so the KCNA is current for two years from that pass as well, until 2029-03-15, instead of 2028-11-10. Check the Linux Foundation's CARE page for the exact date it shows, because the rules can change.

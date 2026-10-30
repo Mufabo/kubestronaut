@@ -48,18 +48,51 @@ in place of a lab, and are ignored by `make test-tier1`.
 
 ### Task format
 
+Labs follow KodeKloud's style: readers get one task at a time from `make lab`
+and `make check` (see `lab-authoring.md`), so each task must stand on its own.
+A short sentence says what to do; a list gives the exact specification the
+check tests.
+
 ```markdown
-### Task 2: Fix the broken pod (⏱ 3 min, ★★☆)
+### Task 2: Rescue a broken Pod
 
-The pod `broken` in your namespace never starts. Make it run without deleting
-and recreating it.
+The Pod `broken` never starts. Find out why, and fix it so that it runs.
 
-*Success looks like:* `broken` is `Running` and uses image `nginx:1.27`.
+- Pod: `broken`
+- Image it should run: `nginx:1.27`
+- Status: `Running`
+
+Note: fix the Pod in place. Do **not** delete and recreate it.
 ```
 
-Tasks state the goal and the success condition, never the command to use.
-Difficulty: ★☆☆ one command, ★★☆ a few steps or some diagnosis, ★★★ exam-level
-multi-step or troubleshooting.
+- Tasks state the goal and the specification, never the command to use.
+- Every item in the list is something the check enforces, and the check
+  enforces nothing that is not stated.
+- Lab-wide notes (Namespace, how to start, where solutions are) go above the
+  first task, never after the last one: the runner shows everything up to the
+  next heading as part of a task.
+- Task N is `check N` in `verify.sh`. In a lab with parts, tasks are `####`
+  headings under `### Part <part>: ...`.
+
+Each Part of the book ends with an exam-style mock exam (`mock-exams/`). A
+chapter may also include a short, timed exam-style lab or part as a warm-up;
+Chapter 03's `final` part is the reference. All questions are shown at once and
+scored together with `make verify`:
+
+```markdown
+#### Question 3 | Relabel
+
+Task weight: 20%
+
+Use context: `kubectl config use-context kind-kbook`
+
+In Namespace `ch03-f2`, change the label `stage=old` to `stage=new` on every
+Pod that has it. The Pod with `stage=keep` must not change.
+```
+
+Keep `Task weight` a plain line (no emphasis; markdownlint MD036), name every
+Namespace and answer file in full, and make the weights add up to 100. See
+`lab-authoring.md`, "Two lab styles".
 
 ## Question rules
 

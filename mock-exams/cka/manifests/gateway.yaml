@@ -1,0 +1,21 @@
+# Question 8: a GatewayClass and a Gateway for the reader's HTTPRoute. No
+# controller implements cka-class, so the Gateway is never programmed; the
+# question is about the route's spec.
+apiVersion: gateway.networking.k8s.io/v1
+kind: GatewayClass
+metadata:
+  name: cka-class
+spec:
+  controllerName: example.com/cka-gateway-controller
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: cka-gw
+  namespace: cka-net
+spec:
+  gatewayClassName: cka-class
+  listeners:
+    - name: http
+      protocol: HTTP
+      port: 80

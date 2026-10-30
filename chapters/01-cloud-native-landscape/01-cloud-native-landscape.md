@@ -37,7 +37,7 @@ Containers are lightweight because they share the host's kernel and isolate proc
 ### What containers alone do not solve
 
 | Problem at scale | Question you now have to answer | Kubernetes' answer |
-|---|---|---|
+| --- | --- | --- |
 | Placement | Which machine has room for this container? | The scheduler |
 | Self-healing | What restarts it when it crashes or the machine dies? | Controllers and the kubelet |
 | Scaling | How do I add or remove copies as load changes? | Replica counts, autoscalers |
@@ -75,7 +75,7 @@ Notice what is described: **properties** (resilient, observable, automated), not
 **Microservices vs monolith.** A monolith is deployed as one unit. Microservices split an application into small, independently deployable services that communicate over the network.
 
 | | Monolith | Microservices |
-|---|---|---|
+| --- | --- | --- |
 | Deploy | All at once | Each service independently |
 | Scale | Everything together | Only what needs it |
 | Failure | One bug can take down everything | Failures can be contained (if designed for it) |
@@ -99,7 +99,7 @@ Kubernetes is built on the declarative model. You submit the desired state; the 
 The twelve-factor methodology is a widely cited set of design rules for services that run well in dynamic platforms. Learn the factors and how Kubernetes supports them:
 
 | # | Factor | In one line | Kubernetes tie-in |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | 1 | Codebase | One codebase, many deploys | Same image promoted across environments |
 | 2 | Dependencies | Declare and isolate them | Dependencies baked into the image |
 | 3 | Config | Keep config out of code, in the environment | ConfigMaps, Secrets, env vars |
@@ -130,7 +130,7 @@ The **Cloud Native Computing Foundation** is a vendor-neutral home for open-sour
 Projects move through levels as they prove adoption and governance:
 
 | Level | Meaning |
-|---|---|
+| --- | --- |
 | **Sandbox** | Early-stage, experimental; the CNCF hosts it and offers visibility |
 | **Incubating** | Growing adoption in production, healthy contributors, defined governance |
 | **Graduated** | Broad production use, strong governance, security practices, and a proven community |
@@ -144,7 +144,7 @@ Archived projects have been retired. The exam expects you to know these three le
 The CNCF landscape (landscape.cncf.io) maps hundreds of projects and products. Do not try to memorize it. Learn the *categories* and one or two flagships in each:
 
 | Category | Problem it solves | Well-known projects |
-|---|---|---|
+| --- | --- | --- |
 | Container runtime | Runs containers on a node | containerd, CRI-O |
 | Orchestration | Schedules and manages containers | Kubernetes |
 | Cluster DNS and service discovery | Names for services | CoreDNS |
@@ -178,7 +178,7 @@ flowchart TB
 *Text description: Kubernetes talks to runtimes through CRI, to network plugins through CNI, and to storage drivers through CSI; runtimes run OCI-compliant images.*
 
 | Standard | Stands for | What it standardizes |
-|---|---|---|
+| --- | --- | --- |
 | **OCI** | Open Container Initiative | Image format, runtime specification, and distribution (how registries serve images) |
 | **CRI** | Container Runtime Interface | How the kubelet talks to a container runtime |
 | **CNI** | Container Network Interface | How networking is set up for containers |
@@ -221,7 +221,7 @@ Kubernetes is developed in the open by a large community, organized like this:
 New features and APIs graduate through stages:
 
 | Stage | Behavior |
-|---|---|
+| --- | --- |
 | **Alpha** | Off by default; may be buggy; can change or be removed without notice |
 | **Beta** | Better tested; the design is mostly settled, but details can still change |
 | **Stable (GA)** | Enabled by default, supported, and covered by the deprecation policy |
@@ -251,9 +251,9 @@ There are no automated checks for this exercise. Compare your answers with a stu
 ## Exam tips
 
 > **Exam tip:** KCNA is multiple choice, so **precision of vocabulary** matters. Know exactly what CRI, CNI, CSI, and OCI each standardize; questions often swap them.
-
+>
 > **Exam tip:** Expect "which project solves this problem" questions. Learn categories first, then flagships: Prometheus (metrics), Fluentd (logging), Jaeger (tracing), Envoy (proxy), etcd (state), Helm (packaging), Argo CD/Flux (GitOps).
-
+>
 > **Exam tip:** Know the three maturity levels in order, and that graduation reflects adoption and governance maturity, not "quality" alone.
 
 ## Common misconceptions

@@ -1,0 +1,238 @@
+- id: ch09-q01
+  type: mcq
+  exams: [CKAD]
+  question: "A Pod has three init containers and two app containers. Which statement about their start order is correct?"
+  choices:
+    - "All five containers start at the same time, and the init containers only have to start, not finish"
+    - "The init containers run one after another, each must exit with code 0, and only then do the app containers start"
+    - "The app containers start first, and the init containers run afterwards in parallel"
+    - "The init containers run in parallel, and the app containers start as soon as any one of them finishes"
+  answer: B
+  explanation: "Init containers run sequentially, in the order they are listed. Each must exit successfully before the next one starts, and no app container starts until all init containers have succeeded. A native sidecar is the exception: it is an init container that keeps running, see the native sidecar question."
+
+- id: ch09-q02
+  type: mcq
+  exams: [CKAD]
+  question: "An init container exits with code 1 in a Pod that otherwise has a valid spec. What is the status of the Pod, and do its app containers start?"
+  choices:
+    - "The Pod is Running, and the app containers start with the init container's output as input"
+    - "The Pod shows Init:Error, then Init:CrashLoopBackOff between retries, and the app containers do not start"
+    - "The Pod is evicted, and the app containers start on another node"
+    - "The app containers start, but the init container is marked as skipped"
+  answer: B
+  explanation: "A failing init container is retried with back-off, and its state shows as `Init:Error` or `Init:CrashLoopBackOff`. None of the app containers starts until the init containers all succeed. `kubectl logs POD -c INIT_NAME` shows why it failed."
+
+- id: ch09-q03
+  type: mcq
+  exams: [CKAD]
+  question: "Which declaration makes a container a native sidecar, one that starts before the app containers and keeps running with them?"
+  choices:
+    - "An entry in `spec.containers` with the annotation `sidecar: true`"
+    - "An entry in `spec.initContainers` with `restartPolicy: Always`"
+    - "An entry in `spec.containers` with `restartPolicy: Always`"
+    - "An entry in `spec.initContainers` with `sidecar: true`"
+  answer: B
+  explanation: "The native sidecar is an init container with `restartPolicy: Always`. The kubelet starts it in init order, so it is running before the app containers start, and it stops after them. `restartPolicy` is not a valid field on an ordinary container, and no annotation or `sidecar` field makes one a sidecar."
+
+- id: ch09-q04
+  type: mcq
+  exams: [CKAD]
+  question: "Two containers in the same Pod want to talk to each other. How do they reach each other?"
+  choices:
+    - "Through the Service of the Pod, which the kubelet creates automatically"
+    - "Over `localhost`, because the containers share the Pod's network namespace"
+    - "Through a shared file in an emptyDir, because they have separate network stacks"
+    - "Only through the Pod IP, by routing to it from inside the Pod"
+  answer: B
+  explanation: "All containers of a Pod share one network namespace, so they reach each other on `localhost` and on the Pod's ports. They do not share a filesystem, and no Service is created for them. Sharing files requires a volume, which is a different mechanism."
+
+- id: ch09-q05
+  type: mcq
+  exams: [CKAD]
+  question: "A Pod with containers `app` and `log-shipper` runs in namespace `prod`. Which command shows the logs of `log-shipper` only?"
+  choices:
+    - "`kubectl -n prod logs POD log-shipper`"
+    - "`kubectl -n prod logs POD -c log-shipper`"
+    - "`kubectl -n prod logs POD --container=app`"
+    - "`kubectl -n prod describe POD log-shipper`"
+  answer: B
+  explanation: "`-c` (or `--container`) selects the container. Without it, `kubectl` uses the first container in the Pod, which may not be the one you want. Passing the container name as a positional argument is not valid for `logs`."
+
+- id: ch09-q06
+  type: mcq
+  exams: [CKAD]
+  question: "A Pod sets `shareProcessNamespace: true`. What can a helper container see that it could not see before?"
+  choices:
+    - "The files in the app container's root filesystem"
+    - "The processes of the other containers in the same Pod, since they share one process namespace"
+    - "The environment variables of the app container, which are shared through the pause container"
+    - "The Pod's Secrets, mounted into the helper automatically"
+  answer: B
+  explanation: "With a shared process namespace, every container in the Pod sees the same processes, and the pause container is process 1. The containers do not share their root filesystems, and the environment and Secrets are not shared by this setting."
+
+- id: ch09-q07
+  type: mcq
+  exams: [CKAD]
+  question: "A helper container converts an application's custom metrics into the format a monitoring system scrapes. Which multi-container pattern is this?"
+  choices:
+    - "Ambassador, because the helper proxies connections for the application"
+    - "Adapter, because the helper converts the application's output into a standard format"
+    - "Init container, because the helper runs before the application"
+    - "Sidecar, because the helper shares the application's network namespace"
+  answer: B
+  explanation: "The adapter pattern normalises another container's output into a format a consumer expects. An ambassador is a proxy that the application connects to on localhost. A sidecar is the broader term for any helper that runs beside the app, and an init container runs before it, so neither name is as precise here."
+
+- id: ch09-q08
+  type: task
+  exams: [CKAD]
+  prompt: "In namespace `prod`, create a Pod named `greeter`. Its init container `setup` (image `busybox:1.36`) writes `hello` to `/shared/greeting.txt`. Its main container `greet` (image `busybox:1.36`, command `sleep 3600`) must be able to read that file at the same path. Both containers mount the same `emptyDir` volume at `/shared`. Show the file's contents from `greet`."
+  solution: |
+    ```bash
+    cat <<'YAML' | kubectl -n prod apply -f -
+    apiVersion: v1
+    kind: Pod
+    metadata:
+      name: greeter
+    spec:
+      volumes:
+        - name: shared
+          emptyDir: {}
+      initContainers:
+        - name: setup
+          image: busybox:1.36
+          command: ["sh", "-c", "echo hello > /shared/greeting.txt"]
+          volumeMounts:
+            - name: shared
+              mountPath: /shared
+      containers:
+        - name: greet
+          image: busybox:1.36
+          command: ["sleep", "3600"]
+          volumeMounts:
+            - name: shared
+              mountPath: /shared
+    YAML
+    kubectl -n prod wait --for=condition=Ready pod/greeter --timeout=120s
+    kubectl -n prod exec greeter -c greet -- cat /shared/greeting.txt
+    ```
+
+    The init container finishes first, so the file exists when `greet` starts. `-c greet` is needed because `exec` on a multi-container Pod would otherwise pick the first container.
+
+- id: ch09-q09
+  type: task
+  exams: [CKAD]
+  prompt: "In namespace `prod`, create a Pod named `logger`. Its main container `app` (image `busybox:1.36`) appends the current date to `/logs/app.log` every second. A native sidecar named `tail` (an init container with image `busybox:1.36` that keeps running) follows `/logs/app.log`. Both use an `emptyDir` named `logs`, mounted at `/logs`. The Pod must be Running, and `tail`'s logs must show the dates."
+  solution: |
+    ```bash
+    cat <<'YAML' | kubectl -n prod apply -f -
+    apiVersion: v1
+    kind: Pod
+    metadata:
+      name: logger
+    spec:
+      volumes:
+        - name: logs
+          emptyDir: {}
+      initContainers:
+        - name: tail
+          image: busybox:1.36
+          restartPolicy: Always
+          command: ["sh", "-c", "touch /logs/app.log; tail -F /logs/app.log"]
+          volumeMounts:
+            - name: logs
+              mountPath: /logs
+      containers:
+        - name: app
+          image: busybox:1.36
+          command: ["sh", "-c", "while true; do date >> /logs/app.log; sleep 1; done"]
+          volumeMounts:
+            - name: logs
+              mountPath: /logs
+    YAML
+    kubectl -n prod wait --for=condition=Ready pod/logger --timeout=120s
+    kubectl -n prod logs logger -c tail --tail=2
+    ```
+
+    `restartPolicy: Always` on the init container is what makes it a native sidecar. Without it, `tail` would run once and the Pod would wait on it.
+
+- id: ch09-q10
+  type: task
+  exams: [CKAD]
+  prompt: "In namespace `prod`, create a Pod named `precheck`. Its init container `precheck-init` (image `busybox:1.36`) must succeed only if the file `/etc/hostname` exists in its filesystem. The main container `main` (image `busybox:1.36`) runs `sleep 3600`. Show that the Pod is Running and that the init container's state is `Completed`."
+  solution: |
+    ```bash
+    cat <<'YAML' | kubectl -n prod apply -f -
+    apiVersion: v1
+    kind: Pod
+    metadata:
+      name: precheck
+    spec:
+      initContainers:
+        - name: precheck-init
+          image: busybox:1.36
+          command: ["sh", "-c", "test -f /etc/hostname"]
+      containers:
+        - name: main
+          image: busybox:1.36
+          command: ["sleep", "3600"]
+    YAML
+    kubectl -n prod wait --for=condition=Ready pod/precheck --timeout=120s
+    kubectl -n prod get pod precheck
+    kubectl -n prod get pod precheck -o jsonpath='{.status.initContainerStatuses[0].state.terminated.reason}{"\n"}'
+    ```
+
+    `test -f` exits with 0 only when the file exists, which is the success the init container needs. A failing test would leave the Pod in `Init:Error`.
+
+- id: ch09-q11
+  type: task
+  exams: [CKAD]
+  prompt: "In namespace `prod`, create a Pod named `shared-pid` with two containers, `main` and `debugger`, both running `busybox:1.36` with the command `sleep 3600`. The containers must share a process namespace. Show the processes that `debugger` can see, and check that the `sleep` process of `main` is among them."
+  solution: |
+    ```bash
+    cat <<'YAML' | kubectl -n prod apply -f -
+    apiVersion: v1
+    kind: Pod
+    metadata:
+      name: shared-pid
+    spec:
+      shareProcessNamespace: true
+      containers:
+        - name: main
+          image: busybox:1.36
+          command: ["sleep", "3600"]
+        - name: debugger
+          image: busybox:1.36
+          command: ["sleep", "3600"]
+    YAML
+    kubectl -n prod wait --for=condition=Ready pod/shared-pid --timeout=120s
+    kubectl -n prod exec shared-pid -c debugger -- ps
+    ```
+
+    The output lists two `sleep 3600` processes, one from each container, because the process namespace is shared. Without `shareProcessNamespace: true`, `debugger` would see only its own.
+
+- id: ch09-q12
+  type: mcq
+  exams: [CKAD, CKA]
+  question: "A log collector must read the container logs of every Pod on every node. Which workload fits?"
+  choices:
+    - "A sidecar container in every application Pod"
+    - "A DaemonSet, so one collector Pod runs on each node"
+    - "A Deployment with as many replicas as there are nodes"
+    - "A Job that runs once per hour"
+  answer: B
+  explanation: "A DaemonSet runs one Pod per node and adds one when a node joins. A Deployment's replicas can land several on one node and none on another, and a sidecar per application Pod duplicates the work and misses everything else on the node."
+
+- id: ch09-q13
+  type: task
+  exams: [CKAD]
+  prompt: "In namespace `ops`, the DaemonSet `collector` runs on the workers but not on the control plane node. Make it run there too, and show one Pod per node."
+  solution: |
+    ```bash
+    kubectl describe node CONTROL_PLANE_NODE | grep Taints
+    kubectl -n ops patch daemonset collector --type=json \
+      -p='[{"op":"add","path":"/spec/template/spec/tolerations","value":[{"key":"node-role.kubernetes.io/control-plane","operator":"Exists","effect":"NoSchedule"}]}]'
+    kubectl -n ops rollout status daemonset/collector
+    kubectl -n ops get pods -o wide
+    ```
+
+    The control plane node carries the taint `node-role.kubernetes.io/control-plane:NoSchedule`. A toleration in the Pod template lets the DaemonSet place a Pod there; the patch changes the template, so the Pods are replaced one at a time. If the template already has tolerations, `add` to `/spec/template/spec/tolerations/-` instead, or edit the YAML.

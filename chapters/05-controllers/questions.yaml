@@ -1,0 +1,165 @@
+- id: ch05-q01
+  type: mcq
+  exams: [KCNA, CKA]
+  question: "What does a Kubernetes controller do?"
+  choices:
+    - "Runs containers on a node and reports their status"
+    - "Repeatedly compares the desired state in an object's spec with the actual state and acts to close the gap"
+    - "Stores the state of every object in the cluster"
+    - "Decides which node each new Pod runs on"
+  answer: B
+  explanation: "A controller is a reconciliation loop: observe, compare with the declared spec, act, repeat. Running containers is the kubelet's job, storing state is etcd's (through the API server), and placing Pods is the scheduler's."
+
+- id: ch05-q02
+  type: mcq
+  exams: [KCNA, CKAD, CKA]
+  question: "A ReplicaSet with `replicas: 3` manages three Pods. You delete one of them. What happens?"
+  choices:
+    - "Nothing; the ReplicaSet now runs two Pods until you scale it"
+    - "The deleted Pod is restored with the same name and IP"
+    - "The ReplicaSet creates a new Pod with a new name to get back to three"
+    - "The ReplicaSet is deleted because one of its Pods is missing"
+  answer: C
+  explanation: "The ReplicaSet sees two matching Pods where three are wanted and creates a replacement from its template. Pods are never repaired or resurrected: the replacement has a new name, a new UID, and usually a new IP."
+
+- id: ch05-q03
+  type: mcq
+  exams: [CKAD, CKA]
+  question: "How does a ReplicaSet decide which Pods count towards its replica count?"
+  choices:
+    - "By the Pods' names, which must start with the ReplicaSet's name"
+    - "By its label selector, for Pods in its namespace that no other controller owns"
+    - "By the node the Pods run on"
+    - "By the image the Pods run"
+  answer: B
+  explanation: "The selector is the only link. Matching Pods without another owner are counted (and adopted); a Pod whose labels stop matching is released and replaced. The name prefix is a convention of Pods the ReplicaSet created, not how it finds them."
+
+- id: ch05-q04
+  type: mcq
+  exams: [CKAD, CKA]
+  question: "You change the image in a Deployment's Pod template. What does the Deployment controller do?"
+  choices:
+    - "Restarts the existing Pods in place with the new image"
+    - "Edits the template of the existing ReplicaSet so that its Pods are recreated"
+    - "Creates a new ReplicaSet for the new template and shifts replicas to it, keeping the old ReplicaSet at zero"
+    - "Deletes the Deployment and creates a new one"
+  answer: C
+  explanation: "Each distinct Pod template gets its own ReplicaSet (named with a hash of the template). A rolling update scales the new one up and the old one down; the old one is kept at zero replicas as revision history for rollbacks."
+
+- id: ch05-q05
+  type: mcq
+  exams: [CKAD, CKA]
+  question: "Which change to a Deployment creates a new revision in `kubectl rollout history`?"
+  choices:
+    - "Scaling it from 3 to 5 replicas"
+    - "Changing a container's image"
+    - "Adding a label to the Deployment object itself"
+    - "Changing `revisionHistoryLimit`"
+  answer: B
+  explanation: "Only changes to `spec.template` create a new ReplicaSet, and so a new revision. Replica count, the Deployment's own metadata, and settings such as `revisionHistoryLimit` or `strategy` do not."
+
+- id: ch05-q06
+  type: mcq
+  exams: [CKAD, CKA]
+  question: "A Deployment has `replicas: 4` and its strategy is RollingUpdate with `maxSurge: 1` and `maxUnavailable: 0`. During an update, what are the most and the fewest available Pods?"
+  choices:
+    - "At most 4 Pods, at least 3 available"
+    - "At most 5 Pods, at least 4 available"
+    - "At most 5 Pods, at least 3 available"
+    - "At most 8 Pods, at least 4 available"
+  answer: B
+  explanation: "`maxSurge: 1` allows one Pod above the 4 wanted, so at most 5. `maxUnavailable: 0` allows none below 4 available. The update adds a new Pod, waits until it is ready, then removes an old one."
+
+- id: ch05-q07
+  type: mcq
+  exams: [CKAD, CKA]
+  question: "You roll out an image tag that does not exist. With the default strategy, what happens to the application?"
+  choices:
+    - "All old Pods are deleted first, so the application goes down"
+    - "The rollout stalls: a few new Pods stay in ImagePullBackOff while most old Pods keep serving"
+    - "Kubernetes automatically rolls back to the previous revision"
+    - "The Deployment is marked as deleted"
+  answer: B
+  explanation: "A rolling update only removes old Pods as new ones become ready, within `maxUnavailable`. New Pods that never become ready stop the rollout. After `progressDeadlineSeconds` the Deployment reports `ProgressDeadlineExceeded`, but it does not roll back by itself; you do that with `kubectl rollout undo`."
+
+- id: ch05-q08
+  type: mcq
+  exams: [CKAD, CKA]
+  question: "Where does the CHANGE-CAUSE column of `kubectl rollout history` come from?"
+  choices:
+    - "Kubernetes fills it in automatically from the command you ran"
+    - "The annotation `kubernetes.io/change-cause` on the Deployment when the revision was created"
+    - "The commit message of the container image"
+    - "The `--reason` flag of `kubectl set image`"
+  answer: B
+  explanation: "The cause is copied from the Deployment's `kubernetes.io/change-cause` annotation. Nothing sets it for you (the old `--record` flag that did is deprecated), so annotate the Deployment when you make a change."
+
+- id: ch05-q09
+  type: mcq
+  exams: [KCNA, CKAD]
+  question: "You need exactly one log-collector Pod on every node of the cluster, including nodes added later. Which resource fits?"
+  choices:
+    - "A Deployment with replicas equal to the number of nodes"
+    - "A StatefulSet"
+    - "A DaemonSet"
+    - "A CronJob"
+  answer: C
+  explanation: "A DaemonSet runs one Pod per matching node and adds Pods as nodes join. A Deployment with a fixed replica count cannot guarantee one per node and does not follow the node count."
+
+- id: ch05-q10
+  type: task
+  exams: [CKAD, CKA]
+  prompt: "In namespace `prod`, create a Deployment named `api` with 4 replicas of `httpd:2.4`, and wait until the rollout has finished."
+  solution: |
+    ```bash
+    kubectl -n prod create deployment api --image=httpd:2.4 --replicas=4
+    kubectl -n prod rollout status deployment/api
+    ```
+
+- id: ch05-q11
+  type: task
+  exams: [CKAD, CKA]
+  prompt: "The Deployment `api` in namespace `prod` runs a container named `httpd`. Update it to `httpd:2.4.62`, record the change cause `security update`, and confirm the cause appears in the rollout history."
+  solution: |
+    ```bash
+    kubectl -n prod set image deployment/api httpd=httpd:2.4.62
+    kubectl -n prod annotate deployment api kubernetes.io/change-cause="security update" --overwrite
+    kubectl -n prod rollout status deployment/api
+    kubectl -n prod rollout history deployment/api
+    ```
+
+- id: ch05-q12
+  type: task
+  exams: [CKAD, CKA]
+  prompt: "The Deployment `api` in namespace `prod` is on revision 5, which is broken. Roll it back to revision 3, then show which image revision 3 runs."
+  solution: |
+    ```bash
+    kubectl -n prod rollout undo deployment/api --to-revision=3
+    kubectl -n prod rollout status deployment/api
+    kubectl -n prod rollout history deployment/api --revision=6
+    ```
+
+    The rollback is recorded as a new revision (6) with revision 3's template, so revision 3 itself no longer appears in the history; inspect the new one. Before the rollback, `--revision=3` shows the same template.
+
+- id: ch05-q13
+  type: task
+  exams: [CKAD, CKA]
+  prompt: "Change the Deployment `api` in namespace `prod` so that updates never take a Pod away before its replacement is ready, adding at most two extra Pods at a time."
+  solution: |
+    ```bash
+    kubectl -n prod patch deployment api -p '{"spec":{"strategy":{"type":"RollingUpdate","rollingUpdate":{"maxUnavailable":0,"maxSurge":2}}}}'
+    kubectl -n prod get deployment api -o jsonpath='{.spec.strategy}{"\n"}'
+    ```
+
+    `maxUnavailable: 0` keeps full capacity; `maxSurge: 2` allows two extra Pods at a time.
+
+- id: ch05-q14
+  type: task
+  exams: [CKAD, CKA]
+  prompt: "Print the names of the ReplicaSets owned by the Deployment `api` in namespace `prod` that currently have zero desired replicas."
+  solution: |
+    ```bash
+    kubectl -n prod get rs -o jsonpath='{range .items[?(@.metadata.ownerReferences[0].name=="api")]}{.metadata.name}{" "}{.spec.replicas}{"\n"}{end}' | awk '$2==0 {print $1}'
+    ```
+
+    Filtering on the owner reference is exact. `-l app=api` works too when the Deployment was created with `kubectl create deployment`, which labels its Pods (and so its ReplicaSets) `app=api`.

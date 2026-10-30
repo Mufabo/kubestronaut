@@ -68,7 +68,7 @@ that everything else wraps.
 The Pod **phase** is a coarse summary:
 
 | Phase | Meaning |
-|---|---|
+| --- | --- |
 | `Pending` | Accepted by the API, but not all containers are running yet (unscheduled, or pulling images) |
 | `Running` | Bound to a node and at least one container is running or starting |
 | `Succeeded` | All containers exited with code 0 and will not be restarted |
@@ -142,8 +142,14 @@ Start the chapter's lab so you have a clean namespace to work in:
 make lab CH=4
 ```
 
-Everything below happens in the `ch04-pods` namespace, which the lab sets as
-your current default.
+Everything below happens in the `ch04-pods` namespace. The lab does not change
+your `kubectl` settings, so either add `-n ch04-pods` to each command, or opt in
+to making it your default for now:
+
+```bash
+make use-namespace CH=4     # kubectl now defaults to ch04-pods
+make teardown CH=4          # when you are done: remove the lab, restore your settings
+```
 
 ### Create a Pod
 
@@ -246,7 +252,7 @@ The Events show `Failed to pull image ... not found`. The three states you will
 meet most often:
 
 | Status | Usual cause | First move |
-|---|---|---|
+| --- | --- | --- |
 | `Pending` (no node assigned) | Not enough resources, taints, or unbound volumes | `kubectl describe pod`, read the scheduler message in Events |
 | `ImagePullBackOff` / `ErrImagePull` | Wrong image name or tag, private registry without credentials | `kubectl describe pod`, check Events and the image reference |
 | `CrashLoopBackOff` | The process exits repeatedly | `kubectl logs <pod> --previous` |
@@ -259,69 +265,86 @@ kubectl delete pod bad demo2 --ignore-not-found
 
 ## Hands-on lab
 
-Start (or restart from scratch) with:
+The lab works like a KodeKloud lab: you get one task at a time, do it in your
+terminal, then ask for a check. A correct answer takes you to the next task;
+a wrong one tells you what is missing. Your progress is saved, so you can stop
+and come back.
 
 ```bash
-make lab CH=4
+make lab CH=4        # set up the lab and show task 1
+make check CH=4      # check the current task; if it is right, show the next
+make question CH=4   # show the current task again
+make skip CH=4       # move on without checking
+make reset CH=4      # back to the starting state and task 1
+make verify CH=4     # check every task at once
 ```
 
-You can run `make reset CH=4` at any time to return to the starting state, and
-`make verify CH=4` to check your work. Your kubectl context now defaults to the
-`ch04-pods` namespace. Some Pods already exist, so run `kubectl get pods` first.
+Everything happens in the Namespace `ch04-pods`: use `-n ch04-pods` on every
+command, or run `make use-namespace CH=4` once. Some Pods already exist, so
+look around first (`kubectl -n ch04-pods get pods`). Full solutions are in
+[`lab/solutions.md`](lab/solutions.md).
 
-### Task 1: Create a web Pod (⏱ 2 min, ★☆☆)
+### Task 1: Create a web Pod
 
-Create a Pod named `web` that runs image `nginx:1.27`, carries the label
-`app=web`, and declares container port 80.
+Create a Pod with the following specification:
 
-*Success looks like:* `web` is `Running` with exactly those properties.
+- Name: `web`
+- Image: `nginx:1.27` (a single container)
+- Label: `app=web`
+- Container port: `80`
 
-### Task 2: Rescue a broken Pod (⏱ 3 min, ★★☆)
+### Task 2: Rescue a broken Pod
 
-The Pod `broken` never starts. Find out why and make it run **without deleting
-and recreating it**. It is supposed to run `nginx:1.27`.
+The Pod `broken` never starts. Find out why, and fix it so that it runs.
 
-*Success looks like:* `broken` is `Running` and uses image `nginx:1.27`.
+- Pod: `broken`
+- Image it should run: `nginx:1.27`
+- Status: `Running`
 
-### Task 3: Find a value in the logs (⏱ 3 min, ★★☆)
+Note: fix the Pod in place. Do **not** delete and recreate it.
 
-The Pod `logger` prints a line containing an activation code every few seconds.
-Write **only the code** (the text after the `=`) into the file `/tmp/ch04-code.txt`
-on your machine.
+### Task 3: Find a value in the logs
 
-*Success looks like:* the file contains the code and nothing else.
+The Pod `logger` prints a line containing an activation code every few
+seconds. Save **only the code** (the text after the `=`) to a file on your
+machine.
 
-### Task 4: Requests and limits (⏱ 4 min, ★★☆)
+- Pod: `logger`
+- File: `/tmp/ch04-code.txt`
 
-Create a Pod named `limited` running `nginx:1.27` with these resources on its
-only container: requests of 100 millicores of CPU and 64 MiB of memory; limits
-of 200 millicores and 128 MiB.
+### Task 4: Requests and limits
 
-*Success looks like:* `limited` is `Running` with exactly those values.
+Create a Pod with the following specification:
 
-### Task 5: A Pod that runs once (⏱ 3 min, ★★☆)
+- Name: `limited`
+- Image: `nginx:1.27` (a single container)
+- CPU request: 100 millicores
+- Memory request: 64 MiB
+- CPU limit: 200 millicores
+- Memory limit: 128 MiB
 
-Create a Pod named `once` running `busybox:1.36` that prints `hello` and then
-finishes. It must **not** be restarted after it exits.
+### Task 5: A Pod that runs once
 
-*Success looks like:* `once` reaches phase `Succeeded` and its logs show `hello`.
+Create a Pod that prints `hello` once and then finishes.
 
-When you are done: `make verify CH=4`. Stuck? Hints are in the verify output;
-full solutions are in [`lab/solutions.md`](lab/solutions.md).
+- Name: `once`
+- Image: `busybox:1.36` (a single container)
+- Output: `hello`
+- The Pod must **not** be restarted after it exits; it should end in phase `Succeeded`.
 
 ## Exam tips
 
 > **Exam tip:** Use imperative commands (`kubectl run`, `kubectl create`) to
 > generate a starting manifest, then edit. Typing YAML from scratch costs minutes
 > you do not have.
-
+>
 > **Exam tip:** `kubectl explain pod.spec.containers.resources --recursive` shows
 > field names and structure offline from the API server, faster than searching
 > documentation.
-
+>
 > **Exam tip:** After any change, confirm the result with `kubectl get` or
 > `describe`. A manifest that applied without error may still not run.
-
+>
 > **Exam tip:** Most Pod spec fields cannot be edited on a live Pod. If
 > `kubectl edit` is rejected, the recovery is `kubectl replace --force -f <file>`
 > (edit the temporary file `kubectl edit` saves), which deletes and recreates the Pod.

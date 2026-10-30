@@ -1,0 +1,671 @@
+# KCNA practice exam, set 2: 60 more original questions, grouped by curriculum
+# domain, none repeated from set 1 (mock-exams/kcna). The id names the domain (see
+# quiz.yaml); `make quiz EXAM=kcna2` shuffles the order for each attempt.
+
+# --- Kubernetes Fundamentals (26) ---------------------------------------------
+
+- id: kcna2-fund-01
+  type: mcq
+  question: "Which control plane component runs the loops that make the cluster's actual state match the desired state for Deployments, ReplicaSets, and Nodes?"
+  choices:
+    - "kube-scheduler"
+    - "kube-controller-manager"
+    - "kube-proxy"
+    - "etcd"
+  answer: B
+  explanation: "The controller manager runs many controllers, each watching its kind of object and acting to close the gap between spec and status. The scheduler only assigns Pods to nodes."
+
+- id: kcna2-fund-02
+  type: mcq
+  question: "What does the cloud-controller-manager do?"
+  choices:
+    - "It schedules Pods onto cloud instances"
+    - "It stores the cluster's state in the cloud"
+    - "It runs the controllers that talk to a cloud provider's API, such as creating load balancers and labeling nodes with their zone"
+    - "It replaces the kubelet on cloud nodes"
+  answer: C
+  explanation: "Cloud-specific logic (load balancers for LoadBalancer Services, node lifecycle, routes) runs in the cloud-controller-manager, so the core components stay independent of any provider."
+
+- id: kcna2-fund-03
+  type: mcq
+  question: "Why can a cluster run several kube-apiserver instances at the same time?"
+  choices:
+    - "Each instance owns a separate part of etcd"
+    - "Only one instance is active; the others wait for a leader election"
+    - "Each instance serves different Namespaces"
+    - "The API server keeps no state of its own; every instance reads and writes the same etcd"
+  answer: D
+  explanation: "The API server is stateless, so instances can run side by side behind a load balancer. The scheduler and the controller manager, in contrast, use leader election so that only one instance acts."
+
+- id: kcna2-fund-04
+  type: mcq
+  question: "In the API version apps/v1, what are apps and v1?"
+  choices:
+    - "The API group and its version"
+    - "The Namespace and the resource version"
+    - "The kind and its revision"
+    - "The cluster name and the Kubernetes version"
+  answer: A
+  explanation: "Resources are organized in API groups (apps, batch, networking.k8s.io, ...), each versioned. The core group, for Pods and Services, has no name: its apiVersion is just v1."
+
+- id: kcna2-fund-05
+  type: mcq
+  question: "A Pod's container exits with code 0, and its restartPolicy is OnFailure. What happens?"
+  choices:
+    - "The container is restarted"
+    - "The container is not restarted, and the Pod ends as Succeeded"
+    - "The Pod is deleted"
+    - "The kubelet restarts the whole node"
+  answer: B
+  explanation: "OnFailure restarts only containers that exit with a non-zero code. Always restarts any exit (the default for Pods of a Deployment); Never restarts none."
+
+- id: kcna2-fund-06
+  type: mcq
+  question: "A Pod has two init containers and one app container. In which order do they run?"
+  choices:
+    - "All three at the same time"
+    - "The app container first, then the init containers"
+    - "The first init container to completion, then the second, then the app container"
+    - "In random order"
+  answer: C
+  explanation: "Init containers run one after another, each to completion, before any app container starts. If one fails, the kubelet retries it according to the restart policy."
+
+- id: kcna2-fund-07
+  type: mcq
+  question: "A container requests 250m of CPU. How much is that?"
+  choices:
+    - "250 MiB of memory"
+    - "250 CPU cores"
+    - "250 milliseconds per minute"
+    - "A quarter of one CPU core"
+  answer: D
+  explanation: "m means millicores: 1000m is one core, so 250m is a quarter. Memory uses units such as Mi and Gi."
+
+- id: kcna2-fund-08
+  type: mcq
+  question: "Every container in a Pod sets CPU and memory limits equal to its requests. Which QoS class does the Pod get?"
+  choices:
+    - "Guaranteed"
+    - "Burstable"
+    - "BestEffort"
+    - "Critical"
+  answer: A
+  explanation: "Requests equal to limits for CPU and memory in every container make a Pod Guaranteed; it is the last to be evicted under memory pressure. Some requests or limits make it Burstable, none BestEffort."
+
+- id: kcna2-fund-09
+  type: mcq
+  question: "What do the Pods of a StatefulSet usually get through a headless Service?"
+  choices:
+    - "One shared virtual IP for all replicas"
+    - "A stable DNS name per Pod, such as db-0.db.prod.svc.cluster.local"
+    - "A public IP per Pod"
+    - "No DNS names at all"
+  answer: B
+  explanation: "A headless Service (clusterIP: None) creates DNS records for each Pod. Combined with the StatefulSet's ordinal names, every replica keeps a name clients can address directly."
+
+- id: kcna2-fund-10
+  type: mcq
+  question: "A Job has completions: 6 and parallelism: 2. How does it run?"
+  choices:
+    - "Six Pods at once"
+    - "Two Pods, each running six times"
+    - "Up to two Pods at a time, until six have completed successfully"
+    - "Six Pods, two of which may fail"
+  answer: C
+  explanation: "completions is how many successful Pods the Job needs; parallelism caps how many run at once. backoffLimit, not parallelism, sets how many failures are tolerated."
+
+- id: kcna2-fund-11
+  type: mcq
+  question: "What does a selector such as environment in (prod, staging) match?"
+  choices:
+    - "Objects whose name contains prod or staging"
+    - "Objects in the Namespaces prod and staging"
+    - "Objects annotated with environment"
+    - "Objects whose label environment has the value prod or staging"
+  answer: D
+  explanation: "Set-based selectors (in, notin, exists) match label values against a set. Deployments, ReplicaSets, Jobs, and kubectl -l support them; a Service's selector is equality-based only."
+
+- id: kcna2-fund-12
+  type: mcq
+  question: "You delete a Deployment with the default settings. What happens to its ReplicaSets and Pods?"
+  choices:
+    - "The garbage collector deletes them too, because they are owned by the Deployment"
+    - "They keep running without an owner"
+    - "Only the Pods are deleted; the ReplicaSets remain"
+    - "They move to the default Namespace"
+  answer: A
+  explanation: "Owner references link Pods to their ReplicaSet and ReplicaSets to their Deployment. Deleting the owner deletes the dependents in cascade, unless you ask for --cascade=orphan."
+
+- id: kcna2-fund-13
+  type: mcq
+  question: "Which statement about labels and annotations is true?"
+  choices:
+    - "Both can be used in selectors"
+    - "Labels identify and select objects; annotations hold other metadata for tools and people"
+    - "Annotations are limited to 63 characters, labels are not"
+    - "Labels are only allowed on Pods"
+  answer: B
+  explanation: "Selectors use labels. Annotations carry non-identifying data: change causes, tool settings, build information. Annotation values may be large; label values are short."
+
+- id: kcna2-fund-14
+  type: mcq
+  question: "Which kubectl command shows a Pod's node and IP address in its output?"
+  choices:
+    - "kubectl get pods --show-labels"
+    - "kubectl get pods -o name"
+    - "kubectl get pods -o wide"
+    - "kubectl top pods"
+  answer: C
+  explanation: "-o wide adds columns such as IP and NODE. --show-labels adds labels, -o name prints only names, and kubectl top shows resource usage."
+
+- id: kcna2-fund-15
+  type: mcq
+  question: "Why do etcd clusters run with three or five members, not four?"
+  choices:
+    - "etcd only supports odd numbers"
+    - "Four members are slower to start"
+    - "Four members need a separate leader node"
+    - "Four members tolerate only one failure, like three, while needing one more machine"
+  answer: D
+  explanation: "A write needs a majority. Three members need two and tolerate one failure; four need three and still tolerate only one. Five tolerate two."
+
+- id: kcna2-fund-16
+  type: mcq
+  question: "Which tool creates and upgrades a Kubernetes cluster on machines you provide, and is the reference installer of the project?"
+  choices:
+    - "kubeadm"
+    - "kubectl"
+    - "Helm"
+    - "kubelet"
+  answer: A
+  explanation: "kubeadm init sets up a control plane, kubeadm join adds nodes, and kubeadm upgrade moves the cluster to a new version. kubectl talks to a running cluster; Helm installs applications."
+
+- id: kcna2-fund-17
+  type: mcq
+  question: "What is a static Pod?"
+  choices:
+    - "A Pod that never restarts"
+    - "A Pod that the kubelet runs directly from a manifest file on its node, without the scheduler"
+    - "A Pod with a fixed IP address"
+    - "A Pod created by a DaemonSet"
+  answer: B
+  explanation: "The kubelet watches a directory (on kubeadm nodes /etc/kubernetes/manifests) and runs every Pod defined there. The API server shows a read-only mirror Pod. kubeadm runs the control plane this way."
+
+- id: kcna2-fund-18
+  type: mcq
+  question: "A Pod has preferredDuringSchedulingIgnoredDuringExecution node affinity for zone=a, and no node in zone a has room. What happens?"
+  choices:
+    - "The Pod stays Pending until a node in zone a has room"
+    - "The Pod is rejected"
+    - "The scheduler places it on another node that fits; the preference only adds to a node's score"
+    - "The scheduler evicts Pods from zone a"
+  answer: C
+  explanation: "Preferred rules are soft: they raise the score of matching nodes. Required rules are hard and keep the Pod Pending if no node matches. IgnoredDuringExecution means running Pods are not moved later."
+
+- id: kcna2-fund-19
+  type: mcq
+  question: "What do topology spread constraints do?"
+  choices:
+    - "They limit how much CPU a Pod may use"
+    - "They copy Pods to every zone"
+    - "They connect clusters in different regions"
+    - "They spread a workload's Pods evenly across zones, nodes, or other topology domains"
+  answer: D
+  explanation: "topologySpreadConstraints set how unevenly matching Pods may be distributed (maxSkew) across a topology key such as topology.kubernetes.io/zone, so that one zone failing does not take every replica."
+
+- id: kcna2-fund-20
+  type: mcq
+  question: "A high-priority Pod cannot be scheduled because the nodes are full. What can the scheduler do?"
+  choices:
+    - "Preempt (evict) lower-priority Pods to make room for it"
+    - "Add a node to the cluster"
+    - "Lower the Pod's requests"
+    - "Nothing; priority only affects the queue order"
+  answer: A
+  explanation: "With a PriorityClass, the scheduler orders Pending Pods by priority and may preempt lower-priority Pods. Adding nodes is the cluster autoscaler's job, not the scheduler's."
+
+- id: kcna2-fund-21
+  type: mcq
+  question: "A Node is NotReady for several minutes. What happens to the Pods of a Deployment that ran on it?"
+  choices:
+    - "Nothing, ever"
+    - "After the toleration period for the not-ready or unreachable taint, they are evicted, and the ReplicaSet creates replacements on other nodes"
+    - "They move to the node with their memory intact"
+    - "The Deployment is deleted"
+  answer: B
+  explanation: "The node lifecycle controller taints the node. Pods tolerate that taint for 300 seconds by default; then they are evicted and their controllers create new Pods elsewhere. Containers are not moved live."
+
+- id: kcna2-fund-22
+  type: mcq
+  question: "What does a multi-stage container image build achieve?"
+  choices:
+    - "It runs several containers in one image"
+    - "It builds the image on several machines in parallel"
+    - "It builds in one stage with the full toolchain and copies only the result into a small final image"
+    - "It signs the image"
+  answer: C
+  explanation: "The final stage starts FROM a minimal base and copies the built artifact from an earlier stage, so compilers and build dependencies do not end up in the image that runs."
+
+- id: kcna2-fund-23
+  type: mcq
+  question: "What is runc?"
+  choices:
+    - "A Kubernetes controller"
+    - "A container registry"
+    - "A high-level runtime that pulls images and implements the CRI"
+    - "A low-level OCI runtime that creates the container process with namespaces and cgroups"
+  answer: D
+  explanation: "containerd or CRI-O handle images and the CRI, then call an OCI runtime such as runc to actually start the container. Sandboxed runtimes such as gVisor's runsc replace runc."
+
+- id: kcna2-fund-24
+  type: mcq
+  question: "Where does a node get the images its Pods use?"
+  choices:
+    - "From a container registry, such as Docker Hub or a private registry, pulled by the container runtime"
+    - "From etcd"
+    - "From the API server"
+    - "From the control plane node's disk"
+  answer: A
+  explanation: "The kubelet asks the runtime to pull the image named in the Pod spec from its registry. Private registries need credentials, given to the Pod as an imagePullSecret."
+
+- id: kcna2-fund-25
+  type: mcq
+  question: "What does imagePullPolicy: IfNotPresent do?"
+  choices:
+    - "Always pulls the image, even if it is cached"
+    - "Pulls the image only if it is not already on the node"
+    - "Never pulls; the image must be on the node"
+    - "Pulls only images tagged latest"
+  answer: B
+  explanation: "IfNotPresent uses a cached copy when there is one. Always checks the registry every time (the default for the latest tag or no tag). Never uses only local images."
+
+- id: kcna2-fund-26
+  type: mcq
+  question: "Why should a container image not contain configuration that differs between environments?"
+  choices:
+    - "Images cannot contain files"
+    - "Configuration files make images too large to pull"
+    - "One immutable image should run everywhere; ConfigMaps, Secrets, and environment variables supply what differs"
+    - "Kubernetes refuses images with configuration files"
+  answer: C
+  explanation: "Separating configuration from the image (one of the twelve-factor principles) lets the same tested image move from staging to production unchanged."
+
+# --- Container Orchestration (17) ---------------------------------------------
+
+- id: kcna2-orch-01
+  type: mcq
+  question: "What is a headless Service?"
+  choices:
+    - "A Service without a selector"
+    - "A Service of type ExternalName"
+    - "A Service in a Namespace without Pods"
+    - "A Service with clusterIP: None, whose DNS name returns the IPs of its Pods directly"
+  answer: D
+  explanation: "Without a virtual IP, DNS answers with the ready Pods' addresses, and clients connect to them directly. StatefulSets use headless Services for stable per-Pod names."
+
+- id: kcna2-orch-02
+  type: mcq
+  question: "Which objects record the actual Pod addresses behind a Service?"
+  choices:
+    - "EndpointSlices"
+    - "ConfigMaps"
+    - "NetworkPolicies"
+    - "Nodes"
+  answer: A
+  explanation: "The EndpointSlice controller keeps a list of ready Pod IPs and ports for each Service. kube-proxy reads them to program the node's forwarding rules."
+
+- id: kcna2-orch-03
+  type: mcq
+  question: "Which statement compares the Gateway API with Ingress correctly?"
+  choices:
+    - "The Gateway API replaces Services"
+    - "The Gateway API splits roles into GatewayClass, Gateway, and routes such as HTTPRoute, and supports more protocols and traffic splitting than Ingress"
+    - "Ingress is newer than the Gateway API"
+    - "The Gateway API works without any controller"
+  answer: B
+  explanation: "The Gateway API separates what infrastructure providers, cluster operators, and application teams manage, and adds features such as weighted backends. Like Ingress, it needs an implementation."
+
+- id: kcna2-orch-04
+  type: mcq
+  question: "A Pod in Namespace shop looks up the name db. Which Service does it reach?"
+  choices:
+    - "The Service db in Namespace default"
+    - "Any Service named db in the cluster, at random"
+    - "The Service db in its own Namespace, shop, through the DNS search path"
+    - "None; a short name never resolves"
+  answer: C
+  explanation: "A Pod's resolv.conf lists search domains starting with its own Namespace (shop.svc.cluster.local), so db resolves to db.shop.svc.cluster.local. Other Namespaces need db.other."
+
+- id: kcna2-orch-05
+  type: mcq
+  question: "Which component answers DNS queries for Services inside a cluster?"
+  choices:
+    - "kube-proxy"
+    - "The API server"
+    - "etcd"
+    - "CoreDNS"
+  answer: D
+  explanation: "CoreDNS runs as a Deployment behind the kube-dns Service and serves records for Services and Pods. kube-proxy handles Service traffic, not names."
+
+- id: kcna2-orch-06
+  type: mcq
+  question: "Which modes can kube-proxy use to implement Services on Linux nodes?"
+  choices:
+    - "iptables, IPVS, and nftables"
+    - "TCP and UDP"
+    - "DNS and HTTP"
+    - "Overlay and underlay"
+  answer: A
+  explanation: "kube-proxy programs the node's packet filter: iptables (the long-time default), IPVS, or nftables. Some CNI plugins, such as Cilium, can replace kube-proxy entirely."
+
+- id: kcna2-orch-07
+  type: mcq
+  question: "A NetworkPolicy's ingress rule has from: [namespaceSelector: {matchLabels: {team: a}}]. Which Pods may connect?"
+  choices:
+    - "Pods labeled team=a in any Namespace"
+    - "All Pods in Namespaces labeled team=a"
+    - "Only Pods in the policy's own Namespace"
+    - "No Pods; namespaceSelector only works for egress"
+  answer: B
+  explanation: "namespaceSelector selects whole Namespaces by their labels. To require a Pod label as well, put a podSelector in the same from entry."
+
+- id: kcna2-orch-08
+  type: mcq
+  question: "A RoleBinding in Namespace dev refers to a ClusterRole. Where do the permissions apply?"
+  choices:
+    - "In every Namespace"
+    - "Nowhere; a RoleBinding cannot refer to a ClusterRole"
+    - "Only in Namespace dev"
+    - "Only on cluster-scoped resources"
+  answer: C
+  explanation: "A RoleBinding grants permissions within its own Namespace, even when the role it refers to is a ClusterRole. That lets one ClusterRole (for example view) be reused per Namespace."
+
+- id: kcna2-orch-09
+  type: mcq
+  question: "What does a validating admission controller do?"
+  choices:
+    - "It authenticates users"
+    - "It schedules Pods"
+    - "It encrypts objects before storing them"
+    - "It inspects a request after authorization and can reject it before the object is stored"
+  answer: D
+  explanation: "Admission comes after authentication and authorization. Mutating admission can change the object; validating admission can only accept or reject it, for example to enforce policies."
+
+- id: kcna2-orch-10
+  type: mcq
+  question: "Which security setting prevents a process in a container from gaining more privileges than its parent, for example through setuid binaries?"
+  choices:
+    - "allowPrivilegeEscalation: false"
+    - "hostNetwork: false"
+    - "imagePullPolicy: Always"
+    - "terminationGracePeriodSeconds: 0"
+  answer: A
+  explanation: "allowPrivilegeEscalation: false sets the no_new_privs flag on the container's processes. The restricted Pod Security level requires it."
+
+- id: kcna2-orch-11
+  type: mcq
+  question: "What is the Container Storage Interface (CSI)?"
+  choices:
+    - "A format for container images"
+    - "A standard interface through which storage vendors provide volume drivers to Kubernetes outside its own code"
+    - "A backup tool"
+    - "The kubelet's API for logs"
+  answer: B
+  explanation: "CSI drivers let any storage system provision and attach volumes without changes to Kubernetes itself. Most in-tree volume plugins have been migrated to CSI."
+
+- id: kcna2-orch-12
+  type: mcq
+  question: "A StorageClass has reclaimPolicy: Delete. What happens when a claim that was dynamically provisioned from it is deleted?"
+  choices:
+    - "The volume is kept for manual reuse"
+    - "The data is moved to a backup"
+    - "The PersistentVolume and the underlying storage are deleted"
+    - "The claim cannot be deleted"
+  answer: C
+  explanation: "Delete removes the volume with its claim; Retain keeps the PersistentVolume and its data, which an administrator must clean up or reuse by hand."
+
+- id: kcna2-orch-13
+  type: mcq
+  question: "Which access mode lets many nodes mount the same volume read-write at once?"
+  choices:
+    - "ReadWriteOnce"
+    - "ReadOnlyMany"
+    - "ReadWriteOncePod"
+    - "ReadWriteMany"
+  answer: D
+  explanation: "ReadWriteMany needs storage that supports it, such as NFS or a shared file system. Block storage such as cloud disks usually offers only ReadWriteOnce."
+
+- id: kcna2-orch-14
+  type: mcq
+  question: "A PersistentVolumeClaim stays Pending. Which cause is most likely?"
+  choices:
+    - "No PersistentVolume matches it, and no StorageClass can provision one (or it waits for a Pod with WaitForFirstConsumer)"
+    - "The Pod using it is CrashLoopBackOff"
+    - "The Namespace has no Service"
+    - "kube-proxy is down"
+  answer: A
+  explanation: "A claim binds to a matching PersistentVolume or gets one from its StorageClass. kubectl describe pvc shows the reason in its events; WaitForFirstConsumer classes wait for a Pod by design."
+
+- id: kcna2-orch-15
+  type: mcq
+  question: "A container's last state shows reason OOMKilled and exit code 137. What happened?"
+  choices:
+    - "The image could not be pulled"
+    - "The container exceeded its memory limit and the kernel killed it"
+    - "The liveness probe failed"
+    - "The node was drained"
+  answer: B
+  explanation: "137 is 128 plus signal 9 (SIGKILL). OOMKilled means the out-of-memory killer acted because the container used more memory than its limit. Raise the limit or fix the leak."
+
+- id: kcna2-orch-16
+  type: mcq
+  question: "A node shows NotReady. Where do you look first?"
+  choices:
+    - "The application logs of a Pod on another node"
+    - "The Ingress controller"
+    - "The node's conditions in kubectl describe node, then the kubelet and container runtime on the node"
+    - "The Helm releases"
+  answer: C
+  explanation: "Ready comes from the kubelet's status reports. describe node shows the conditions and their messages; on the node, systemctl status kubelet and its journal, and the runtime's status, give the cause."
+
+- id: kcna2-orch-17
+  type: mcq
+  question: "Pod Security Admission is configured how?"
+  choices:
+    - "With a cluster-wide webhook that you must install"
+    - "With a ConfigMap per Pod"
+    - "Only through the API server's flags"
+    - "With labels on each Namespace that choose a Pod Security Standard and a mode (enforce, audit, warn)"
+  answer: D
+  explanation: "Pod Security Admission is built into the API server. Labels such as pod-security.kubernetes.io/enforce=restricted on a Namespace decide which level applies there and what happens to violations."
+
+# --- Cloud Native Application Delivery (10) -----------------------------------
+
+- id: kcna2-deliv-01
+  type: mcq
+  question: "What does helm rollback do?"
+  choices:
+    - "Returns a release to an earlier revision of its manifests and values"
+    - "Deletes the release"
+    - "Downgrades Helm itself"
+    - "Rolls back the cluster's Kubernetes version"
+  answer: A
+  explanation: "Helm keeps a history of each release's revisions. helm rollback RELEASE REVISION applies the manifests of that revision again, as a new revision."
+
+- id: kcna2-deliv-02
+  type: mcq
+  question: "Which statement about Argo CD and Flux is true?"
+  choices:
+    - "Both are container runtimes"
+    - "Both are GitOps tools: controllers in the cluster that keep it in sync with what is declared in Git"
+    - "Argo CD builds images and Flux runs tests"
+    - "Both replace kubectl entirely"
+  answer: B
+  explanation: "Argo CD and Flux are CNCF graduated GitOps projects. They pull the desired state from Git (or OCI registries) and reconcile continuously; they do not build images."
+
+- id: kcna2-deliv-03
+  type: mcq
+  question: "What does a Helm values file do?"
+  choices:
+    - "It lists the chart's dependencies"
+    - "It stores the release history"
+    - "It sets parameters that the chart's templates use, overriding the chart's defaults"
+    - "It defines the chart's name and version"
+  answer: C
+  explanation: "Templates read .Values. A values file (-f values.yaml) or --set overrides the defaults in the chart's own values.yaml. Chart.yaml holds the name, version, and dependencies."
+
+- id: kcna2-deliv-04
+  type: mcq
+  question: "In a typical CI/CD pipeline for Kubernetes, what is usually the result of the CI part?"
+  choices:
+    - "A running cluster"
+    - "A new Namespace"
+    - "A Helm repository"
+    - "A tested container image pushed to a registry, with a version tag or digest"
+  answer: D
+  explanation: "Continuous integration builds, tests, and publishes an artifact. Continuous delivery then deploys that artifact to environments, often through GitOps by updating the image reference in Git."
+
+- id: kcna2-deliv-05
+  type: mcq
+  question: "Why should a deployment pipeline refer to images by digest or by a unique tag, not by latest?"
+  choices:
+    - "So that every environment runs exactly the image that was tested, and a rollback returns to a known image"
+    - "Because latest is not allowed in Kubernetes"
+    - "Because digests pull faster"
+    - "Because tags are case-sensitive"
+  answer: A
+  explanation: "latest can point to a different image tomorrow, so the same manifest could run different code. Digests are immutable; unique tags are close, as long as nobody moves them."
+
+- id: kcna2-deliv-06
+  type: mcq
+  question: "What does revisionHistoryLimit on a Deployment control?"
+  choices:
+    - "How often the Deployment may be updated"
+    - "How many old ReplicaSets are kept, which is how far back a rollback can go"
+    - "How many Pods may be unavailable during an update"
+    - "How long a rollout may take"
+  answer: B
+  explanation: "Each change to the Pod template creates a ReplicaSet; old ones are scaled to zero and kept, up to revisionHistoryLimit (10 by default), so that kubectl rollout undo can return to them."
+
+- id: kcna2-deliv-07
+  type: mcq
+  question: "How do you follow a Pod's logs live, as new lines are written?"
+  choices:
+    - "kubectl logs POD --previous"
+    - "kubectl describe pod POD"
+    - "kubectl logs -f POD"
+    - "kubectl get pod POD -w"
+  answer: C
+  explanation: "-f (follow) streams new lines. --previous shows the logs of the container's last, crashed instance; get -w watches the object's status, not its logs."
+
+- id: kcna2-deliv-08
+  type: mcq
+  question: "Where do you find the reasons Kubernetes gives for scheduling failures, image pulls, and probe failures of a Pod?"
+  choices:
+    - "In the container's logs"
+    - "In the Pod's labels"
+    - "In etcd's logs"
+    - "In the Pod's events, shown by kubectl describe pod or kubectl get events"
+  answer: D
+  explanation: "Components record what they do to an object as events: Scheduled, Pulling, Failed, Unhealthy. They are kept for a limited time (one hour by default)."
+
+- id: kcna2-deliv-09
+  type: mcq
+  question: "What does kubectl debug node/NAME -it --image=busybox:1.36 give you?"
+  choices:
+    - "A shell in a Pod on that node with the node's file system mounted at /host"
+    - "SSH access to the node"
+    - "A copy of the node in a new VM"
+    - "The kubelet's logs"
+  answer: A
+  explanation: "kubectl debug on a node starts a Pod in the node's host namespaces with its root file system under /host, useful when you cannot SSH to the node."
+
+- id: kcna2-deliv-10
+  type: mcq
+  question: "A Deployment's rollout of a new image hangs: new Pods never become ready. What does kubectl rollout status report after progressDeadlineSeconds?"
+  choices:
+    - "That the rollout succeeded"
+    - "That the Deployment exceeded its progress deadline; the old Pods keep serving"
+    - "That the Deployment was deleted"
+    - "Nothing; rollouts never time out"
+  answer: B
+  explanation: "With the default rolling update, old Pods stay until new ones are ready. After progressDeadlineSeconds (600 by default) the Deployment's Progressing condition turns False; kubectl rollout undo returns to the previous version."
+
+# --- Cloud Native Architecture (7) --------------------------------------------
+
+- id: kcna2-arch-01
+  type: mcq
+  question: "Which component adds or removes nodes when Pods cannot be scheduled or nodes are underused?"
+  choices:
+    - "The Horizontal Pod Autoscaler"
+    - "The Vertical Pod Autoscaler"
+    - "The cluster autoscaler (or a node provisioner such as Karpenter)"
+    - "The scheduler"
+  answer: C
+  explanation: "The HPA changes replica counts, the VPA changes requests, and the cluster autoscaler changes the number of nodes, based on Pending Pods and node usage."
+
+- id: kcna2-arch-02
+  type: mcq
+  question: "In distributed tracing, what is a span?"
+  choices:
+    - "A time series of a metric"
+    - "One log line"
+    - "The total latency of the cluster"
+    - "One timed operation within a trace, such as a call from one service to another"
+  answer: D
+  explanation: "A trace follows one request through many services; it is made of spans, each with a start, a duration, and attributes, linked by a trace ID that is passed along with the request."
+
+- id: kcna2-arch-03
+  type: mcq
+  question: "Which tool usually receives alerts from Prometheus and groups, silences, and routes them to email or chat?"
+  choices:
+    - "Alertmanager"
+    - "Grafana Loki"
+    - "Fluent Bit"
+    - "Jaeger"
+  answer: A
+  explanation: "Prometheus evaluates alerting rules and sends firing alerts to Alertmanager, which deduplicates, groups, silences, and routes them. Loki stores logs, Fluent Bit ships them, and Jaeger stores traces."
+
+- id: kcna2-arch-04
+  type: mcq
+  question: "Which body of the CNCF decides on accepting projects and moving them through the maturity levels?"
+  choices:
+    - "The Linux Foundation's board"
+    - "The Technical Oversight Committee (TOC)"
+    - "The Kubernetes Steering Committee"
+    - "The project's own maintainers"
+  answer: B
+  explanation: "The CNCF TOC defines the technical vision and votes on sandbox admission, incubation, and graduation. The Kubernetes Steering Committee governs only the Kubernetes project."
+
+- id: kcna2-arch-05
+  type: mcq
+  question: "What is the main benefit of open standards such as OCI, CNI, and CSI for cloud-native users?"
+  choices:
+    - "They make Kubernetes faster"
+    - "They are required by law"
+    - "Components from different vendors work together, so users can choose and replace them without lock-in"
+    - "They remove the need for container runtimes"
+  answer: C
+  explanation: "Shared interfaces let any compliant runtime, network plugin, or storage driver plug into Kubernetes. The same image runs on any OCI runtime."
+
+- id: kcna2-arch-06
+  type: mcq
+  question: "What does a site reliability engineer (SRE) typically use to decide whether a service may ship risky changes?"
+  choices:
+    - "The number of Pods"
+    - "The cluster's Kubernetes version"
+    - "The size of the container images"
+    - "The error budget left under its service level objective (SLO)"
+  answer: D
+  explanation: "An SLO (for example 99.9% of requests succeed) leaves a small budget for failure. While budget remains, teams can move fast; when it is spent, reliability work comes first."
+
+- id: kcna2-arch-07
+  type: mcq
+  question: "A new Kubernetes feature is in alpha. Which statement is true?"
+  choices:
+    - "It is disabled by default behind a feature gate, and may change or be removed without notice"
+    - "It is enabled by default and stable"
+    - "It is only available on managed clusters"
+    - "It cannot be enabled at all"
+  answer: A
+  explanation: "Alpha features are off by default and carry no compatibility promise. Beta features are better tested (new beta APIs are off by default); GA features are stable and on."

@@ -1,0 +1,155 @@
+- id: ch20-q01
+  type: mcq
+  exams: [CKA]
+  question: "Which of these does an etcd snapshot of a Kubernetes cluster contain?"
+  choices:
+    - "The data written to PersistentVolumes"
+    - "The container images the Pods run"
+    - "The API objects, including Secrets"
+    - "The certificates in /etc/kubernetes/pki"
+  answer: C
+  explanation: "etcd stores the API objects, Secrets included. Volume data lives in the storage system, images in registries, and the certificates are files on the control plane nodes; each needs its own backup."
+
+- id: ch20-q02
+  type: mcq
+  exams: [CKA]
+  question: "Where do you find the client certificate settings for `etcdctl` on a kubeadm control plane node?"
+  choices:
+    - "In ~/.kube/config"
+    - "In the etcd static Pod manifest, /etc/kubernetes/manifests/etcd.yaml"
+    - "In the kubeadm-config ConfigMap only"
+    - "etcd does not use TLS in a kubeadm cluster"
+  answer: B
+  explanation: "The manifest lists `--trusted-ca-file`, `--cert-file`, and `--key-file` (under /etc/kubernetes/pki/etcd) and `--listen-client-urls`. Those become `--cacert`, `--cert`, `--key`, and `--endpoints` for `etcdctl`."
+
+- id: ch20-q03
+  type: mcq
+  exams: [CKA]
+  question: "With etcd 3.6 or later, which command restores a snapshot into a new data directory?"
+  choices:
+    - "`etcdctl snapshot restore FILE --data-dir DIR`"
+    - "`etcdutl snapshot restore FILE --data-dir DIR`"
+    - "`kubeadm etcd restore FILE`"
+    - "`etcdctl restore --from FILE`"
+  answer: B
+  explanation: "etcd 3.5 moved `snapshot restore` and `snapshot status` to `etcdutl`, which works on files offline, and 3.6 removed them from `etcdctl`; 3.7 keeps it that way. `etcdctl` keeps `snapshot save`, which needs a running member."
+
+- id: ch20-q04
+  type: mcq
+  exams: [CKA]
+  question: "`etcdutl snapshot restore backup.db --data-dir /var/lib/etcd` fails with: data-dir \"/var/lib/etcd\" not empty. What is the right fix?"
+  choices:
+    - "Delete /var/lib/etcd and run the restore again"
+    - "Restore into a new directory, such as /var/lib/etcd-restore, and point etcd's data hostPath at it"
+    - "Add --force to the restore"
+    - "Stop the kubelet permanently"
+  answer: B
+  explanation: "A restore always builds a new data directory. Restoring next to the live data keeps the old data as a fallback; deleting it first turns a mistake into an outage."
+
+- id: ch20-q05
+  type: mcq
+  exams: [CKA]
+  question: "After a restore, `kubectl get configmap a` finds the restored ConfigMap, but `kubectl get configmaps` still lists the objects from before the restore. What was skipped?"
+  choices:
+    - "Running kubeadm upgrade"
+    - "Stopping the API server before the restore and starting it again afterwards"
+    - "Restarting CoreDNS"
+    - "Deleting the old snapshot file"
+  answer: B
+  explanation: "The API server caches what it reads from etcd and follows it with watches. A restore moves etcd's revision backwards, and a running API server can keep serving lists from its stale cache. Restarting it makes it read the restored data from scratch."
+
+- id: ch20-q06
+  type: mcq
+  exams: [CKA]
+  question: "What is the revision shown by `etcdutl snapshot status`?"
+  choices:
+    - "The etcd version that created the file"
+    - "The number of keys in the snapshot"
+    - "etcd's global write counter at the moment the snapshot was taken"
+    - "The number of times the snapshot was restored"
+  answer: C
+  explanation: "Every write to etcd increases the revision, and an object's resourceVersion in Kubernetes is the revision of its last change. A snapshot contains every change up to its revision."
+
+- id: ch20-q07
+  type: mcq
+  exams: [CKA]
+  question: "How does etcd pick up a new data directory in a kubeadm cluster after you edit /etc/kubernetes/manifests/etcd.yaml?"
+  choices:
+    - "You run kubectl apply -f etcd.yaml"
+    - "The kubelet notices the changed static Pod manifest and recreates the etcd Pod"
+    - "You run kubeadm init again"
+    - "You restart containerd"
+  answer: B
+  explanation: "etcd is a static Pod. The kubelet watches the manifests directory and recreates the Pod when a file changes, which takes up to a minute or so. kubectl cannot change static Pods."
+
+- id: ch20-q08
+  type: mcq
+  exams: [CKA]
+  question: "Why should an etcd snapshot file be protected like a password?"
+  choices:
+    - "It contains the etcd root password"
+    - "It contains every Secret in the cluster"
+    - "It can be used to log in to the API server"
+    - "It is executable"
+  answer: B
+  explanation: "Secrets are stored in etcd, base64-encoded but not encrypted unless encryption at rest is configured. Anyone with the snapshot can read them. `etcdctl snapshot save` creates the file readable by its owner only."
+
+- id: ch20-q09
+  type: mcq
+  exams: [CKA]
+  question: "A cluster has three etcd members. How is it restored from a snapshot?"
+  choices:
+    - "Restore one member; the others copy its data automatically"
+    - "Restore every member from the same snapshot, each with its own name and the full initial cluster list, so they form a new cluster"
+    - "Restore each member from its own latest snapshot"
+    - "A multi-member cluster cannot be restored"
+  answer: B
+  explanation: "A restore creates a new cluster. Every member is restored from the same file with `--name`, `--initial-cluster`, and `--initial-advertise-peer-urls`, so the members agree on the data and on each other."
+
+- id: ch20-q10
+  type: task
+  exams: [CKA]
+  prompt: "On the control plane node of a kubeadm cluster, save a snapshot of etcd to `/srv/backup/etcd.db`, then show its revision and the number of keys it holds."
+  solution: |
+    ```bash
+    sudo mkdir -p /srv/backup
+    sudo etcdctl --endpoints=https://127.0.0.1:2379 \
+      --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+      --cert=/etc/kubernetes/pki/etcd/server.crt \
+      --key=/etc/kubernetes/pki/etcd/server.key \
+      snapshot save /srv/backup/etcd.db
+    sudo etcdutl snapshot status /srv/backup/etcd.db -w table
+    ```
+
+    Read the certificate paths from `/etc/kubernetes/manifests/etcd.yaml` if they differ. The table's `REVISION` and `TOTAL KEYS` columns answer the question.
+
+- id: ch20-q11
+  type: task
+  exams: [CKA]
+  prompt: "Restore the snapshot `/srv/backup/etcd.db` on a kubeadm control plane node with one etcd member, so that the cluster runs from the restored data in `/var/lib/etcd-from-backup`."
+  solution: |
+    ```bash
+    sudo mv /etc/kubernetes/manifests/kube-apiserver.yaml /etc/kubernetes/
+    sudo etcdutl snapshot restore /srv/backup/etcd.db --data-dir /var/lib/etcd-from-backup
+    sudo vim /etc/kubernetes/manifests/etcd.yaml      # etcd-data hostPath: path: /var/lib/etcd-from-backup
+    sudo crictl ps --name etcd                        # wait until the new etcd container runs
+    sudo mv /etc/kubernetes/kube-apiserver.yaml /etc/kubernetes/manifests/
+    kubectl get nodes
+    ```
+
+    Changing only the hostPath is enough: inside the container, etcd keeps reading `--data-dir=/var/lib/etcd`, which is now the restored directory on the node. If you change `--data-dir` instead, change the volume's `mountPath` to match.
+
+- id: ch20-q12
+  type: task
+  exams: [CKA]
+  prompt: "Using `etcdctl` on the control plane node, list the keys etcd holds for the ConfigMaps in the Namespace `kube-system`."
+  solution: |
+    ```bash
+    sudo etcdctl --endpoints=https://127.0.0.1:2379 \
+      --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+      --cert=/etc/kubernetes/pki/etcd/server.crt \
+      --key=/etc/kubernetes/pki/etcd/server.key \
+      get /registry/configmaps/kube-system --prefix --keys-only
+    ```
+
+    Kubernetes stores objects under `/registry/<resource>/<namespace>/<name>`. `--keys-only` skips the values, which are protobuf.

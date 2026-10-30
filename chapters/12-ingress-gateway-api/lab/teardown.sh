@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# End the lab: remove everything it created and restore the reader's kubectl
+# context/namespace if they opted in with `make use-namespace`. The Gateway API
+# CRDs stay installed: other labs may use them.
+set -euo pipefail
+here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=/dev/null
+source "${here}/../../../tools/lib.sh"
+# shellcheck source=/dev/null
+source "${here}/lab.env"
+# shellcheck source=/dev/null
+source "${here}/common.sh"
+
+require_lab_cluster
+lab_teardown_ns "$LAB_NS"
+remove_controller
+kubectl delete gatewayclass "$LAB_GATEWAYCLASS" --ignore-not-found >/dev/null
+lab_restore_kubectx "${here}/.state/kubectx"
+info "Lab removed."

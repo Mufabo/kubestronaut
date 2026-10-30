@@ -1,0 +1,85 @@
+# Tier 2 lab environment: three VirtualBox VMs running a kubeadm cluster.
+# Requires VirtualBox and Vagrant on the host (see envs/vagrant/README.md).
+#
+# Build it with the driver, not with plain `vagrant up`:
+#   Windows:        .\kbook-vm.ps1 build
+#   Linux / macOS:  ./kbook-vm.sh build
+# The driver runs the provisioners below one stage at a time and saves the
+# snapshots `prereqs`, `cluster`, and `cluster-prev` between stages. Every
+# provisioner is `run: "never"`, so `vagrant up` alone only boots the VMs.
+#
+# Versions come from versions.env, the single source of truth. This file reads it
+# the same way the Makefile does, so there is no second copy of any version.
+
+def read_versions(path)
+  File.readlines(path).each_with_object({}) do |line, h|
+    line = line.strip
+    next if line.empty? || line.start_with?("#")
+    key, value = line.split("=", 2)
+    h[key.strip] = value.to_s.split("#", 2).first.to_s.strip
+  end
+end
+
+VERSIONS = read_versions(File.expand_path("../../versions.env", __dir__))
+# The driver sets KBOOK_K8S_VERSION to build the cluster-prev snapshot at
+# K8S_PREV_VERSION; otherwise every stage uses K8S_VERSION.
+K8S_VERSION = ENV.fetch("KBOOK_K8S_VERSION", VERSIONS.fetch("K8S_VERSION"))
+K8S_MINOR = K8S_VERSION.sub(/\.\d+$/, "").sub(/^v/, "")
+SNAPSHOT = ENV.fetch("KBOOK_SNAPSHOT", "")
+# One CPU per VM by default. On Windows with WSL2 or Docker Desktop, Hyper-V owns
+# the CPU's virtualization extensions and VirtualBox runs on top of it; there,
+# Ubuntu guests with more than one CPU often hang early in boot. Hosts without
+# Hyper-V can set KBOOK_VM_CPUS=2 before building.
+CPUS = Integer(ENV.fetch("KBOOK_VM_CPUS", "1"))
+
+NODES = {
+  "cp1"   => { ip: "192.168.56.10", role: "control-plane", memory: 2048 },
+  "node1" => { ip: "192.168.56.11", role: "worker",        memory: 1536 },
+  "node2" => { ip: "192.168.56.12", role: "worker",        memory: 1536 },
+}.freeze
+HOSTS = NODES.map { |name, node| "#{node[:ip]} #{name}" }.join("\n")
+
+Vagrant.configure("2") do |config|
+  config.vm.box = VERSIONS.fetch("VAGRANT_BOX")
+  config.vm.box_version = VERSIONS.fetch("VAGRANT_BOX_VERSION")
+  config.vm.box_check_update = false
+  # The first boot of a fresh box can take several minutes on a slow host.
+  config.vm.boot_timeout = 600
+  # envs/vagrant is /vagrant in every VM; the build's shared state (join
+  # command, SSH key) lives in /vagrant/.state, which git ignores.
+  config.vm.synced_folder ".", "/vagrant", type: "virtualbox"
+
+  NODES.each do |name, node|
+    config.vm.define name do |vm|
+      vm.vm.hostname = name
+      vm.vm.network "private_network", ip: node[:ip]
+      vm.vm.provider "virtualbox" do |vb|
+        vb.name = "kbook-#{name}"
+        vb.cpus = CPUS
+        vb.memory = node[:memory]
+      end
+      if node[:role] == "control-plane"
+        # Readers work on cp1, with the whole book at /kbook.
+        vm.vm.synced_folder "../..", "/kbook", type: "virtualbox"
+      end
+
+      vm.vm.provision "os", type: "shell", run: "never", path: "bootstrap-os.sh",
+        env: { "NODE_NAME" => name, "NODE_IP" => node[:ip], "HOSTS" => HOSTS }
+      vm.vm.provision "k8s-tools", type: "shell", run: "never", path: "bootstrap-tools.sh",
+        env: { "K8S_VERSION" => K8S_VERSION, "K8S_MINOR" => K8S_MINOR, "NODE_IP" => node[:ip] }
+      if node[:role] == "control-plane"
+        vm.vm.provision "cluster-init", type: "shell", run: "never", path: "bootstrap-control-plane.sh",
+          env: {
+            "K8S_VERSION" => K8S_VERSION,
+            "CALICO_VERSION" => VERSIONS.fetch("CALICO_VERSION"),
+            "NODE_IP" => node[:ip],
+          }
+        vm.vm.provision "network-ready", type: "shell", run: "never", path: "bootstrap-network-ready.sh"
+      else
+        vm.vm.provision "cluster-join", type: "shell", run: "never", path: "bootstrap-worker.sh"
+      end
+      vm.vm.provision "mark", type: "shell", run: "never",
+        inline: "mkdir -p /etc/kbook && printf '%s\\n' \"$1\" > /etc/kbook/snapshot", args: [SNAPSHOT]
+    end
+  end
+end

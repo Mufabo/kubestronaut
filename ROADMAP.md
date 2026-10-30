@@ -4,11 +4,11 @@ A hands-on textbook covering everything needed for the five certifications that 
 
 - **Audience:** readers who already know Linux, basic web development, and containers.
 - **Format:** one Markdown file per chapter, plus setup files for each chapter's lab environment.
-- **Labs:** KodeKloud/Killercoda-style, repeatable and resettable with one command, self-checking.
+- **Labs:** KodeKloud-style for learning (one task at a time, a check after each); killer.sh-style for the mock exam that closes each Part, and for short timed warm-ups inside chapters (weighted questions, a context per question, scored together against a pass mark). All repeatable and resettable with one command.
 - **Assessment:** end-of-chapter questions in every chapter, plus a mock exam per certification.
 
 > **Before locking the outline:** verify each certification's current curriculum (domains, weights, Kubernetes version) on the CNCF/Linux Foundation curriculum repos. Update `docs/coverage-matrix.md` (see §6) whenever they change.
-> **Already checked:** KCNA now has four domains (44/28/16/12) and CKA has five (25/15/20/10/30), per the official `cncf/curriculum` READMEs. The bullet-level PDFs still need to be transcribed into the coverage matrix.
+> **Already checked (2026-10-09):** all five curricula (KCNA, CKA v1.35, CKAD v1.37, CKS v1.34, KCSA) are transcribed verbatim into `docs/coverage-matrix.md` from the `cncf/curriculum` PDFs. The mapping found three gaps in the chapter plan, now closed: building container images (Chapter 16), API deprecations (Chapter 15), and `securityContext` and capabilities for CKAD readers (Chapter 10, with the hardening view still in 33).
 
 ---
 
@@ -25,7 +25,7 @@ A hands-on textbook covering everything needed for the five certifications that 
 
 ## 2. Repository layout
 
-```
+```text
 kubestronaut-book/
 ├── ROADMAP.md
 ├── versions.env                 # K8s version + pinned tool versions
@@ -55,7 +55,8 @@ kubestronaut-book/
 │           ├── verify.sh        # per-task PASS/FAIL
 │           ├── solve.sh         # automated reference solution (CI)
 │           └── solutions.md     # human-readable, kept separate to avoid spoilers
-├── mock-exams/
+├── mock-exams/                  # same layout as a chapter; make mock EXAM=<name>
+│   ├── part1/                   # Part I finale, Chapters 02 to 06 (done)
 │   ├── kcna/  kcsa/  ckad/  cka/  cks/
 └── appendices/
 ```
@@ -65,7 +66,7 @@ kubestronaut-book/
 ## 3. Lab infrastructure
 
 | Tier | Environment | Used for | Reset method |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | 1 | kind / k3d (multi-node) on the reader's machine | ~70% of chapters: workloads, config, services, storage, RBAC, scheduling | Delete namespace, or delete and recreate the cluster |
 | 2 | Multi-VM kubeadm cluster (**Vagrant**, decided) | Cluster install, upgrades, etcd backup/restore, node troubleshooting, most of CKS (AppArmor, seccomp, Falco, kernel-level work) | Restore VM snapshot |
 | 3 | Devcontainer / Codespaces / Killercoda scenarios | Readers without capable hardware | Rebuild container / restart scenario |
@@ -73,7 +74,7 @@ kubestronaut-book/
 **Reset contract** (identical in every chapter):
 
 | Script | Behavior |
-|---|---|
+| --- | --- |
 | `setup.sh` | Idempotent. Creates the exact starting state. Safe to run repeatedly. |
 | `reset.sh` | Tears down chapter resources and re-runs `setup.sh`. |
 | `verify.sh` | Runs one check per task; prints `PASS`/`FAIL` with a hint; exits non-zero on any failure. |
@@ -82,7 +83,7 @@ kubestronaut-book/
 
 Each lab runs in its own namespace (Tier 1) or snapshot (Tier 2) so that chapters never interfere with each other.
 
-**Hardware requirements to state in Chapter 3:** Tier 1 needs roughly 4 GB RAM free; Tier 2 needs roughly 8 to 16 GB. Point everyone else to Tier 3.
+**Hardware requirements to state in Chapter 3:** Tier 1 needs roughly 4 GB RAM free; Tier 2 needs roughly 5 GB more for its three VMs (with the kind cluster paused), plus about 30 GB of disk for the VMs and snapshots. Point everyone else to Tier 3.
 
 ---
 
@@ -120,7 +121,7 @@ Legend: **A** = KCNA, **S** = KCSA, **D** = CKAD, **C** = CKA, **X** = CKS. Tier
 ### Part I: Foundations
 
 | # | Chapter | Exams | Tier |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | 01 | Cloud-native landscape, the CNCF, and why Kubernetes exists | A | none |
 | 02 | Kubernetes architecture: control plane, nodes, API server, etcd | A C | 1 |
 | 03 | Lab setup and `kubectl` fluency (contexts, output formats, `explain`, dry-run) | A D C | 1 |
@@ -131,22 +132,22 @@ Legend: **A** = KCNA, **S** = KCSA, **D** = CKAD, **C** = CKA, **X** = CKS. Tier
 ### Part II: Building and running applications
 
 | # | Chapter | Exams | Tier |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | 07 | ConfigMaps, Secrets, environment variables, downward API | D C | 1 |
 | 08 | Jobs and CronJobs | D | 1 |
 | 09 | Multi-container pods: init containers, sidecars, patterns | D | 1 |
-| 10 | Probes, requests/limits, QoS classes | D C | 1 |
+| 10 | Probes, requests/limits, QoS classes, `securityContext` and capabilities | D C | 1 |
 | 11 | Services and cluster DNS | A D C | 1 |
 | 12 | Ingress and Gateway API | D C | 1 |
 | 13 | Storage basics: volumes, PV, PVC, StorageClass | D C | 1 |
 | 14 | Helm and Kustomize | D C | 1 |
-| 15 | Developer observability: logs, metrics, debugging applications | A D | 1 |
-| 16 | Application delivery: CI/CD, GitOps (Argo CD, Flux), deployment strategies | A D | 1 |
+| 15 | Developer observability and maintenance: logs, metrics, debugging applications, API deprecations | A D | 1 |
+| 16 | Container images and application delivery: building and changing images, CI/CD, GitOps (Argo CD, Flux), deployment strategies | A D | 1 |
 
 ### Part III: Cluster administration
 
 | # | Chapter | Exams | Tier |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | 17 | Scheduling: taints, tolerations, affinity, topology spread, priority, static pods | C | 1 |
 | 18 | Installing a cluster with kubeadm | C | 2 |
 | 19 | Cluster upgrades and node maintenance (cordon, drain) | C | 2 |
@@ -163,24 +164,25 @@ Legend: **A** = KCNA, **S** = KCSA, **D** = CKAD, **C** = CKA, **X** = CKS. Tier
 ### Part IV: Security
 
 | # | Chapter | Exams | Tier |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | 29 | Cloud-native security model: 4Cs, threat modeling, compliance frameworks | S | none |
 | 30 | Cluster setup hardening: CIS benchmark (kube-bench), API server flags, TLS | S X | 2 |
-| 31 | AuthN, AuthZ, and admission control (ValidatingAdmissionPolicy, OPA Gatekeeper, Kyverno) | S X | 1/2 |
+| 31 | AuthN, AuthZ, and admission control (ValidatingAdmissionPolicy, OPA Gatekeeper, Kyverno) | S X | 1 |
 | 32 | System hardening: AppArmor, seccomp, host OS footprint | X | 2 |
 | 33 | Microservice hardening: Pod Security Standards, securityContext, secrets management, sandboxed runtimes | S X | 2 |
-| 34 | Supply chain security: image scanning, signing, SBOMs, image admission policy | S X | 1/2 |
+| 34 | Supply chain security: image scanning, signing, SBOMs, image admission policy | S X | 1 |
 | 35 | Runtime security, monitoring, and auditing: Falco, audit logs, immutability, incident response | S X | 2 |
-| 36 | Network security in depth: default-deny, mTLS, encryption in transit | S X | 1/2 |
+| 36 | Network security in depth: default-deny, mTLS, encryption in transit | S X | 1 |
 
 ### Part V: Exam readiness
 
 | # | Chapter | Exams | Tier |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | 37 | Terminal speed: aliases, `vim`, `tmux`, `jq`/`yq`, imperative commands | D C X | 1 |
 | 38 | Navigating the allowed documentation | D C X | none |
 | 39 | Exam logistics and study plans per certification | all | none |
-| M1-M5 | Mock exams: KCNA, KCSA (question banks); CKAD, CKA, CKS (timed performance-based) | all | 1/2 |
+| P1 | Part I simulator: the killer.sh-style finale of Part I, over Chapters 02 to 06 (done, `mock-exams/part1`) | D C | 1 |
+| M1-M5 | Mock exams: KCNA, KCSA (question banks); CKAD, CKA, CKS (timed performance-based, killer.sh style) | all | 1/2 |
 
 ### Appendices
 
@@ -193,7 +195,7 @@ Command cheat sheet · YAML snippets · JSONPath reference · glossary · soluti
 Maintain `docs/coverage-matrix.md` as a table with one row per curriculum bullet:
 
 | Exam | Domain | Bullet (verbatim from curriculum) | Chapter | Lab task | Question IDs | Status |
-|---|---|---|---|---|---|---|
+| --- | --- | --- | --- | --- | --- | --- |
 
 This is the proof of "covers all materials." Review it at the end of every phase and before every release.
 
@@ -204,38 +206,53 @@ This is the proof of "covers all materials." Review it at the end of every phase
 Estimates assume one author working part-time; adjust for your pace and any co-authors.
 
 ### Phase 0: Foundations (2 to 3 weeks)
-*Status: scaffold, docs, tooling, CI, and the pilot chapter (04) are drafted. Remaining: run the pilot against a real kind cluster and fix what breaks.*
 
-- [ ] Style guide, chapter template, lab-authoring guide
-- [ ] Repo skeleton, `versions.env`, Makefile targets (`lab`, `reset`, `verify`, `solve`)
-- [ ] Shared shell library (`tools/lib.sh`) with assertion and wait helpers
-- [ ] CI pipeline: markdown lint, shellcheck, yamllint, kind-based lab runner
-- [ ] Question-bank format and renderer
-- [ ] Coverage matrix populated from all five current curricula (empty status)
-- [ ] **Pilot chapter (Ch. 04) finished to the full definition of done**
+*Status (2026-10-15): done except the outside reader. The framework, CI, and the pilot run against a real kind cluster; the hardening pass (exact-context plus cluster-marker safety check, no implicit kubeconfig changes, read-only `verify`, sentinel survival, schema validation, version-drift check, framework test harness) is in place.*
+
+- [x] Style guide, chapter template, lab-authoring guide
+- [x] Repo skeleton, `versions.env`, Makefile targets (`lab`, `reset`, `verify`, `solve`)
+- [x] Shared shell library (`tools/lib.sh`) with assertion and wait helpers
+- [x] CI pipeline: markdown lint, shellcheck, yamllint, kind-based lab runner
+- [x] Question-bank format and renderer
+- [x] Coverage matrix populated from all five current curricula
+- [ ] **Pilot chapter (Ch. 04) finished to the full definition of done** (only the outside reader is missing)
 - **Exit criterion:** a stranger can clone the repo, run `make lab CH=04`, complete the lab, break it, and `make reset CH=04`.
 
 ### Phase 1: Parts I and II (~8 weeks)
-*Status: Chapters 01 and 02 drafted (Ch02 lab has a read-only cluster tour with computed expected answers). Neither has been run on a real cluster yet. Chapter 03 is planned; decisions recorded: lab combines a shared seeded set of Pods, fresh per-task scenarios, and guided drills with a timed final task, and includes the full shell/exam setup (aliases, completion, vim).*
-- [ ] Chapters 01 to 16 drafted, tested, reviewed
-- [ ] Tier 3 devcontainer working
+
+*Status (2026-10-15): Chapters 01 to 16 and the Part I and Part II mock exams are drafted, and every Tier 1 lab passes `make test` on kind. Not yet read by anyone at the target level.*
+
+- [x] Chapters 01 to 16 drafted and tested
+- [ ] Chapters 01 to 16 reviewed by a reader at the target level
+- [ ] Tier 3 devcontainer working (`envs/devcontainer` does not exist yet)
 - **Exit criterion:** all Tier 1 labs pass the CI loop; coverage matrix shows KCNA and CKAD material complete.
 
 ### Phase 2: Part III (~8 weeks)
-- [ ] Tier 2 environment built first: Vagrant config, base-image build, snapshot-based reset
-- [ ] Chapters 17 to 28
+
+*Status (2026-10-15): 17 to 28 are drafted and tested (18 to 20 and 27 by hand on the VMs). The Part III mock exam (on the VMs) is done; Part III is complete apart from outside review.*
+
+- [x] Tier 2 environment built first: Vagrant config, staged build, snapshot-based reset (`envs/vagrant`, verified by hand 2026-10-12 with `make test-tier2-env` on all three snapshots)
+- [x] Chapters 17 to 28
+- [x] Part III mock exam (`mock-exams/part3`, on the Tier 2 VMs; verified by hand 2026-10-15)
 - **Exit criterion:** a full kubeadm cluster can be rebuilt from scratch, upgraded, and restored from an etcd backup by following the book alone.
 
 ### Phase 3: Part IV (~8 weeks)
+
+*Status (2026-10-24): 30, 31, 33, 34, and 36 are drafted and tested (30 and 33 on the Tier 2 VMs); 29 is drafted (concept chapter, no lab). Missing: 32, 35.*
+
 - [ ] Chapters 29 to 36; pin and test Trivy, Falco, kube-bench, Kyverno/Gatekeeper versions
 - **Exit criterion:** every CKS and KCSA bullet in the coverage matrix is mapped and tested.
 
 ### Phase 4: Part V and mock exams (~4 weeks)
-- [ ] Chapters 37 to 39
+
+*Status (2026-10-23): 37 is drafted and tested; 38 and 39 are drafted (concept chapters, no lab). The KCNA practice exam (`mock-exams/kcna`, 60 questions, `make quiz`) is done, and so are the full CKAD simulator (`mock-exams/ckad`, 20 questions over every CKAD domain) and the full CKA simulator (`mock-exams/cka`, 18 questions over every CKA domain, on the Tier 2 VMs). Missing: the KCSA practice exam and the full CKS simulator.*
+
+- [x] Chapters 37 to 39
 - [ ] Five mock exams; time-test each yourself and record how long it took
 - **Exit criterion:** mock exams reflect exam format and difficulty, and a beta reader finishes a mock within the allotted time on a first attempt only after studying the book.
 
 ### Phase 5: Beta and release (4+ weeks)
+
 - [ ] Recruit 3 to 5 beta readers at the target level
 - [ ] Collect stuck-points per chapter; fix environment bugs first, prose second
 - [ ] Full re-verification against current curricula and Kubernetes version
@@ -248,9 +265,10 @@ Estimates assume one author working part-time; adjust for your pace and any co-a
 ## 8. Risks and mitigations
 
 | Risk | Mitigation |
-|---|---|
+| --- | --- |
 | Curriculum or Kubernetes version changes mid-project | Single `versions.env`; coverage matrix; CI re-runs all labs on a version bump |
 | Lab scripts rot over time | Every lab in CI; scheduled weekly CI run against pinned and latest versions |
+| Verifier scale: ~100 hand-written `verify.sh` files become a maintenance burden | Revisit around 15 labs: if the same check patterns keep repeating, add a declarative `checks:` schema (resource, field, equals) for the simple cases and keep custom shell for behavioural ones. Not worth building at 3 labs |
 | Tier 2 hardware requirements exclude readers | Tier 3 hosted option; document minimum specs clearly |
 | Labs work on the author's machine only | Beta readers on Linux, macOS, and Windows (WSL2); CI on Linux |
 | Security tooling (Falco, Trivy) changes quickly | Pin versions; isolate tool setup in per-chapter `setup.sh` |
@@ -261,9 +279,9 @@ Estimates assume one author working part-time; adjust for your pace and any co-a
 
 ## 9. Immediate next steps
 
-1. ~~Decide the Tier 2 tool~~ Decided: **Vagrant**. (Note: Vagrant needs a provider such as VirtualBox or libvirt; the setup guide must say which are supported per OS. Apple Silicon Macs are the awkward case.)
-2. Write `docs/chapter-template.md` and `docs/lab-authoring.md`.
-3. Build the Makefile and `tools/lib.sh`.
-4. Write the pilot chapter (04: Pods) end to end.
-5. Set up CI and make the pilot chapter pass the setup, solve, verify loop.
-6. Run the Pods lab on a real kind cluster (`make cluster && make test CH=4`), then fix whatever breaks. The stub-`kubectl` test only proves the script logic.
+1. ~~Decide the Kubernetes version~~ Decided 2026-10-15 to stay on v1.35; on 2026-10-23 the Linux Foundation moved the CKA and the CKAD to v1.37, and the book moved its pin to v1.37.0 (previous version v1.36.5), re-running every lab and re-capturing the output that depends on the version. Check again before the beta.
+2. ~~Finish Part III on the VMs~~ Done 2026-10-15: Chapters 18, 19, 20, and 27.
+3. ~~Write the Part III mock exam~~ Done 2026-10-15 (`mock-exams/part3`).
+4. Finish Part IV: 32, 35 (29, 30, and 33 drafted 2026-10-24). Close the "Minimize base image footprint" gap in 34 (or 16).
+5. Build the Tier 3 devcontainer, so readers without the hardware for Tier 2 have a path.
+6. Find the first outside reader, starting with the pilot chapter (04).

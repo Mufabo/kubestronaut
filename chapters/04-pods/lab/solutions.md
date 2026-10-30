@@ -1,7 +1,8 @@
 # Chapter 04 lab: solutions
 
-Try each task before reading its solution. All commands assume your current
-namespace is `ch04-pods` (`make lab CH=4` sets it). Add `-n ch04-pods` if not.
+Try each task before reading its solution. The commands below assume
+`kubectl` defaults to `ch04-pods` (run `make use-namespace CH=4` once). If you
+have not done that, add `-n ch04-pods` to every command.
 
 ## Task 1: create `web`
 

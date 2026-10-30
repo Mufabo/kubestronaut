@@ -29,4 +29,4 @@ YAML
 info "Waiting for the where-am-i Pod to be scheduled and running"
 wait_for "where-am-i Running" 180 pod_phase_is "$LAB_NS" where-am-i Running
 
-info "Lab ready. This lab is read-only exploration; nothing here changes the cluster."
+info "Lab ready. Namespace: ${LAB_NS} (use -n ${LAB_NS}, or run: make use-namespace CH=2). This lab is read-only exploration."

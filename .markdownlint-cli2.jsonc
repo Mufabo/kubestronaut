@@ -3,6 +3,8 @@
     "MD013": false,
     "MD033": { "allowed_elements": ["details", "summary", "br"] },
     "MD041": false,
-    "MD024": { "siblings_only": true }
+    "MD024": { "siblings_only": true },
+    // Tab characters are real: kubectl describe and jsonpath @tsv output are tab-separated.
+    "MD010": false
   }
 }

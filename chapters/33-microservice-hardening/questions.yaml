@@ -1,0 +1,181 @@
+- id: ch33-q01
+  type: mcq
+  exams: [KCNA, KCSA, CKS]
+  question: "Which are the three Pod Security Standards, from the most to the least permissive?"
+  choices:
+    - "privileged, baseline, restricted"
+    - "open, default, locked"
+    - "restricted, baseline, privileged"
+    - "permissive, enforced, audited"
+  answer: A
+  explanation: "privileged allows everything, baseline blocks known privilege escalations (host namespaces, privileged containers, hostPath, and more), and restricted adds current hardening practice on top (non-root, seccomp, all capabilities dropped, no privilege escalation)."
+
+- id: ch33-q02
+  type: mcq
+  exams: [KCSA, CKS]
+  question: "A Pod mounts a hostPath volume and sets nothing else. Which levels does it pass?"
+  choices:
+    - "privileged, baseline, and restricted"
+    - "privileged only"
+    - "privileged and baseline"
+    - "None"
+  answer: B
+  explanation: "baseline forbids hostPath volumes, and restricted contains everything baseline forbids. Only privileged, which forbids nothing, admits the Pod."
+
+- id: ch33-q03
+  type: mcq
+  exams: [KCSA, CKS]
+  question: "What does the label pod-security.kubernetes.io/warn=restricted do on a Namespace?"
+  choices:
+    - "Rejects Pods that violate restricted"
+    - "Records violations in the audit log only"
+    - "Deletes running Pods that violate restricted"
+    - "Admits violating Pods, and returns a warning to the client that created them"
+  answer: D
+  explanation: "warn admits the Pod and warns the client; audit admits it and annotates the audit event; enforce rejects it. None of the modes touches Pods that already run."
+
+- id: ch33-q04
+  type: mcq
+  exams: [CKS]
+  question: "How do you find the running Pods of a Namespace that the baseline level would reject, without changing anything?"
+  choices:
+    - "kubectl label --dry-run=server --overwrite namespace NS pod-security.kubernetes.io/enforce=baseline"
+    - "kubectl get pods -n NS --show-labels"
+    - "kubectl auth can-i create pods -n NS"
+    - "kubectl label --dry-run=client namespace NS pod-security.kubernetes.io/enforce=baseline"
+  answer: A
+  explanation: "A server dry run makes Pod Security Admission evaluate the existing Pods against the new level and return a warning for each violator, without storing the label. A client dry run never reaches the API server, so it cannot."
+
+- id: ch33-q05
+  type: mcq
+  exams: [CKS]
+  question: "A Namespace enforces restricted. You create a Deployment whose Pod template sets no securityContext. What happens?"
+  choices:
+    - "The Deployment is rejected"
+    - "The Deployment is created with a warning, but its ReplicaSet fails to create any Pod"
+    - "The Pods are created and run as privileged"
+    - "Pod Security Admission adds the missing settings"
+  answer: B
+  explanation: "Pod Security Admission checks Pods. The Deployment and the ReplicaSet are stored (with a warning), and every Pod the ReplicaSet tries to create is rejected; the reason appears in FailedCreate events. Pod Security Admission validates, it never mutates."
+
+- id: ch33-q06
+  type: mcq
+  exams: [CKS]
+  question: "Which set of settings makes a busybox container (which runs as root by default) pass restricted?"
+  choices:
+    - "privileged: false and readOnlyRootFilesystem: true"
+    - "runAsNonRoot: true only"
+    - "runAsNonRoot: true, runAsUser: 1000, seccompProfile RuntimeDefault, allowPrivilegeEscalation: false, capabilities drop ALL"
+    - "hostNetwork: false and runAsGroup: 1000"
+  answer: C
+  explanation: "restricted needs non-root, a seccomp profile, no privilege escalation, and all capabilities dropped. runAsNonRoot alone would make the kubelet refuse to start an image whose user is root, so runAsUser must pick a non-root user."
+
+- id: ch33-q07
+  type: mcq
+  exams: [KCSA, CKS]
+  question: "Why is mounting a Secret as a file usually safer than putting it in an environment variable?"
+  choices:
+    - "Files are encrypted inside the container"
+    - "Environment variables are visible to the API server"
+    - "Files cannot be read by root"
+    - "Environment variables are inherited by child processes and leak into dumps and debug output; a file can have restrictive permissions and is read only where needed"
+  answer: D
+  explanation: "Environment variables spread: to every child process, to /proc, to crash reports. A mounted Secret is a file with a mode such as 0400, and it also follows updates to the Secret."
+
+- id: ch33-q08
+  type: mcq
+  exams: [CKS]
+  question: "Which setting stops Kubernetes from mounting a ServiceAccount token into a Pod?"
+  choices:
+    - "serviceAccountName: none"
+    - "automountServiceAccountToken: false, on the Pod or its ServiceAccount"
+    - "readOnlyRootFilesystem: true"
+    - "runAsNonRoot: true"
+  answer: B
+  explanation: "By default every Pod gets a projected token for its ServiceAccount. automountServiceAccountToken: false removes it; a compromised container then has no credentials for the API server."
+
+- id: ch33-q09
+  type: mcq
+  exams: [KCSA, CKS]
+  question: "You add an EncryptionConfiguration with aescbc first and identity second, and the API server restarts with it. Which Secrets are now encrypted in etcd?"
+  choices:
+    - "All Secrets, at once"
+    - "Only Secrets in kube-system"
+    - "Only Secrets written from now on; existing ones stay unencrypted until they are written again"
+    - "None, until etcd restarts"
+  answer: C
+  explanation: "The first provider encrypts new writes; identity lets the API server still read the old, unencrypted values. Rewrite the existing Secrets (kubectl get secrets -A -o json | kubectl replace -f -) to encrypt them."
+
+- id: ch33-q10
+  type: mcq
+  exams: [CKS]
+  question: "How do you prove that a Secret is encrypted at rest?"
+  choices:
+    - "kubectl get secret NAME -o yaml shows encrypted data"
+    - "kubectl describe secret NAME shows the provider"
+    - "The Secret's data is base64-encoded"
+    - "Read it from etcd with etcdctl: the stored value starts with k8s:enc:PROVIDER:v1:KEY-NAME:"
+  answer: D
+  explanation: "The API always returns the decrypted value, base64-encoded as usual. Only the raw value in etcd shows whether the API server encrypted it, and with which provider and key."
+
+- id: ch33-q11
+  type: mcq
+  exams: [KCSA, CKS]
+  question: "What does gVisor add between a container and the node?"
+  choices:
+    - "A user-space kernel that handles the container's system calls, so the container does not use the host kernel directly"
+    - "A full virtual machine with its own guest kernel for every container"
+    - "A firewall for the container's traffic"
+    - "Encryption of the container's file system"
+  answer: A
+  explanation: "gVisor's Sentry implements the Linux system calls in user space and uses only a small set of the host's. Kata Containers is the one that runs each Pod in a lightweight virtual machine."
+
+- id: ch33-q12
+  type: mcq
+  exams: [KCSA, CKS]
+  question: "What does the handler field of a RuntimeClass name?"
+  choices:
+    - "The node the Pods must run on"
+    - "The image the Pods must use"
+    - "The runtime configured in the container runtime on the nodes, such as runsc for gVisor"
+    - "The admission plugin that checks the Pods"
+  answer: C
+  explanation: "A Pod with runtimeClassName uses the RuntimeClass's handler, which must match a runtime the nodes' containerd or CRI-O has configured. If a node lacks it, the Pod fails to start there; the RuntimeClass's scheduling field can restrict such Pods to nodes that have it."
+
+- id: ch33-q13
+  type: task
+  exams: [CKS]
+  prompt: "In a Namespace that enforces restricted, run a Pod that reads the Secret app-key from a file in mode 0400, has no ServiceAccount token, and runs as user 1000."
+  solution: |
+    ```yaml
+    apiVersion: v1
+    kind: Pod
+    metadata:
+      name: reader
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      volumes:
+        - name: key
+          secret:
+            secretName: app-key
+            defaultMode: 0400
+      containers:
+        - name: reader
+          image: busybox:1.36
+          command: ["sleep", "infinity"]
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: key
+              mountPath: /etc/key
+              readOnly: true
+    ```
+
+    The four restricted settings let the Pod in; the volume's defaultMode sets the file mode, and automountServiceAccountToken removes the token. Mode 0400 leaves the file readable by root only; add fsGroup and mode 0440 if user 1000 must read it.

@@ -1,0 +1,155 @@
+- id: ch29-q01
+  type: mcq
+  exams: [KCNA, KCSA]
+  question: "What are the four layers of the 4Cs model of cloud-native security, from the outside in?"
+  choices:
+    - "Code, Container, Cluster, Cloud"
+    - "Cloud, Cluster, Container, Code"
+    - "Cluster, Cloud, Code, Container"
+    - "Container, Code, Cloud, Cluster"
+  answer: B
+  explanation: "Cloud (or data center) is outermost, then the Cluster, then the Container, and the Code in the middle. Each layer depends on the security of the layers outside it, so a strong inner layer cannot make up for a weak outer one."
+
+- id: ch29-q02
+  type: mcq
+  exams: [KCNA, KCSA]
+  question: "In the 4Cs model, which layer does a NetworkPolicy belong to?"
+  choices:
+    - "Cloud"
+    - "Container"
+    - "Code"
+    - "Cluster"
+  answer: D
+  explanation: "NetworkPolicies are Kubernetes objects configured through the API, like RBAC, admission control, and Pod Security, so they belong to the Cluster layer. Firewalling the nodes would be Cloud; image scanning, Container."
+
+- id: ch29-q03
+  type: mcq
+  exams: [KCSA]
+  question: "The CNCF Cloud Native Security Whitepaper sorts controls by lifecycle phase. Which list is in the right order?"
+  choices:
+    - "Develop, distribute, deploy, runtime"
+    - "Build, test, release, monitor"
+    - "Plan, code, deploy, operate"
+    - "Distribute, develop, runtime, deploy"
+  answer: A
+  explanation: "Develop (writing safe code), distribute (shipping what was built: scanning, signing), deploy (deciding what may run: admission), and runtime (containing and watching what runs). The Kubernetes documentation now uses these phases rather than the 4Cs."
+
+- id: ch29-q04
+  type: mcq
+  exams: [KCSA, CKS]
+  question: "Why should Pods be prevented from reaching 169.254.169.254 on a cloud provider's nodes?"
+  choices:
+    - "It is the API server's internal address"
+    - "It is the cluster DNS service"
+    - "It is the instance metadata endpoint, which hands out the node's cloud credentials to anything on the node"
+    - "It is the kubelet's read-only port"
+  answer: C
+  explanation: "The metadata endpoint serves the node's identity and credentials. A compromised Pod that can reach it can act with the node's cloud permissions. Block it with egress NetworkPolicies, and give workloads their own narrow cloud identity."
+
+- id: ch29-q05
+  type: mcq
+  exams: [KCSA]
+  question: "With a managed Kubernetes service, which of these is still your responsibility?"
+  choices:
+    - "Patching the etcd servers"
+    - "The physical security of the data center"
+    - "The control plane machines' operating system"
+    - "RBAC rules, NetworkPolicies, and the images your workloads run"
+  answer: D
+  explanation: "Under the shared responsibility model, the provider runs and patches the control plane and the infrastructure. What you configure through the API and what you deploy (RBAC, policies, images, Pod settings) stays yours, as does the cloud account."
+
+- id: ch29-q06
+  type: mcq
+  exams: [KCSA]
+  question: "After breaking into a cluster, an attacker creates a DaemonSet that starts a reverse shell on every node, so that access survives Pod restarts. Which threat from the Kubernetes threat model is this?"
+  choices:
+    - "Persistence"
+    - "Denial of service"
+    - "Attacker on the network"
+    - "Access to sensitive data"
+  answer: A
+  explanation: "Persistence means keeping access after the first foothold is gone: static Pods, DaemonSets, CronJobs, webhooks, or long-lived credentials. RBAC limits on who may create them, and audit logs or runtime detection to notice them, are the controls."
+
+- id: ch29-q07
+  type: mcq
+  exams: [KCSA, CKS]
+  question: "A user may only create Pods in the Namespace payments. Why is that a privilege escalation risk?"
+  choices:
+    - "Pods can change their own Namespace"
+    - "A Pod can run as any ServiceAccount in the Namespace, so the user gets every right those ServiceAccounts have, including Secrets they may read"
+    - "Creating Pods implies the right to delete Nodes"
+    - "It is not a risk; Pods have no permissions"
+  answer: B
+  explanation: "The Pod's serviceAccountName can name any ServiceAccount in its Namespace, and the user can then use that identity from inside the Pod. Pods can also mount any Secret in the Namespace. Treat the right to create Pods as access to everything the Namespace's ServiceAccounts and Secrets hold."
+
+- id: ch29-q08
+  type: mcq
+  exams: [KCSA]
+  question: "Why is a client certificate issued through a CertificateSigningRequest a persistence risk?"
+  choices:
+    - "It never expires"
+    - "It grants cluster-admin automatically"
+    - "Kubernetes cannot revoke it; it stays valid until it expires or the cluster CA is replaced"
+    - "It is stored unencrypted on every node"
+  answer: C
+  explanation: "Kubernetes has no certificate revocation list for client certificates. An attacker who gets one keeps that identity until expiry, so keep expirationSeconds short, restrict who may approve CSRs, and remove the RBAC bindings of a compromised identity."
+
+- id: ch29-q09
+  type: mcq
+  exams: [KCSA]
+  question: "Which threat modeling method checks each component for Spoofing, Tampering, Repudiation, Information disclosure, Denial of service, and Elevation of privilege?"
+  choices:
+    - "MITRE ATT&CK"
+    - "An attack tree"
+    - "The CIS Benchmark"
+    - "STRIDE"
+  answer: D
+  explanation: "STRIDE is named after those six threat types. MITRE ATT&CK catalogs observed attacker tactics and techniques, an attack tree breaks one attacker goal into steps, and the CIS Benchmark is a control framework, not a threat model."
+
+- id: ch29-q10
+  type: mcq
+  exams: [KCSA, CKS]
+  question: "Which framework does kube-bench check a cluster against?"
+  choices:
+    - "The CIS Kubernetes Benchmark"
+    - "PCI DSS"
+    - "MITRE ATT&CK"
+    - "SLSA"
+  answer: A
+  explanation: "kube-bench runs the CIS Kubernetes Benchmark's checks on the control plane, etcd, and the nodes, and reports each as pass, fail, or warn with a remediation. Chapter 30 uses it."
+
+- id: ch29-q11
+  type: mcq
+  exams: [KCSA]
+  question: "Which of these is a compliance framework rather than a control framework or a threat model?"
+  choices:
+    - "The NSA/CISA Kubernetes Hardening Guide"
+    - "STRIDE"
+    - "PCI DSS"
+    - "The Pod Security Standards"
+  answer: C
+  explanation: "PCI DSS is an obligation for organizations that handle card payments, which they must show they meet. The hardening guide and the Pod Security Standards prescribe settings (control frameworks), and STRIDE finds threats."
+
+- id: ch29-q12
+  type: mcq
+  exams: [KCNA, KCSA, CKS]
+  question: "Which statement about container isolation is true?"
+  choices:
+    - "Containers on a node share its kernel, so their isolation depends on how they are configured or on a sandboxed runtime"
+    - "Each container has its own kernel, like a virtual machine"
+    - "Containers cannot make system calls to the node"
+    - "A container running as root is still harmless to the node"
+  answer: A
+  explanation: "A container is a process on the node's kernel, isolated by namespaces and cgroups. Non-root users, dropped capabilities, seccomp, and AppArmor narrow what it can do; sandboxed runtimes such as gVisor or Kata Containers add a separate kernel boundary."
+
+- id: ch29-q13
+  type: task
+  exams: [KCSA, CKS]
+  prompt: "On your cluster, find every subject that holds the cluster-admin ClusterRole cluster-wide, and check whether the default ServiceAccount of the Namespace default may read Secrets."
+  solution: |
+    ```bash
+    kubectl get clusterrolebindings -o jsonpath='{range .items[?(@.roleRef.name=="cluster-admin")]}{.metadata.name}{"\t"}{.subjects[*].kind}{"\t"}{.subjects[*].name}{"\n"}{end}'
+    kubectl auth can-i get secrets -n default --as=system:serviceaccount:default:default
+    ```
+
+    On the book's kind cluster, only the groups `system:masters` and `kubeadm:cluster-admins` hold cluster-admin, and the default ServiceAccount gets `no`. A ServiceAccount in the first list, or a `yes` in the second, would be the first thing to remove.

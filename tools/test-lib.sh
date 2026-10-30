@@ -3,6 +3,7 @@
 # Needs a `kubectl` on PATH but NO cluster: everything runs against a throwaway
 # kubeconfig, so it never touches your real one.
 #   tools/test-lib.sh
+# shellcheck disable=SC2034  # the CHECKS_* counters are read by lib.sh functions
 set -uo pipefail
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 tmp="$(mktemp -d)"
@@ -80,6 +81,22 @@ expect "current context is left unchanged in that case" "other" "$(cur_ctx)"
 fresh_kubeconfig
 if lab_restore_kubectx "${tmp}/never-saved" >/dev/null 2>&1; then ok "restore with nothing saved is a no-op"; else bad "restore with nothing saved is a no-op"; fi
 expect "and changes nothing" "orig" "$(cur_ctx)"
+
+# 7. check_optional never fails the lab; finish_checks reports it
+CHECKS_PASSED=0; CHECKS_FAILED=0; CHECKS_OPTIONAL_DONE=0; CHECKS_OPTIONAL_TODO=0
+yes_cmd() { true; }
+no_cmd()  { false; }
+check 1 "required ok" "h" yes_cmd >/dev/null
+check_optional 2 "stretch not done" "h" no_cmd >/dev/null
+check_optional 3 "stretch done" "h" yes_cmd >/dev/null
+summary="$(finish_checks)"; rc=$?
+expect "an undone optional task does not fail the lab" "0" "$rc"
+if [[ "$summary" == *"Optional tasks done: 1 of 2"* ]]; then ok "optional progress is reported"; else bad "optional progress is reported ($summary)"; fi
+CHECKS_PASSED=0; CHECKS_FAILED=0; CHECKS_OPTIONAL_DONE=0; CHECKS_OPTIONAL_TODO=0
+check 1 "required fails" "h" no_cmd >/dev/null
+check_optional 2 "stretch done" "h" yes_cmd >/dev/null
+finish_checks >/dev/null; rc=$?
+expect "a failing required task still fails the lab" "1" "$rc"
 
 echo
 if ((failures == 0)); then echo "All kubeconfig helper tests passed."; else echo "${failures} test(s) failed."; exit 1; fi

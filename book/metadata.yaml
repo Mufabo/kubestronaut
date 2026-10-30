@@ -1,0 +1,9 @@
+# Metadata for the EPUB (tools/build-epub.sh). The build adds the edition date
+# and commit as the subtitle.
+title: "Kubestronaut: a hands-on textbook"
+lang: en-US
+subject: Kubernetes certification (KCNA, KCSA, CKAD, CKA, CKS)
+description: >-
+  A hands-on textbook for the five Kubestronaut certifications. Each chapter
+  comes with a self-checking lab in the book's repository.
+rights: See the repository's license.

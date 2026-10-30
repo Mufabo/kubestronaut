@@ -60,7 +60,7 @@ Notice the shape: a **hub and spoke** around the API server. Components do not c
 ### Control plane components
 
 | Component | Role |
-|---|---|
+| --- | --- |
 | **kube-apiserver** | The front door. Exposes the Kubernetes API over HTTPS, authenticates and authorizes requests, validates and stores objects. The only component that talks to etcd. Stateless: you can run several behind a load balancer. |
 | **etcd** | A consistent, distributed key-value store (Raft consensus) that holds all cluster state. The source of truth. Back it up. |
 | **kube-scheduler** | Watches for Pods with no node assigned, picks the best node for each, and records the choice. It does not start containers. |
@@ -72,7 +72,7 @@ A production control plane is typically **highly available**: three (or another 
 ### Node components
 
 | Component | Role |
-|---|---|
+| --- | --- |
 | **kubelet** | The agent on every node. Watches for Pods assigned to its node, tells the container runtime to run them, runs probes, and reports status back. It runs as a system service on the node, **not** as a Pod. |
 | **Container runtime** | Actually runs containers (containerd or CRI-O), driven by the kubelet through the CRI. |
 | **kube-proxy** | Programs the node's network rules (iptables, IPVS, or nftables) so that traffic to a Service reaches its Pods. |
@@ -139,7 +139,7 @@ sequenceDiagram
 **API groups, versions, and kinds.** Resources are organized into groups and versioned:
 
 | Group | Examples | `apiVersion` in a manifest |
-|---|---|---|
+| --- | --- | --- |
 | core (no name) | Pod, Service, ConfigMap, Namespace, Node | `v1` |
 | `apps` | Deployment, ReplicaSet, StatefulSet, DaemonSet | `apps/v1` |
 | `batch` | Job, CronJob | `batch/v1` |
@@ -230,6 +230,11 @@ Start the lab so your cluster and namespace are ready:
 make lab CH=2
 ```
 
+The lab does not change your `kubectl` settings. Most of this chapter looks at
+`kube-system` (use `-n kube-system`), and the lab's own Pod lives in `ch02-arch`
+(use `-n ch02-arch`). If you would rather have `kubectl` default to `ch02-arch`,
+run `make use-namespace CH=2`, and `make teardown CH=2` when you are finished.
+
 The output below is **example output**; names, IPs, and ages will differ on your machine.
 
 ### Look at the nodes
@@ -240,9 +245,9 @@ kubectl get nodes -o wide
 
 ```text
 NAME                  STATUS   ROLES           AGE   VERSION   INTERNAL-IP   ...
-kbook-control-plane   Ready    control-plane   12m   v1.35.0   172.18.0.4    ...
-kbook-worker          Ready    <none>          12m   v1.35.0   172.18.0.2    ...
-kbook-worker2         Ready    <none>          12m   v1.35.0   172.18.0.3    ...
+kbook-control-plane   Ready    control-plane   74m   v1.37.0   172.18.0.3    ...
+kbook-worker          Ready    <none>          74m   v1.37.0   172.18.0.2    ...
+kbook-worker2         Ready    <none>          74m   v1.37.0   172.18.0.4    ...
 ```
 
 The `ROLES` column comes from node labels. Workers have no role label by default. In kind, each "node" is a Docker container, which is why they have `172.18.x.x` addresses.
@@ -337,54 +342,69 @@ Those four files *are* the control plane. This step depends on kind and Docker; 
 
 ## Hands-on lab
 
+The lab works like a KodeKloud lab: one task at a time, a check after each,
+and progress that is saved between sessions.
+
 ```bash
-make lab CH=2        # start (or restart) the lab
-make verify CH=2     # check your work
-make reset CH=2      # back to the starting state
+make lab CH=2        # set up the lab and show task 1
+make check CH=2      # check the current task; if it is right, show the next
+make question CH=2   # show the current task again
+make reset CH=2      # back to the starting state and task 1
+make teardown CH=2   # remove the lab and delete the answer files
 ```
 
-The lab is **read-only exploration**: nothing you do here changes the cluster. Answers go into small files under `/tmp`. Each task's expected answer is computed from your live cluster, so it will match yours even if node names differ.
+The lab is **read-only exploration**: nothing you do here changes the cluster.
+Answers go into small files under `/tmp`. Each expected answer is computed
+from your live cluster, so it matches yours even if node names differ. Stuck?
+The check prints a hint. Solutions are in [`lab/solutions.md`](lab/solutions.md).
 
-### Task 1: Find the control plane node (⏱ 2 min, ★☆☆)
+### Task 1: Find the control plane node
 
-Save the **name of the control plane node** into `/tmp/ch02-cp-node.txt`.
+Which node runs the control plane? Save its name to a file.
 
-*Success looks like:* the file holds the node name and nothing else.
+- File: `/tmp/ch02-cp-node.txt`
+- Content: the node name only
 
-### Task 2: Find etcd (⏱ 2 min, ★☆☆)
+### Task 2: Find etcd
 
-Save the **name of the Pod that runs etcd** into `/tmp/ch02-etcd-pod.txt`.
+Which Pod runs etcd? Save its name to a file.
 
-*Success looks like:* the file holds the exact Pod name.
+- File: `/tmp/ch02-etcd-pod.txt`
+- Content: the exact Pod name
 
-### Task 3: Identify the static Pods (⏱ 5 min, ★★☆)
+### Task 3: Identify the static Pods
 
-Save the names of **all static Pods in the `kube-system` namespace** into `/tmp/ch02-static-pods.txt`, one per line. Which components are static Pods and which are not?
+Save the names of **all static Pods** in the Namespace `kube-system`, and
+nothing else.
 
-*Success looks like:* the file lists exactly the static Pods' names.
+- File: `/tmp/ch02-static-pods.txt`
+- Format: one name per line
 
-### Task 4: Where did the scheduler put it? (⏱ 2 min, ★☆☆)
+Think about which components are static Pods, and which are not.
 
-The Pod `where-am-i` in namespace `ch02-arch` was placed by the scheduler. Save the **name of the node it runs on** into `/tmp/ch02-pod-node.txt`.
+### Task 4: Where did the scheduler put it?
 
-*Success looks like:* the file holds the node name.
+The scheduler placed the Pod `where-am-i`. Save the name of the node it runs on.
 
-### Task 5: Find the API for Deployments (⏱ 3 min, ★★☆)
+- Pod: `where-am-i` in Namespace `ch02-arch`
+- File: `/tmp/ch02-pod-node.txt`
 
-Find which API group and version serves **Deployments**. Save it in the form `group/version` into `/tmp/ch02-deployment-api.txt`.
+### Task 5: Find the API for Deployments
 
-*Success looks like:* the file contains the group/version string you would write in a manifest's `apiVersion`.
+Which API group and version serve **Deployments**? Save the answer exactly as
+you would write it in a manifest's `apiVersion`.
 
-Stuck? Hints appear in the `verify` output. Solutions are in [`lab/solutions.md`](lab/solutions.md).
+- File: `/tmp/ch02-deployment-api.txt`
+- Format: `group/version`
 
 ## Exam tips
 
 > **Exam tip:** Know which components are **control plane** (apiserver, etcd, scheduler, controller-manager, cloud-controller-manager) and which are **node** components (kubelet, kube-proxy, runtime). Questions frequently ask you to sort them, and `kube-proxy` is a favorite trap: it runs on every node, not on the control plane only.
-
+>
 > **Exam tip:** On CKA tasks about a broken control plane, the first step is usually to check the static Pod manifests in `/etc/kubernetes/manifests` and the kubelet's logs, because the API server itself may be down and `kubectl` unusable.
-
+>
 > **Exam tip:** `kubectl api-resources` and `kubectl explain` work offline from the cluster. Use them to find the correct `apiVersion` and field names quickly instead of searching documentation.
-
+>
 > **Exam tip:** Only the API server talks to etcd. If an answer choice has the scheduler or kubelet reading etcd directly, it is wrong.
 
 ## Common mistakes

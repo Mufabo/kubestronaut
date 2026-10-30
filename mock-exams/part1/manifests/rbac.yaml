@@ -1,0 +1,35 @@
+# Question 13: ServiceAccount auditor (p1-titan) may read in p1-titan via the
+# built-in view role, and may create and delete (but not list) Pods in p1-io.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: auditor
+  namespace: p1-titan
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: auditor-view
+  namespace: p1-titan
+roleRef: {apiGroup: rbac.authorization.k8s.io, kind: ClusterRole, name: view}
+subjects:
+  - {kind: ServiceAccount, name: auditor, namespace: p1-titan}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: pod-writer
+  namespace: p1-io
+rules:
+  - apiGroups: [""]
+    resources: [pods]
+    verbs: [create, delete]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: auditor-pod-writer
+  namespace: p1-io
+roleRef: {apiGroup: rbac.authorization.k8s.io, kind: Role, name: pod-writer}
+subjects:
+  - {kind: ServiceAccount, name: auditor, namespace: p1-titan}

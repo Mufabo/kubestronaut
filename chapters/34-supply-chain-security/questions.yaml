@@ -1,0 +1,146 @@
+- id: ch34-q01
+  type: mcq
+  exams: [KCSA]
+  question: "Which property makes a digest a better pin than a tag?"
+  choices:
+    - "A digest is shorter and easier to read"
+    - "A digest identifies one exact set of bytes, while a tag can be moved to a different image"
+    - "A digest is automatically scanned for vulnerabilities"
+    - "A digest is accepted by every registry, and tags are not"
+  answer: B
+  explanation: "A digest is the hash of the image manifest, so it names exactly one image. A tag is a name the publisher can point at a different image later."
+
+- id: ch34-q02
+  type: mcq
+  exams: [KCSA]
+  question: "A scanner reports no known vulnerabilities for an image today. Which statement is correct?"
+  choices:
+    - "The image will never have a vulnerability"
+    - "The image has no vulnerabilities in any package the scanner can identify, measured against the database at scan time"
+    - "The image is signed and therefore safe"
+    - "The image has a provenance attestation"
+  answer: B
+  explanation: "A scan is a snapshot against a vulnerability database on the day it ran. It only sees the packages it can identify, and new CVEs can appear later without any change to the image."
+
+- id: ch34-q03
+  type: mcq
+  exams: [KCSA]
+  question: "What does an SBOM provide?"
+  choices:
+    - "A proof that the image was built by an approved pipeline"
+    - "A machine-readable list of the components in an image, with versions"
+    - "A cryptographic signature over the image digest"
+    - "A list of the open ports the container exposes"
+  answer: B
+  explanation: "An SBOM lists components such as OS and language packages with their versions. It helps answer whether you are affected by a new vulnerability, but it does not prove how the image was built or who signed it."
+
+- id: ch34-q04
+  type: mcq
+  exams: [CKS]
+  question: "Which artifact proves who signed a particular image digest?"
+  choices:
+    - "An SBOM"
+    - "A vulnerability scan report"
+    - "A signature, such as one made with cosign"
+    - "The image's tag"
+  answer: C
+  explanation: "A signature binds a signing identity to a digest. An SBOM lists components, a scan lists known vulnerabilities, and a tag is a mutable name."
+
+- id: ch34-q05
+  type: mcq
+  exams: [CKS]
+  question: "Which artifact records how an image was built, such as the source commit and the builder?"
+  choices:
+    - "A provenance attestation"
+    - "A ValidatingAdmissionPolicy"
+    - "A NetworkPolicy"
+    - "A Secret of type kubernetes.io/tls"
+  answer: A
+  explanation: "A provenance attestation records the build: the source, the builder, and the steps. SLSA grades how strongly that record is protected."
+
+- id: ch34-q06
+  type: mcq
+  exams: [CKS]
+  question: "An admission policy rejects Pods whose containers use images from Docker Hub, but it checks only spec.containers. A Pod has an init container from Docker Hub. What happens?"
+  choices:
+    - "The Pod is refused, because init containers are always checked"
+    - "The Pod is accepted, because the policy does not check init containers"
+    - "The Pod is refused with a warning"
+    - "The init container is replaced with a trusted image"
+  answer: B
+  explanation: "An init container runs before the app and can use any image. A policy that only iterates over spec.containers leaves init containers unchecked, which is a common gap."
+
+- id: ch34-q07
+  type: mcq
+  exams: [CKS]
+  question: "Which admission check can a ValidatingAdmissionPolicy perform by itself, without a policy engine?"
+  choices:
+    - "Verify a cosign signature against the registry"
+    - "Check that every image starts with an approved registry prefix"
+    - "Confirm that an image has no CVEs"
+    - "Fetch the image's provenance attestation from the registry"
+  answer: B
+  explanation: "A ValidatingAdmissionPolicy evaluates CEL over the object, so it can check strings such as the registry prefix or the presence of @sha256:. Signature and attestation checks need network access to the registry and trust roots, which a policy engine provides."
+
+- id: ch34-q08
+  type: mcq
+  exams: [KCSA]
+  question: "A container image has a valid signature, and its scan lists several high-severity CVEs. What does the signature establish?"
+  choices:
+    - "That the image has no vulnerabilities"
+    - "That a particular identity signed this digest, so the image was not changed after signing"
+    - "That the image was built from the reviewed source with a trusted builder"
+    - "That the image is a minimal image"
+  answer: B
+  explanation: "A signature proves origin and integrity of a digest, not safety. The CVEs remain a separate finding. Provenance, not the signature, is what describes the build."
+
+- id: ch34-q09
+  type: mcq
+  exams: [CKS]
+  question: "Which practice makes a Pod run the same image every time it is started?"
+  choices:
+    - "Using the image tag latest"
+    - "Pinning the image by digest in the Pod's spec"
+    - "Setting imagePullPolicy to Always"
+    - "Adding a label to the Pod"
+  answer: B
+  explanation: "latest and other tags can point to a new image at any time. imagePullPolicy controls when the node pulls, not which bytes it gets. A digest pins the exact image."
+
+- id: ch34-q10
+  type: mcq
+  exams: [CKS]
+  question: "Which prefix rule is safest for allowing only images from registry.example.com?"
+  choices:
+    - "image.startsWith('registry.example.com')"
+    - "image.contains('registry.example.com')"
+    - "image.startsWith('registry.example.com/')"
+    - "image.endsWith('.example.com')"
+  answer: C
+  explanation: "The trailing slash stops registry.example.com.evil.test/app from passing the check. Without it, a prefix match also accepts a longer hostname. contains and endsWith are looser still."
+
+- id: ch34-q11
+  type: task
+  exams: [CKS]
+  prompt: "Show the image digest that the Pod `web` in Namespace `shop` is running, using its status. Save only the digest, in the form `sha256:` followed by 64 hex characters, to `/tmp/web-digest.txt`."
+  solution: |
+    ```bash
+    id="$(kubectl -n shop get pod web -o jsonpath='{.status.containerStatuses[0].imageID}')"
+    printf '%s\n' "${id##*@}" > /tmp/web-digest.txt
+    cat /tmp/web-digest.txt
+    ```
+
+    The `imageID` in the status is the digest the node pulled. Its part after `@` is the
+    digest, and `${id##*@}` keeps only that part. If the imageID has no `@`, the whole value is
+    the digest, and this command still works.
+
+- id: ch34-q12
+  type: task
+  exams: [CKS]
+  prompt: "Show a manifest for a Deployment `api` in Namespace `shop` that runs `registry.example.com/shop/api` pinned to the digest `sha256:` followed by 64 `a` characters. Print only the image line from the manifest."
+  solution: |
+    ```bash
+    kubectl -n shop create deployment api --image=registry.example.com/shop/api@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa --dry-run=client -o yaml | grep 'image:'
+    ```
+
+    `--dry-run=client -o yaml` prints the manifest without creating the Deployment. The
+    image reference keeps the `@sha256:` form, so the Pod runs that exact digest.

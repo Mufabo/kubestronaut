@@ -1,0 +1,144 @@
+- id: ch37-q01
+  type: mcq
+  exams: [CKAD, CKA]
+  question: "Which command is the shortest correct way to list Deployments in the current Namespace?"
+  choices:
+    - "kubectl get deployments"
+    - "k get deploy"
+    - "kubectl list deployment"
+    - "k show deployments"
+  answer: B
+  explanation: "deploy is the short name of deployments, and k is the alias for kubectl in the exam environment. The verb is get; list and show are not kubectl verbs."
+
+- id: ch37-q02
+  type: mcq
+  exams: [CKAD, CKA]
+  question: "What does kubectl create deployment web --image=nginx:1.27 --dry-run=client -o yaml do?"
+  choices:
+    - "Creates the Deployment and prints its YAML"
+    - "Prints the Deployment's YAML without creating it"
+    - "Writes a file named web.yaml in the current directory"
+    - "Validates the image against the registry"
+  answer: B
+  explanation: "A client-side dry run prints the object without sending it to the API server. It writes nothing to the cluster, and it does not create a file unless you redirect the output."
+
+- id: ch37-q03
+  type: mcq
+  exams: [CKAD, CKA]
+  question: "Which command shows the allowed values and the type of restartPolicy in a Pod, without searching the documentation?"
+  choices:
+    - "kubectl describe pod restartPolicy"
+    - "kubectl explain pod.spec.restartPolicy"
+    - "kubectl get pod --field restartPolicy"
+    - "kubectl api-resources restartPolicy"
+  answer: B
+  explanation: "kubectl explain prints the type, the allowed values, and a description for any field path. describe shows the state of an object, and the other two commands do not take a field."
+
+- id: ch37-q04
+  type: mcq
+  exams: [CKAD, CKA]
+  question: "You need the name of one Pod's node. Which command is the fastest correct answer?"
+  choices:
+    - "kubectl get pod web -o yaml and then scroll to spec.nodeName"
+    - "kubectl get pod web -o jsonpath='{.spec.nodeName}'"
+    - "kubectl describe pod web and read the whole output"
+    - "kubectl get nodes"
+  answer: B
+  explanation: "jsonpath prints exactly one field, so there is nothing to scan. Reading the full YAML or the describe output costs time without giving a better answer."
+
+- id: ch37-q05
+  type: mcq
+  exams: [CKAD, CKA]
+  question: "Which jq filter prints the names of Pods whose first container has restarted at least once, given kubectl get pods -o json?"
+  choices:
+    - "jq '.items[].metadata.name'"
+    - "jq -r '.items[] | select(.status.containerStatuses[0].restartCount > 0) | .metadata.name'"
+    - "jq '.status.restartCount'"
+    - "jq -r '.items[] | .restartCount'"
+  answer: B
+  explanation: "The filter selects the items whose restart count is above zero, and prints the name of each. Without select, every name is printed, and the other filters read a field that is not on the Pod object."
+
+- id: ch37-q06
+  type: mcq
+  exams: [CKAD, CKA]
+  question: "Which yq command changes the replica count in deploy.yaml, in place?"
+  choices:
+    - "yq '.spec.replicas = 5' deploy.yaml"
+    - "yq -i '.spec.replicas = 5' deploy.yaml"
+    - "yq -r '.spec.replicas' deploy.yaml > 5"
+    - "sed -i 's/replicas: .*/5/' deploy.yaml and then yq -i"
+  answer: B
+  explanation: "yq -i edits the file in place. Without -i, yq prints the changed document to standard output and leaves the file as it was."
+
+- id: ch37-q07
+  type: mcq
+  exams: [CKAD, CKA]
+  question: "In vim, which command replaces every occurrence of old with new in the whole file?"
+  choices:
+    - ":s/old/new"
+    - ":%s/old/new/g"
+    - "ciw old new"
+    - ":replace old new all"
+  answer: B
+  explanation: "The % range covers every line, and the g flag replaces every match on each line. :s on its own affects only the current line, and the first match there."
+
+- id: ch37-q08
+  type: mcq
+  exams: [CKAD, CKA]
+  question: "Which shell shortcut reuses the last argument of the previous command, such as a file name you just created?"
+  choices:
+    - "!!"
+    - "!$"
+    - "Ctrl+r"
+    - "Alt+a"
+  answer: B
+  explanation: "!$ expands to the last argument of the previous command. !! repeats the whole previous command, and Ctrl+r searches the history."
+
+- id: ch37-q09
+  type: mcq
+  exams: [CKAD, CKA]
+  question: "Which is the most reliable way to wait for a Deployment to finish rolling out in a script?"
+  choices:
+    - "sleep 60"
+    - "kubectl rollout status deployment/web --timeout=120s"
+    - "kubectl get deploy web and check it once"
+    - "kubectl delete pods and hope"
+  answer: B
+  explanation: "rollout status waits until the rollout completes or the timeout passes, and it returns an error on failure. A fixed sleep is either too short or wastes time, and one check can run before the rollout starts."
+
+- id: ch37-q10
+  type: mcq
+  exams: [CKAD, CKA]
+  question: "Under time pressure, which habit saves the most time on a YAML manifest task?"
+  choices:
+    - "Writing the whole manifest from memory, then applying it"
+    - "Generating the manifest with --dry-run=client -o yaml, changing only what the task asks for, then applying it"
+    - "Copying a manifest from the documentation without reading it"
+    - "Applying the manifest first and fixing it after the check fails"
+  answer: B
+  explanation: "A generated manifest already has the required structure, such as selectors and labels, so you change only what the task asks for. Writing from memory is where most errors come from."
+
+- id: ch37-q11
+  type: task
+  exams: [CKAD, CKA]
+  prompt: "In Namespace `drill`, create a Deployment named `api` with image `nginx:1.27` and 2 replicas, without writing its YAML by hand. Save the manifest you generated to `/tmp/api.yaml`, then apply it."
+  solution: |
+    ```bash
+    kubectl -n drill create deployment api --image=nginx:1.27 --replicas=2 --dry-run=client -o yaml > /tmp/api.yaml
+    kubectl apply -f /tmp/api.yaml
+    ```
+
+    The `--dry-run=client -o yaml` form prints the manifest, and the redirect keeps it.
+    `apply` creates the Deployment from that file. Check with `kubectl -n drill get deploy api`.
+
+- id: ch37-q12
+  type: task
+  exams: [CKAD, CKA]
+  prompt: "In Namespace `drill`, print the names of the Pods that have a container restarted at least once, one per line, using a filter rather than reading the output by eye."
+  solution: |
+    ```bash
+    kubectl -n drill get pods -o json | jq -r '.items[] | select(.status.containerStatuses[0].restartCount > 0) | .metadata.name'
+    ```
+
+    `jq -r` prints the names without quotes. The `select` keeps only the Pods whose first
+    container has a restart count above zero.

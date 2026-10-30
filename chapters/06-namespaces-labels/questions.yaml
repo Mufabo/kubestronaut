@@ -1,0 +1,157 @@
+- id: ch06-q01
+  type: mcq
+  exams: [KCNA, CKA]
+  question: "Which of these resources is cluster-scoped rather than namespaced?"
+  choices:
+    - "ConfigMap"
+    - "ServiceAccount"
+    - "PersistentVolume"
+    - "Deployment"
+  answer: C
+  explanation: "PersistentVolumes, nodes, StorageClasses, ClusterRoles, and namespaces themselves belong to the whole cluster. ConfigMaps, ServiceAccounts, and Deployments live in a namespace. `kubectl api-resources --namespaced=false` lists the cluster-scoped kinds."
+
+- id: ch06-q02
+  type: mcq
+  exams: [KCNA, CKA]
+  question: "Pods `a` and `b` run in different namespaces, and the cluster has no NetworkPolicies. Can `a` connect to `b`'s IP address?"
+  choices:
+    - "No, namespaces block traffic between them"
+    - "Only if both namespaces carry the same label"
+    - "Yes, namespaces do not isolate network traffic by themselves"
+    - "Only through the API server"
+  answer: C
+  explanation: "A namespace scopes names, RBAC, quotas, and policies, but it is not a network boundary. Pod-to-Pod traffic is allowed across namespaces until a NetworkPolicy restricts it."
+
+- id: ch06-q03
+  type: mcq
+  exams: [CKAD, CKA]
+  question: "Which of these is a valid label?"
+  choices:
+    - "`owner=Jane Doe`"
+    - "`app.kubernetes.io/name=checkout`"
+    - "`-tier=web`"
+    - "`release=` followed by a 100-character string"
+  answer: B
+  explanation: "A key may have a DNS-subdomain prefix and a name of up to 63 characters that starts and ends with a letter or digit. Values are at most 63 characters and cannot contain spaces, so `Jane Doe` and a 100-character value are rejected, and `-tier` starts with a dash."
+
+- id: ch06-q04
+  type: mcq
+  exams: [CKAD, CKA]
+  question: "Which selector matches Pods that have no `tier` label at all?"
+  choices:
+    - "`-l tier=`"
+    - "`-l '!tier'`"
+    - "`-l 'tier notin ()'`"
+    - "`-l tier`"
+  answer: B
+  explanation: "`!tier` means the key does not exist (`DoesNotExist` in a manifest). `-l tier` means it exists, and `tier=` matches only Pods whose `tier` label is present with an empty value."
+
+- id: ch06-q05
+  type: mcq
+  exams: [CKAD, CKA]
+  question: "You change the label `app=web` to `app=web-debug` on one Pod of a Deployment whose selector is `app=web`. What happens?"
+  choices:
+    - "The Pod is deleted by its ReplicaSet"
+    - "The API server rejects the change"
+    - "The ReplicaSet releases the Pod, which keeps running without an owner, and creates a replacement"
+    - "The Deployment changes its selector to match"
+  answer: C
+  explanation: "Selectors are the only link between a controller and its Pods. The ReplicaSet no longer counts the Pod, removes its ownerReference, and creates a new Pod to reach its replica count. The released Pod keeps running until you delete it."
+
+- id: ch06-q06
+  type: mcq
+  exams: [CKAD, CKA]
+  question: "A Deployment `web` (selector `app=web`) runs 3 replicas. You create a bare Pod with the label `app=web`. What does the Deployment's ReplicaSet do with it?"
+  choices:
+    - "It adopts the Pod and deletes one of its own to stay at 3"
+    - "Nothing: the ReplicaSet's selector also requires the `pod-template-hash` label, which the bare Pod lacks"
+    - "It adopts the Pod and runs 4 replicas"
+    - "It deletes the bare Pod immediately"
+  answer: B
+  explanation: "A Deployment adds `pod-template-hash` to the selector of each ReplicaSet it creates, so a hand-made Pod does not match the ReplicaSet's whole selector and is left alone. A bare ReplicaSet with only `app=web` in its selector would adopt it."
+
+- id: ch06-q07
+  type: mcq
+  exams: [CKAD]
+  question: "Which piece of metadata belongs in an annotation rather than a label?"
+  choices:
+    - "`tier=frontend`, used by a Service to pick Pods"
+    - "The ticket number and a one-paragraph description of the last change"
+    - "`env=prod`, used to list all production Pods"
+    - "`app=checkout`, used by a Deployment's selector"
+  answer: B
+  explanation: "Labels are for selecting and must be short. Free text that nothing selects on, such as descriptions, contacts, or build information, belongs in annotations, whose values can be long."
+
+- id: ch06-q08
+  type: mcq
+  exams: [CKA]
+  question: "`kubectl get pods --field-selector metadata.labels.app=web` fails. Why?"
+  choices:
+    - "Field selectors need `==` instead of `=`"
+    - "Labels are not selectable fields; use `-l app=web`"
+    - "Field selectors only work with `-A`"
+    - "The `app` label does not exist"
+  answer: B
+  explanation: "Only a few fields per resource support field selectors (for Pods, for example `metadata.name`, `spec.nodeName`, and `status.phase`). Labels are always selected with `-l`."
+
+- id: ch06-q09
+  type: task
+  exams: [CKAD, CKA]
+  prompt: "Create a namespace `staging` with the labels `env=staging` and `team=web`, without writing a file."
+  solution: |
+    ```bash
+    kubectl create namespace staging
+    kubectl label namespace staging env=staging team=web
+    kubectl get namespace staging --show-labels
+    ```
+
+- id: ch06-q10
+  type: task
+  exams: [CKAD, CKA]
+  prompt: "List the Pods in every namespace that run on the node `kbook-worker2`, with their namespace and name only."
+  solution: |
+    ```bash
+    kubectl get pods -A --field-selector spec.nodeName=kbook-worker2 \
+      -o custom-columns=NAMESPACE:.metadata.namespace,NAME:.metadata.name
+    ```
+
+    `-o wide` with `grep kbook-worker2` works too but also matches Pods whose name contains the node name.
+
+- id: ch06-q11
+  type: task
+  exams: [CKAD, CKA]
+  prompt: "In namespace `dev`, add the label `release=stable` to every Pod whose `tier` label is `web` or `cache`, and remove the label `temp` from every Pod that has it."
+  solution: |
+    ```bash
+    kubectl -n dev label pods -l 'tier in (web,cache)' release=stable --overwrite
+    kubectl -n dev label pods -l temp temp-
+    ```
+
+    `--overwrite` covers Pods that already have a different `release` value.
+
+- id: ch06-q12
+  type: task
+  exams: [CKA]
+  prompt: "The Pod `trainer` in namespace `ml` is Pending because it requires a node labelled `gpu=true`. Make it schedulable on node `kbook-worker` without changing the Pod."
+  solution: |
+    ```bash
+    kubectl -n ml describe pod trainer         # Node-Selectors: gpu=true, FailedScheduling
+    kubectl label node kbook-worker gpu=true
+    kubectl -n ml get pod trainer -o wide
+    ```
+
+- id: ch06-q13
+  type: task
+  exams: [CKAD, CKA]
+  prompt: "Write the selector of a Deployment that manages Pods labelled `app=queue` whose `tier` is either `worker` or `batch`, and that never manages Pods labelled `canary` (with any value)."
+  solution: |
+    ```yaml
+    selector:
+      matchLabels:
+        app: queue
+      matchExpressions:
+        - {key: tier, operator: In, values: [worker, batch]}
+        - {key: canary, operator: DoesNotExist}
+    ```
+
+    All conditions must hold. The Pod template's labels must satisfy this selector, or the API server rejects the Deployment.

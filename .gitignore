@@ -1,4 +1,14 @@
 chapters/*/lab/.state/
+mock-exams/*/lab/.state/
 *.swp
 .DS_Store
 __pycache__/
+envs/vagrant/.state/
+envs/vagrant/.vagrant/
+
+# Scratch scripts that capture real command output for the chapters
+.capture/
+
+# The EPUB build (make epub)
+dist/
+build/

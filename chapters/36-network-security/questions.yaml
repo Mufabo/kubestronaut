@@ -1,0 +1,155 @@
+- id: ch36-q01
+  type: mcq
+  exams: [CKS]
+  question: "A Pod is not selected by any NetworkPolicy. What traffic may it send and receive?"
+  choices:
+    - "None, until a policy allows it"
+    - "All of it, because no policy isolates it"
+    - "Only DNS"
+    - "Only traffic from its own Namespace"
+  answer: B
+  explanation: "A Pod is isolated only when a policy selects it. Without a selecting policy, it accepts and sends any traffic the CNI allows."
+
+- id: ch36-q02
+  type: mcq
+  exams: [CKS]
+  question: "A policy selects a Pod and has policyTypes: [Ingress] with no ingress rules. What happens to the Pod?"
+  choices:
+    - "It accepts all ingress traffic"
+    - "It accepts no ingress traffic, while its egress is unaffected"
+    - "It loses its network interface"
+    - "It can only receive traffic from the kube-system Namespace"
+  answer: B
+  explanation: "Selecting a Pod for Ingress isolates it for ingress, and with no allow rules nothing is accepted. Egress is not named in policyTypes, so it stays open."
+
+- id: ch36-q03
+  type: mcq
+  exams: [CKS]
+  question: "Under a default-deny egress policy, which rule must exist for Pods to resolve Service names?"
+  choices:
+    - "An egress rule to the kube-system Namespace on port 53 over UDP and TCP"
+    - "An ingress rule on every Service"
+    - "A rule that allows port 443 to the API server"
+    - "A rule that allows all traffic from the node IP"
+  answer: A
+  explanation: "DNS queries are egress traffic to the cluster DNS Pods in kube-system on port 53. Without an allow rule, the default deny blocks them and names stop resolving."
+
+- id: ch36-q04
+  type: mcq
+  exams: [CKS]
+  question: "To let Pods labeled app=frontend call Pods labeled app=api on port 8080, which set of rules is required?"
+  choices:
+    - "Only an ingress rule on the app=api Pods"
+    - "Only an egress rule on the app=frontend Pods"
+    - "An egress rule on the app=frontend Pods and an ingress rule on the app=api Pods"
+    - "A ClusterRole that grants the frontend Pods access to the api Pods"
+  answer: C
+  explanation: "Both halves of a flow need a policy. The sender needs egress allowed, and the receiver needs ingress allowed. A missing half drops the traffic."
+
+- id: ch36-q05
+  type: mcq
+  exams: [CKS]
+  question: "A rule has a from entry with a namespaceSelector and a podSelector in the same list item. What does it allow?"
+  choices:
+    - "Pods matching the podSelector in Namespaces matching the namespaceSelector"
+    - "Every Pod in the matching Namespaces, plus every matching Pod in any Namespace"
+    - "Pods matching the podSelector in any Namespace"
+    - "Nothing, because the two selectors cannot be combined"
+  answer: A
+  explanation: "Selectors in one list item are combined with AND. Separate list items are combined with OR, so the same two selectors split into two items would allow much more."
+
+- id: ch36-q06
+  type: mcq
+  exams: [CKS]
+  question: "Which statement about NetworkPolicy is correct?"
+  choices:
+    - "It encrypts traffic between Pods"
+    - "It decides whether packets are delivered, and it does not encrypt them"
+    - "It authenticates the identity of each Pod with a certificate"
+    - "It filters requests by HTTP path"
+  answer: B
+  explanation: "NetworkPolicy works at IP, port, and label level. It decides delivery only. Encryption needs TLS or an encrypted network path, and identity needs mTLS. HTTP filtering needs a proxy or a mesh."
+
+- id: ch36-q07
+  type: mcq
+  exams: [CKS]
+  question: "Which protection requires both the client and the server to present a certificate?"
+  choices:
+    - "Server TLS"
+    - "Mutual TLS (mTLS)"
+    - "Encryption of the network path between nodes"
+    - "Secrets encryption at rest"
+  answer: B
+  explanation: "In mTLS each side presents a certificate, so each knows the other's identity. Server TLS verifies only the server. Network path encryption and encryption at rest protect different things."
+
+- id: ch36-q08
+  type: mcq
+  exams: [CKS]
+  question: "Which Secret type is used to hold a certificate and private key for an Ingress to terminate TLS?"
+  choices:
+    - "Opaque"
+    - "kubernetes.io/service-account-token"
+    - "kubernetes.io/tls"
+    - "kubernetes.io/dockerconfigjson"
+  answer: C
+  explanation: "A TLS Secret has the type kubernetes.io/tls and the keys tls.crt and tls.key. Ingress and Gateway resources reference it to terminate TLS."
+
+- id: ch36-q09
+  type: mcq
+  exams: [CKS]
+  question: "By default, how are Secrets stored in etcd?"
+  choices:
+    - "Encrypted with the node's private key"
+    - "Base64-encoded, which is not encryption"
+    - "Hashed, so they cannot be read back"
+    - "Encrypted with the API server's TLS certificate"
+  answer: B
+  explanation: "Without an EncryptionConfiguration, Secret values are only base64-encoded in etcd. Anyone who can read the etcd data can decode them, so encryption at rest must be enabled explicitly."
+
+- id: ch36-q10
+  type: mcq
+  exams: [CKS]
+  question: "A NetworkPolicy is applied correctly, but traffic is not blocked. Which cause is most likely?"
+  choices:
+    - "The policy's name is longer than 20 characters"
+    - "The cluster's CNI does not enforce NetworkPolicy"
+    - "NetworkPolicies only apply to Pods that have a Service"
+    - "The policy must be applied to the kube-system Namespace"
+  answer: B
+  explanation: "NetworkPolicy objects are stored, but only a CNI that enforces them acts on them. The default kindnet CNI does not, so the policy has no effect. Calico and Cilium do enforce it."
+
+- id: ch36-q11
+  type: task
+  exams: [CKS]
+  prompt: "In Namespace `shop`, create a NetworkPolicy named `deny-all` that selects every Pod and denies both ingress and egress. Then show the policy's description, as kubectl describe prints it."
+  solution: |
+    ```bash
+    kubectl -n shop apply -f - <<'YAML'
+    apiVersion: networking.k8s.io/v1
+    kind: NetworkPolicy
+    metadata:
+      name: deny-all
+    spec:
+      podSelector: {}
+      policyTypes: ["Ingress", "Egress"]
+    YAML
+    kubectl -n shop describe networkpolicy deny-all
+    ```
+
+    The empty `podSelector` selects every Pod in the Namespace, and listing both
+    policy types with no rules denies both directions. `describe` prints "Selected
+    pods are isolated" for each direction.
+
+- id: ch36-q12
+  type: task
+  exams: [CKS]
+  prompt: "Create a TLS Secret named `web-tls` in Namespace `shop` from the files `web.crt` and `web.key` in the current directory. Show the Secret's type."
+  solution: |
+    ```bash
+    kubectl -n shop create secret tls web-tls --cert=web.crt --key=web.key
+    kubectl -n shop get secret web-tls -o jsonpath='{.type}'
+    ```
+
+    The `tls` subcommand sets the type to `kubernetes.io/tls`, and stores the files
+    under the keys `tls.crt` and `tls.key`. The last command prints
+    `kubernetes.io/tls`.

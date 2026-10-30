@@ -1,0 +1,200 @@
+- id: ch17-q01
+  type: mcq
+  exams: [CKA]
+  question: "What are the two steps the kube-scheduler goes through to choose a node for a Pod?"
+  choices:
+    - "Create, then bind"
+    - "Filter out nodes the Pod cannot run on, then score the rest and pick the best"
+    - "Pull the image, then start the container"
+    - "Check the taints, then delete the Pod"
+  answer: B
+  explanation: "The scheduler filters nodes against the Pod's requirements (selectors, taints, required rules, capacity), then scores the remaining nodes with weights from preferred rules, spread balance and free capacity. The highest score wins. Image pulls and container starts happen later, on the chosen node."
+
+- id: ch17-q02
+  type: mcq
+  exams: [CKA]
+  question: "A Pod has `requiredDuringSchedulingIgnoredDuringExecution` node affinity for `disk=ssd`, and no node carries that label. What happens?"
+  choices:
+    - "The Pod is scheduled on any node, and the rule is ignored"
+    - "The Pod stays Pending, because the required rule removes every node"
+    - "The Pod is scheduled, then evicted after five minutes"
+    - "The Pod is scheduled, and the label is added to a node automatically"
+  answer: B
+  explanation: "A required rule is a filter: if no node matches, the Pod is not placed. The `IgnoredDuringExecution` part means that a node whose labels change after scheduling does not evict the Pod. A preferred rule would only add score, and the Pod would still be scheduled."
+
+- id: ch17-q03
+  type: mcq
+  exams: [CKA]
+  question: "Which taint effect evicts Pods that are already running on the node, unless they tolerate the taint?"
+  choices:
+    - "`NoSchedule`"
+    - "`PreferNoSchedule`"
+    - "`NoExecute`"
+    - "`NoEvict`"
+  answer: C
+  explanation: "`NoExecute` stops new Pods from being scheduled, and it also evicts running Pods that do not tolerate the taint. `tolerationSeconds` lets a Pod stay for a limited time. `NoSchedule` affects only new Pods, and `PreferNoSchedule` is a soft version of it."
+
+- id: ch17-q04
+  type: mcq
+  exams: [CKA]
+  question: "You want no two replicas of one application on the same node, and the Pod should wait if that is impossible. Which rule does that?"
+  choices:
+    - "Pod anti-affinity with `requiredDuringSchedulingIgnoredDuringExecution` and topologyKey `kubernetes.io/hostname`"
+    - "Pod affinity with `preferredDuringScheduling` and topologyKey `zone`"
+    - "A toleration with the effect `PreferNoSchedule`"
+    - "A nodeSelector on the node name"
+  answer: A
+  explanation: "Required pod anti-affinity on the hostname topology key keeps matching Pods on different nodes, and the Pod waits when no such node exists. Preferred rules only add weight, and a nodeSelector pins Pods to nodes rather than separating them."
+
+- id: ch17-q05
+  type: mcq
+  exams: [CKA]
+  question: "A Deployment has `maxSkew: 1` and `whenUnsatisfiable: DoNotSchedule` with topologyKey `kubernetes.io/hostname`. What does that enforce?"
+  choices:
+    - "No node may run more than one replica"
+    - "The number of matching Pods on any two nodes may differ by at most 1, or the new Pod waits"
+    - "Every node must run exactly the same number of Pods, always"
+    - "Replicas are spread by image version, not by node"
+  answer: B
+  explanation: "`maxSkew` is the largest allowed difference in matching Pod counts between any two domains. With `DoNotSchedule`, a Pod that would exceed it waits. Unlike anti-affinity, the rule allows several Pods per node as long as the counts stay close."
+
+- id: ch17-q06
+  type: mcq
+  exams: [CKA]
+  question: "A Pod was created with `priorityClassName: high` and no node has room for it. What can the scheduler do?"
+  choices:
+    - "Nothing; priorities only order the queue"
+    - "Preempt lower-priority Pods on a node to make room, if removing them makes the node fit"
+    - "Resize the other Pods' requests"
+    - "Move a Pod from a node with a higher priority"
+  answer: B
+  explanation: "Preemption evicts lower-priority Pods from a node so that the higher-priority Pod fits there. Priorities also order the scheduling queue. The scheduler does not resize Pods, and it never removes a Pod of equal or higher priority to place another."
+
+- id: ch17-q07
+  type: mcq
+  exams: [CKA]
+  question: "Where do the static Pods of a kubeadm control plane come from, and what does the owner reference `Node` on their mirror Pods tell you?"
+  choices:
+    - "From Deployments in kube-system; the owner says which node runs them"
+    - "From manifest files in the kubelet's staticPodPath directory, so the Pod is static and deleting the mirror does not stop it"
+    - "From the API server's database; the owner is the cluster"
+    - "From DaemonSets; the owner is the node pool"
+  answer: B
+  explanation: "The kubelet runs static Pods from manifest files in the directory set by `staticPodPath`, which kubeadm sets to `/etc/kubernetes/manifests`. Each has a read-only mirror Pod in the API server, and the owner reference of kind `Node` marks it as static. Deleting the mirror does not stop the Pod; the kubelet recreates it from the file."
+
+- id: ch17-q08
+  type: task
+  exams: [CKA]
+  prompt: "In namespace `prod`, create a Deployment `web` with 3 replicas of `nginx:1.27`, labelled `app=web`. Spread its Pods across nodes with a maximum skew of 1, using the hostname as the topology, and let the Pods schedule anyway if the spread cannot be met. Show the Pods' nodes."
+  solution: |
+    ```bash
+    cat <<'YAML' | kubectl -n prod apply -f -
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: web
+    spec:
+      replicas: 3
+      selector:
+        matchLabels:
+          app: web
+      template:
+        metadata:
+          labels:
+            app: web
+        spec:
+          topologySpreadConstraints:
+            - maxSkew: 1
+              topologyKey: kubernetes.io/hostname
+              whenUnsatisfiable: ScheduleAnyway
+              labelSelector:
+                matchLabels:
+                  app: web
+          containers:
+            - name: web
+              image: nginx:1.27
+    YAML
+    kubectl -n prod rollout status deployment/web
+    kubectl -n prod get pods -l app=web -o custom-columns=NAME:.metadata.name,NODE:.spec.nodeName
+    ```
+
+    The constraint lives in the Pod template, so the Pods carry it. `ScheduleAnyway`
+    keeps the Pods schedulable when the spread is impossible.
+
+- id: ch17-q09
+  type: task
+  exams: [CKA]
+  prompt: "Create a PriorityClass named `app-critical` with the value `50000`. In namespace `prod`, create a Pod `api` running `busybox:1.36` with the command `sleep 3600` that uses this class. Show the Pod's priority class."
+  solution: |
+    ```bash
+    cat <<'YAML' | kubectl apply -f -
+    apiVersion: scheduling.k8s.io/v1
+    kind: PriorityClass
+    metadata:
+      name: app-critical
+    value: 50000
+    YAML
+    cat <<'YAML' | kubectl -n prod apply -f -
+    apiVersion: v1
+    kind: Pod
+    metadata:
+      name: api
+    spec:
+      priorityClassName: app-critical
+      containers:
+        - name: api
+          image: busybox:1.36
+          command: ["sleep", "3600"]
+    YAML
+    kubectl -n prod get pod api -o jsonpath='{.spec.priorityClassName}{"\n"}'
+    ```
+
+    PriorityClasses are cluster-scoped, so there is no namespace on the first object.
+
+- id: ch17-q10
+  type: task
+  exams: [CKA]
+  prompt: "On the control plane node, the etcd static Pod runs in namespace `kube-system`. Write its Pod name, and nothing else, to `/tmp/ch17-etcd.txt`. Then show the manifest path the kubelet reads static Pods from."
+  solution: |
+    ```bash
+    kubectl -n kube-system get pods -o jsonpath='{range .items[?(@.metadata.ownerReferences[0].kind=="Node")]}{.metadata.name}{"\n"}{end}' | grep etcd > /tmp/ch17-etcd.txt
+    docker exec kbook-control-plane grep staticPodPath /var/lib/kubelet/config.yaml
+    ```
+
+    Mirror Pods have a `Node` owner. The kubelet reads static Pod manifests from
+    `staticPodPath`, which is `/etc/kubernetes/manifests` here. The second command
+    needs Docker because the kind control plane is a container; on a real cluster, read
+    the kubelet's configuration file on the node.
+
+- id: ch17-q11
+  type: task
+  exams: [CKA]
+  prompt: "In namespace `prod`, create a Pod `flex` running `busybox:1.36` with the command `sleep 3600`. It prefers nodes labelled `disk=ssd` (a preferred node affinity with weight 50), but it may run anywhere else. Show the node the Pod runs on."
+  solution: |
+    ```bash
+    cat <<'YAML' | kubectl -n prod apply -f -
+    apiVersion: v1
+    kind: Pod
+    metadata:
+      name: flex
+    spec:
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 50
+              preference:
+                matchExpressions:
+                  - key: disk
+                    operator: In
+                    values: [ssd]
+      containers:
+        - name: flex
+          image: busybox:1.36
+          command: ["sleep", "3600"]
+    YAML
+    kubectl -n prod wait --for=condition=Ready pod/flex --timeout=120s
+    kubectl -n prod get pod flex -o jsonpath='{.spec.nodeName}{"\n"}'
+    ```
+
+    A preferred rule is a weight, not a requirement: the Pod runs on an `ssd` node
+    when one exists, and elsewhere otherwise.

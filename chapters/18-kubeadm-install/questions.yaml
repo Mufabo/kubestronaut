@@ -1,0 +1,186 @@
+- id: ch18-q01
+  type: mcq
+  exams: [CKA]
+  question: "Which of these does `kubeadm init` install for you?"
+  choices:
+    - "A CNI plugin such as Calico"
+    - "The container runtime"
+    - "CoreDNS and kube-proxy"
+    - "A load balancer for the API server"
+  answer: C
+  explanation: "kubeadm installs the two essential add-ons, CoreDNS and kube-proxy. The container runtime and the kubelet must already be on the machine, and the CNI plugin and any load balancer are your choice and your job."
+
+- id: ch18-q02
+  type: mcq
+  exams: [CKA]
+  question: "Right after `kubeadm init`, `kubectl get nodes` shows the control plane node as `NotReady` and CoreDNS is `Pending`. What is the most likely reason?"
+  choices:
+    - "The certificates have not been signed yet"
+    - "No CNI plugin has been installed"
+    - "The node still has the control plane taint"
+    - "The kubelet is not installed"
+  answer: B
+  explanation: "The kubelet reports the node ready only when a CNI plugin is configured, and CoreDNS cannot get a Pod IP without one. Installing the Pod network fixes both. The control plane taint does not make a node `NotReady`."
+
+- id: ch18-q03
+  type: mcq
+  exams: [CKA]
+  question: "Which cgroup driver should containerd use on a kubeadm node with systemd as its init system?"
+  choices:
+    - "cgroupfs, because it is containerd's default"
+    - "systemd, matching the kubelet's default"
+    - "Either, as long as swap is off"
+    - "None; the kubelet manages cgroups itself"
+  answer: B
+  explanation: "The kubelet and the container runtime must use the same cgroup driver, and kubeadm configures the kubelet for systemd. In containerd that is `SystemdCgroup = true` in `/etc/containerd/config.toml`."
+
+- id: ch18-q04
+  type: mcq
+  exams: [CKA]
+  question: "Why are `kubelet`, `kubeadm`, and `kubectl` held with `apt-mark hold` after installation?"
+  choices:
+    - "Held packages start faster"
+    - "So that a routine package upgrade does not move them to a version the cluster is not ready for"
+    - "kubeadm refuses to run unless they are held"
+    - "Holding them disables automatic certificate rotation"
+  answer: B
+  explanation: "Kubernetes upgrades follow a fixed order (control plane first, then the kubelets), and the kubelet must never be newer than the API server. Holding the packages keeps `apt upgrade` from breaking that."
+
+- id: ch18-q05
+  type: mcq
+  exams: [CKA]
+  question: "The nodes' own network is `192.168.56.0/24`. Which `--pod-network-cidr` is a safe choice?"
+  choices:
+    - "192.168.0.0/16"
+    - "10.96.0.0/12"
+    - "10.244.0.0/16"
+    - "192.168.56.0/24"
+  answer: C
+  explanation: "The Pod network must not overlap the node network or the Service network. `192.168.0.0/16` contains the node network, and `10.96.0.0/12` is kubeadm's default Service network. `10.244.0.0/16` overlaps neither."
+
+- id: ch18-q06
+  type: mcq
+  exams: [CKA]
+  question: "What does `--discovery-token-ca-cert-hash` in a `kubeadm join` command protect against?"
+  choices:
+    - "A joining node with an expired token"
+    - "The joining node trusting an impostor API server"
+    - "Two nodes joining with the same hostname"
+    - "The control plane running out of certificates"
+  answer: B
+  explanation: "The hash is of the cluster CA's public key. The joining node checks the CA it receives against it before trusting the API server, which prevents a man-in-the-middle from posing as the control plane."
+
+- id: ch18-q07
+  type: mcq
+  exams: [CKA]
+  question: "How long are the certificates kubeadm creates valid by default?"
+  choices:
+    - "The CAs and all certificates for 1 year"
+    - "The CAs for 10 years, the other certificates for 1 year"
+    - "The CAs for 1 year, the other certificates for 10 years"
+    - "All of them for 90 days"
+  answer: B
+  explanation: "`kubeadm certs check-expiration` shows it: about 364 days on each certificate and about 9 years remaining on each CA. `kubeadm upgrade` renews the certificates, and `kubeadm certs renew` does it on demand."
+
+- id: ch18-q08
+  type: mcq
+  exams: [CKA]
+  question: "You plan to add two more control plane nodes later. Which flag must you pass to `kubeadm init` now?"
+  choices:
+    - "`--control-plane-endpoint` with the load balancer's address"
+    - "`--apiserver-advertise-address` with the load balancer's address"
+    - "`--pod-network-cidr`"
+    - "`--ignore-preflight-errors=all`"
+  answer: A
+  explanation: "The control plane endpoint is written into the certificates and every kubeconfig. Without it the cluster is tied to the first node's address, and adding it later means re-issuing certificates. `--upload-certs` is also useful, but it can be redone later."
+
+- id: ch18-q09
+  type: mcq
+  exams: [CKA]
+  question: "In a stacked etcd topology with three control plane nodes, how many nodes can fail while etcd still accepts writes?"
+  choices:
+    - "0"
+    - "1"
+    - "2"
+    - "3"
+  answer: B
+  explanation: "etcd needs a majority of its members, here 2 of 3, to agree on writes. Losing one node leaves a majority; losing two does not. Five members survive two failures."
+
+- id: ch18-q10
+  type: mcq
+  exams: [CKA, KCNA]
+  question: "Where does kubeadm put the definitions of the API server, controller manager, scheduler, and etcd on the control plane node?"
+  choices:
+    - "In Deployments in the kube-system Namespace"
+    - "In systemd unit files under /etc/systemd/system"
+    - "As static Pod manifests in /etc/kubernetes/manifests"
+    - "In the kubeadm-config ConfigMap"
+  answer: C
+  explanation: "The kubelet runs those components as static Pods from `/etc/kubernetes/manifests`. Editing one of the files makes the kubelet restart that component. The `kubeadm-config` ConfigMap stores kubeadm's own settings, not the Pods."
+
+- id: ch18-q11
+  type: task
+  exams: [CKA]
+  prompt: "The `kubeadm join` command printed by `kubeadm init` two days ago no longer works. On the control plane node, produce a working join command and use it to join the worker `node2`."
+  solution: |
+    ```bash
+    sudo kubeadm token create --print-join-command
+    ssh node2
+    sudo kubeadm join 192.168.56.10:6443 --token <token> --discovery-token-ca-cert-hash sha256:<hash>
+    exit
+    kubectl get nodes
+    ```
+
+    Bootstrap tokens expire after 24 hours by default. `token create --print-join-command` makes a new token and prints the complete command, including the CA hash.
+
+- id: ch18-q12
+  type: task
+  exams: [CKA]
+  prompt: "On a kubeadm cluster, write the Pod network range the cluster was initialized with into `/tmp/ch18-q12.txt`, and nothing else."
+  solution: |
+    ```bash
+    kubectl -n kube-system get configmap kubeadm-config -o jsonpath='{.data.ClusterConfiguration}' | grep podSubnet
+    kubectl -n kube-system get configmap kubeadm-config -o jsonpath='{.data.ClusterConfiguration}' |
+      awk '/podSubnet:/ {print $2}' > /tmp/ch18-q12.txt
+    cat /tmp/ch18-q12.txt
+    ```
+
+    kubeadm stores the ClusterConfiguration it used in the `kubeadm-config` ConfigMap. Another source is the controller manager's `--cluster-cidr` flag in `/etc/kubernetes/manifests/kube-controller-manager.yaml`.
+
+- id: ch18-q13
+  type: task
+  exams: [CKA]
+  prompt: "A worker node `node1` has the container runtime installed but not the Kubernetes tools. Install `kubeadm`, `kubelet`, and `kubectl` at the cluster's exact version (here `1.37.0`) from the pkgs.k8s.io repository, and stop them from being upgraded by `apt upgrade`."
+  solution: |
+    ```bash
+    sudo apt-get update
+    sudo apt-get install -y apt-transport-https ca-certificates curl gpg
+    sudo mkdir -p -m 755 /etc/apt/keyrings
+    curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.37/deb/Release.key |
+      sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+    echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.37/deb/ /' |
+      sudo tee /etc/apt/sources.list.d/kubernetes.list
+    sudo apt-get update
+    apt-cache madison kubeadm | head -3
+    sudo apt-get install -y kubelet=1.37.0-1.1 kubeadm=1.37.0-1.1 kubectl=1.37.0-1.1
+    sudo apt-mark hold kubelet kubeadm kubectl
+    sudo apt-get install -y cri-tools
+    sudo systemctl enable kubelet
+    ```
+
+    The repository is per minor version (`v1.37`), and `apt-cache madison` shows the exact package versions it offers. Since Kubernetes 1.37 the kubeadm package no longer pulls in `cri-tools`, so install it yourself if you want `crictl` on the node. The commands come from the "Installing kubeadm" page, which the exam lets you open.
+
+- id: ch18-q14
+  type: task
+  exams: [CKA]
+  prompt: "A worker that joined the cluster stays `NotReady`. Find out why, starting from the control plane node, and name the two places you look first."
+  solution: |
+    ```bash
+    kubectl describe node node2 | grep -A8 Conditions
+    kubectl -n kube-system get pods -o wide --field-selector spec.nodeName=node2
+    ssh node2
+    sudo systemctl status kubelet
+    sudo journalctl -u kubelet --no-pager | tail -20
+    ```
+
+    The node's conditions say whether the network plugin is not ready or the kubelet stopped posting status. The CNI Pod on that node (`calico-node` here) shows whether the network started, and the kubelet's status and logs on the node itself show runtime, certificate, or configuration errors.

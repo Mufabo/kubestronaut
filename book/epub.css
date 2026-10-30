@@ -1,0 +1,19 @@
+/* Stylesheet for the EPUB (tools/build-epub.sh). Kept small: readers apply their own fonts. */
+body { line-height: 1.5; }
+code { font-family: monospace; font-size: 0.9em; }
+pre {
+  font-family: monospace;
+  font-size: 0.8em;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  background: #f4f4f4;
+  padding: 0.5em;
+  border-radius: 4px;
+}
+table { border-collapse: collapse; margin: 1em 0; font-size: 0.9em; }
+th, td { border: 1px solid #ccc; padding: 0.3em 0.5em; vertical-align: top; }
+th { background: #eee; }
+blockquote { margin: 1em 0; padding: 0.3em 1em; border-left: 4px solid #3b82f6; background: #f0f6ff; }
+img { max-width: 100%; }
+details { margin: 1em 0; }
+summary { font-weight: bold; }
