@@ -175,7 +175,7 @@ spend longer where the end-of-chapter questions or labs show a gap.
 | 1 | 01, 02, 03 | Labs 02 and 03; the KCNA-tagged questions |
 | 2 | 04, 05, 06, 11 | Labs; mock exam `part1` as practice, untimed |
 | 3 | 13, 15, 16, 21, 23 (read; labs optional) | The KCNA-tagged questions of each chapter |
-| 4 | 24, 25, 28; review | The KCNA practice exam (`make quiz EXAM=kcna`), timed; review the missed questions' chapters; a new attempt at the end of the week |
+| 4 | 24, 25, 28; review | The KCNA practice exam (`make quiz EXAM=kcna`), timed; review the missed questions' chapters; at the end of the week, set 2 (`make quiz EXAM=kcna2`) as the fresh measure |
 
 Kubernetes Fundamentals is 44% of the exam: be fluent with the objects of Chapters
 02 to 06. The labs are not required for a multiple-choice exam, but doing them makes
