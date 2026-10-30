@@ -10,7 +10,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: sudo apt-get update && sudo apt-get install -y shellcheck yamllint vim
+      - run: sudo apt-get update && sudo apt-get install -y yamllint vim
+      - name: Install the pinned shellcheck
+        run: |
+          set -a; source versions.env; set +a
+          tarball="shellcheck-${SHELLCHECK_VERSION}.linux.x86_64.tar.xz"
+          curl -fsSLo "/tmp/${tarball}" "https://github.com/koalaman/shellcheck/releases/download/${SHELLCHECK_VERSION}/${tarball}"
+          echo "${SHELLCHECK_SHA256}  /tmp/${tarball}" | sha256sum --check
+          tar -xJf "/tmp/${tarball}" -C /tmp
+          sudo install -m 0755 "/tmp/shellcheck-${SHELLCHECK_VERSION}/shellcheck" /usr/local/bin/shellcheck
+          shellcheck --version
       - run: pip install -r tools/requirements.txt
       - name: Install the pinned markdownlint-cli2
         run: |
