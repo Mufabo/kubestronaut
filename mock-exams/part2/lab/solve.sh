@@ -89,6 +89,7 @@ spec:
           image: busybox:1.36
           command: ["sh", "-c", "echo migrated"]
 YAML
+kubectl -n p2-batch wait --for=condition=Complete job/migrate --timeout=180s >/dev/null
 
 # Q5
 kubectl -n p2-batch create cronjob report --image=busybox:1.36 --schedule="0 3 * * *" -- sh -c 'echo report' >/dev/null
