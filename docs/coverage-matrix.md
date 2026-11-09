@@ -171,10 +171,10 @@ and Maintenance Q9–Q12 (15%), Environment, Configuration and Security Q13–Q1
 | Cluster Hardening | Exercise caution in using service accounts e.g. disable defaults, minimize permissions on newly created ones | 23, 31 | 23/T3–T4; 31/T3 | ch23-q05, q06, q08, q10, q11; ch31-q10 | drafted |
 | Cluster Hardening | Restrict access to Kubernetes API | 30, 31 | 30/T3; 31/T1–T5 | ch30-q06, q08, q12 | drafted |
 | Cluster Hardening | Upgrade Kubernetes to avoid vulnerabilities | 19 | 19/T1–T4 | ch19-q01, q02, q10 | drafted |
-| System Hardening | Minimize host OS footprint (reduce attack surface) | 32 | | | planned |
-| System Hardening | Using least-privilege identity and access management | 23, 32 | | | planned |
-| System Hardening | Minimize external access to the network | 32, 36 | | | planned |
-| System Hardening | Appropriately use kernel hardening tools such as AppArmor, seccomp | 32 | | | planned |
+| System Hardening | Minimize host OS footprint (reduce attack surface) | 32 | 32/T1 | ch32-q08, q09 | drafted |
+| System Hardening | Using least-privilege identity and access management | 23, 32 | 23/T1–T5; 32/T2 | ch32-q11 | drafted |
+| System Hardening | Minimize external access to the network | 32, 36 | 36/T1–T3 | ch32-q10 | drafted (32 covers the ports and host and cloud firewalls as concepts; 36 the NetworkPolicies) |
+| System Hardening | Appropriately use kernel hardening tools such as AppArmor, seccomp | 32 | 32/T3–T5 | ch32-q01–q07, q12–q14 | drafted |
 | Minimize Microservice Vulnerabilities | Use appropriate pod security standards | 33 | 33/T1–T2 | ch33-q01–q06 | drafted |
 | Minimize Microservice Vulnerabilities | Manage kubernetes secrets | 07, 33 | 07/T2; 33/T3–T4 | ch07-q01, q09; ch33-q07–q10 | drafted |
 | Minimize Microservice Vulnerabilities | Understand and implement isolation techniques (multi-tenancy, sandboxed containers, etc.) | 33 | 33/T5 | ch33-q11, q12 | drafted |

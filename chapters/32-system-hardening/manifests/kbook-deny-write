@@ -1,0 +1,10 @@
+#include <tunables/global>
+
+profile kbook-deny-write flags=(attach_disconnected) {
+  #include <abstractions/base>
+
+  file,
+
+  # Deny every write, anywhere in the container's file system.
+  deny /** w,
+}

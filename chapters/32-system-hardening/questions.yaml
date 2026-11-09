@@ -1,0 +1,211 @@
+- id: ch32-q01
+  type: mcq
+  exams: [KCSA, CKS]
+  question: "What does a seccomp profile control?"
+  choices:
+    - "Which files and paths a program may read, write, or execute"
+    - "Which system calls a process may make, and what happens when it makes another one"
+    - "Which Linux capabilities the container starts with"
+    - "Which users may log in to the node"
+  answer: B
+  explanation: "seccomp (secure computing mode) filters system calls in the kernel: a profile lists system calls and an action for each (allow, return an error, log, kill). Paths are AppArmor's domain (or SELinux labels'), and capabilities are set in the container's securityContext."
+
+- id: ch32-q02
+  type: mcq
+  exams: [CKS]
+  question: "A Pod sets no seccompProfile, and its node's kubelet runs with the default settings. Under which seccomp profile do its containers run?"
+  choices:
+    - "RuntimeDefault"
+    - "The profile of the Pod's ServiceAccount"
+    - "Unconfined: no seccomp filter at all"
+    - "Localhost, with the node's default profile"
+  answer: C
+  explanation: "Unless the kubelet's seccompDefault is on, a container without a profile runs Unconfined, and /proc/1/status in it shows Seccomp: 0. RuntimeDefault has to be asked for, per Pod or container, or made the node's default with seccompDefault: true. Pod Security restricted requires it."
+
+- id: ch32-q03
+  type: mcq
+  exams: [CKS]
+  question: "A Pod sets seccompProfile type Localhost with localhostProfile: profiles/audit.json. Where must the profile be?"
+  choices:
+    - "In /var/lib/kubelet/seccomp/profiles/audit.json on the node that runs the Pod"
+    - "In a ConfigMap named audit.json in the Pod's Namespace"
+    - "In /etc/seccomp/profiles/audit.json on the control plane node"
+    - "Inside the container image, at /profiles/audit.json"
+  answer: A
+  explanation: "localhostProfile is a path relative to the kubelet's seccomp directory, /var/lib/kubelet/seccomp by default, on the node where the Pod runs. Kubernetes does not distribute profiles: put the file on every node that may run the Pod. Without it, the container fails to start with CreateContainerError."
+
+- id: ch32-q04
+  type: mcq
+  exams: [CKS]
+  question: "You set seccompDefault: true in a node's kubelet configuration and restart the kubelet. What changes for the Pods on that node?"
+  choices:
+    - "Every running container is restarted under RuntimeDefault at once"
+    - "Pods that set no seccomp profile are rejected"
+    - "Nothing until the API server is restarted"
+    - "Containers started from now on without a seccomp profile run under RuntimeDefault; running ones keep their profile until they are recreated"
+  answer: D
+  explanation: "seccompDefault changes the kubelet's default from Unconfined to RuntimeDefault for containers that ask for no profile. The profile is fixed when a container is created, so running containers keep running unconfined until their Pod is recreated. Pods that ask for Unconfined explicitly still get it."
+
+- id: ch32-q05
+  type: mcq
+  exams: [KCSA, CKS]
+  question: "How does AppArmor differ from seccomp?"
+  choices:
+    - "AppArmor confines a program by the files, capabilities, and network access its profile allows; seccomp filters the system calls it may make"
+    - "AppArmor works only on Red Hat systems; seccomp only on Ubuntu"
+    - "AppArmor replaces Linux capabilities; seccomp replaces users"
+    - "They are the same mechanism with two names"
+  answer: A
+  explanation: "AppArmor is a Linux Security Module with per-program profiles written in terms of paths (deny /** w), capabilities, and network rules. seccomp works one level lower, on system call numbers. They complement each other: a container usually runs under both, the runtime's default AppArmor profile and a seccomp filter. SELinux, not AppArmor, is the label-based module of Red Hat systems."
+
+- id: ch32-q06
+  type: mcq
+  exams: [CKS]
+  question: "A Pod asks for the AppArmor profile k8s-deny-write, which is loaded on node1 but not on node2. The scheduler places it on node2. What happens?"
+  choices:
+    - "The container runs unconfined on node2"
+    - "The kubelet on node2 loads the profile from node1"
+    - "The container fails to start on node2 (CreateContainerError), because the runtime cannot find the profile"
+    - "The scheduler moves the Pod to node1 by itself"
+  answer: C
+  explanation: "The scheduler knows nothing about AppArmor profiles. The kubelet and the runtime refuse to start a container whose profile is not loaded, rather than run it unprotected. Load the profile on every node that may run the Pod (a DaemonSet or configuration management does this in practice), or restrict the Pod to the nodes that have it."
+
+- id: ch32-q07
+  type: mcq
+  exams: [CKS]
+  question: "On Kubernetes v1.37, how does a container ask for the AppArmor profile k8s-deny-write that is loaded on its node?"
+  choices:
+    - "The annotation apparmor.kubernetes.io/profile: k8s-deny-write on the Namespace"
+    - "securityContext.appArmorProfile with type: Localhost and localhostProfile: k8s-deny-write"
+    - "securityContext.seccompProfile with type: AppArmor"
+    - "runtimeClassName: k8s-deny-write"
+  answer: B
+  explanation: "The appArmorProfile field (generally available since v1.30) sits in the Pod's or the container's securityContext; the container's setting wins. Its types are RuntimeDefault, Localhost (with localhostProfile, the name of a profile loaded on the node), and Unconfined. The older annotation container.apparmor.security.beta.kubernetes.io/CONTAINER is deprecated."
+
+- id: ch32-q08
+  type: mcq
+  exams: [KCSA, CKS]
+  question: "Which of these does NOT reduce a node's host OS footprint?"
+  choices:
+    - "Removing packages and stopping services the node does not need"
+    - "Preventing unneeded kernel modules from loading"
+    - "Using a minimal, container-optimized OS image for the nodes"
+    - "Installing a full set of debugging tools on every node, in case they are needed"
+  answer: D
+  explanation: "Every package, service, and kernel module on a node is something an attacker who reaches the node can use or attack. A minimal node keeps only what the kubelet, the container runtime, and the CNI plugin need; debugging tools come in when needed (for example kubectl debug node/...), not by default."
+
+- id: ch32-q09
+  type: mcq
+  exams: [CKS]
+  question: "Something on a node listens on TCP port 8081, and you want to stop it for good. Which steps find and stop it?"
+  choices:
+    - "kubectl get services -A, then delete the Service with port 8081"
+    - "sudo ss -tlnp to find the listening process, ps -o unit= -p PID (or systemctl status PID) to find its unit, then systemctl disable --now UNIT"
+    - "sudo kill the process; it will not start again"
+    - "sudo ufw deny 8081, which also stops the process"
+  answer: B
+  explanation: "ss -tlnp shows the process behind each listening port, and systemd can name the unit that started a PID. disable --now stops the unit and removes it from the boot targets; a killed process under Restart=always comes back, and a firewall rule only hides a service that should not run at all."
+
+- id: ch32-q10
+  type: mcq
+  exams: [KCSA, CKS]
+  question: "Which port on a worker node must the control plane be able to reach?"
+  choices:
+    - "10250, the kubelet's API, which the API server uses for logs, exec, and port-forward"
+    - "2379, etcd's client port"
+    - "6443, the API server's port"
+    - "10259, the scheduler's port"
+  answer: A
+  explanation: "A worker needs 10250 (the kubelet) open to the control plane, plus whatever the CNI plugin uses between nodes and the NodePort range if NodePort Services must be reachable. 2379, 6443, 10257, and 10259 are control plane ports. Every other port should be closed by the host's or the cloud's firewall."
+
+- id: ch32-q11
+  type: mcq
+  exams: [KCSA, CKS]
+  question: "You remove /etc/sudoers.d/ops on an Ubuntu node, but sudo -l -U ops still lists (ALL : ALL) ALL. Why?"
+  choices:
+    - "sudo caches its rules until the next reboot"
+    - "The file must also be removed from /etc/sudoers.d.bak"
+    - "ops is a member of the sudo group, and /etc/sudoers grants that group every command"
+    - "Removing a sudoers file has no effect while the user is logged in"
+  answer: C
+  explanation: "Ubuntu's /etc/sudoers contains %sudo ALL=(ALL:ALL) ALL, so membership in the sudo group grants root on its own. Take ops out of the group (gpasswd -d ops sudo) as well; sudo -l -U ops then reports that the user is not allowed to run sudo. sudo reads its rules on every call; nothing is cached."
+
+- id: ch32-q12
+  type: task
+  exams: [CKS]
+  prompt: "Run a Pod web (nginx:1.27) under the container runtime's default seccomp profile, and show from inside the container that a seccomp filter is active."
+  solution: |
+    ```yaml
+    apiVersion: v1
+    kind: Pod
+    metadata:
+      name: web
+    spec:
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: web
+          image: nginx:1.27
+    ```
+
+    ```bash
+    kubectl exec web -- grep Seccomp /proc/1/status
+    ```
+
+    Seccomp: 2 means filter mode (0 means none). Setting the profile at the Pod level covers every container; a container's own seccompProfile overrides it.
+
+- id: ch32-q13
+  type: task
+  exams: [CKS]
+  prompt: "The AppArmor profile file /etc/apparmor.d/deny-etc-write exists on node2 but is not loaded. Load it, and run a Pod editor (busybox:1.36, sleep infinity) on node2 under it."
+  solution: |
+    On node2:
+
+    ```bash
+    sudo apparmor_parser /etc/apparmor.d/deny-etc-write
+    sudo aa-status | grep deny-etc-write
+    ```
+
+    Then, assuming the profile in the file is named deny-etc-write (the name after the profile keyword, not the file name):
+
+    ```yaml
+    apiVersion: v1
+    kind: Pod
+    metadata:
+      name: editor
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: node2
+      securityContext:
+        appArmorProfile:
+          type: Localhost
+          localhostProfile: deny-etc-write
+      containers:
+        - name: editor
+          image: busybox:1.36
+          command: ["sleep", "infinity"]
+    ```
+
+    kubectl exec editor -- cat /proc/1/attr/current prints deny-etc-write (enforce). Without the nodeSelector the Pod could land on a node without the profile and fail to start there.
+
+- id: ch32-q14
+  type: task
+  exams: [CKS]
+  prompt: "Make the kubelet on node1 run every container that sets no seccomp profile under RuntimeDefault, and prove it with a new Pod."
+  solution: |
+    On node1, add the setting to the kubelet's configuration file and restart the kubelet:
+
+    ```bash
+    echo 'seccompDefault: true' | sudo tee -a /var/lib/kubelet/config.yaml
+    sudo systemctl restart kubelet
+    ```
+
+    (If the file already has a seccompDefault line, change it instead of adding a second one.) Then start a Pod without a profile on node1 and look at its seccomp mode:
+
+    ```bash
+    kubectl run probe --image=busybox:1.36 --overrides='{"spec":{"nodeSelector":{"kubernetes.io/hostname":"node1"}}}' -- sleep infinity
+    kubectl exec probe -- grep Seccomp /proc/1/status
+    ```
+
+    Seccomp: 2. Pods that were already running keep Seccomp: 0 until they are recreated.
