@@ -1,0 +1,206 @@
+- id: ch35-q01
+  type: mcq
+  exams: [KCSA, CKS]
+  question: "What does Falco do when a container matches one of its rules?"
+  choices:
+    - "It kills the container"
+    - "It blocks the system call, like seccomp"
+    - "It reports an alert to its outputs, such as the journal, a file, or an HTTP endpoint"
+    - "It deletes the Pod through the API server"
+  answer: C
+  explanation: "Falco is a detection tool: it watches system calls through its kernel driver, matches them against rules, and sends alerts. Blocking is the job of seccomp, AppArmor, admission control, and NetworkPolicies; other tools can act on Falco's alerts."
+
+- id: ch35-q02
+  type: mcq
+  exams: [CKS]
+  question: "Where do you add your own Falco rules so that an upgrade does not overwrite them?"
+  choices:
+    - "In /etc/falco/rules.d/ or /etc/falco/falco_rules.local.yaml"
+    - "At the end of /etc/falco/falco_rules.yaml"
+    - "In a ConfigMap in kube-system"
+    - "In /var/lib/kubelet/falco/"
+  answer: A
+  explanation: "falco_rules.yaml holds the release's default rules and is replaced by upgrades. falco.yaml loads falco_rules.local.yaml and the files in rules.d after it, so your rules can use its macros and lists, and can override them."
+
+- id: ch35-q03
+  type: mcq
+  exams: [CKS]
+  question: "A Falco alert ends with k8s_pod_name=billing-6d8f9c7b5-x2lqp k8s_ns_name=shop. How do you find the Deployment it belongs to?"
+  choices:
+    - "Falco's output always names the Deployment"
+    - "Follow the Pod's ownerReferences to its ReplicaSet, and the ReplicaSet's to the Deployment"
+    - "Look up the container ID in etcd"
+    - "Read the node's /etc/hosts"
+  answer: B
+  explanation: "A Deployment's Pod is owned by a ReplicaSet, which is owned by the Deployment: kubectl get pod ... -o jsonpath='{.metadata.ownerReferences[0].name}' gives the ReplicaSet, and the same on the ReplicaSet gives the Deployment. The Pod name's prefix usually tells you too, but the owner references are certain."
+
+- id: ch35-q04
+  type: mcq
+  exams: [CKS]
+  question: "You validate a custom rule with falco -V /etc/falco/rules.d/my.yaml and get \"Undefined macro 'open_read'\". What is wrong?"
+  choices:
+    - "open_read does not exist in this Falco version"
+    - "Custom rules may not use macros"
+    - "The file must be named falco_rules.local.yaml"
+    - "The macro is defined in the default rules file, which was not loaded; validate both, with -V /etc/falco/falco_rules.yaml first"
+  answer: D
+  explanation: "falco -V loads only the files you name. The default macros and lists live in falco_rules.yaml, so validate it together with your file. The running Falco loads all configured rules files in order, so the rule works there."
+
+- id: ch35-q05
+  type: mcq
+  exams: [KCSA, CKS]
+  question: "Which audit level records who read a Secret, without writing the Secret's value into the log?"
+  choices:
+    - "Metadata"
+    - "Request"
+    - "RequestResponse"
+    - "None"
+  answer: A
+  explanation: "Metadata records the user, verb, object, source IP, time, and result, but no bodies. Request and RequestResponse add the request and response bodies, which for Secrets means their values. None records nothing."
+
+- id: ch35-q06
+  type: mcq
+  exams: [CKS]
+  question: "An audit policy has two rules: first level: RequestResponse with no other fields, then level: Metadata for secrets. At which level is a get on a Secret logged?"
+  choices:
+    - "Metadata, because the secrets rule is more specific"
+    - "RequestResponse, because the first rule that matches decides, and it matches every request"
+    - "Both: one event per matching rule"
+    - "None, because the rules conflict"
+  answer: B
+  explanation: "Audit policy rules are checked in order and the first match wins. A catch-all placed first shadows every rule after it, and here it writes Secret values into the log. Put narrow rules first and the catch-all last."
+
+- id: ch35-q07
+  type: mcq
+  exams: [CKS]
+  question: "You add --audit-policy-file and --audit-log-path to the API server's static Pod manifest, and the API server does not come back. What is the most likely missing piece?"
+  choices:
+    - "The kubelet must be restarted for every manifest change"
+    - "Audit logging needs a webhook backend"
+    - "A volume and a mount for the policy file and the log directory: the API server runs in a container and cannot see the host's files otherwise"
+    - "etcd must be restarted first"
+  answer: C
+  explanation: "The API server reads its flags inside its container. Without hostPath volumes and volumeMounts for the policy file and the log directory, it cannot open the policy and exits. crictl logs of the exited container, or the files in /var/log/pods, show the error."
+
+- id: ch35-q08
+  type: mcq
+  exams: [CKS]
+  question: "What does omitStages: [RequestReceived] in an audit policy change?"
+  choices:
+    - "Requests are no longer authenticated"
+    - "No event is written when a request arrives; ResponseComplete still records it, so each request is logged once instead of twice"
+    - "Only failed requests are logged"
+    - "Request bodies are removed from every event"
+  answer: B
+  explanation: "Without it, the API server writes an event when the request arrives and another when the response is complete, with the same metadata. Omitting RequestReceived halves the log with no loss for completed requests."
+
+- id: ch35-q09
+  type: mcq
+  exams: [KCSA, CKS]
+  question: "In the audit log you find a delete of the Secret db-creds whose user.username is kubernetes-admin and whose impersonatedUser.username is system:serviceaccount:shop:cleaner. Who did it, and how?"
+  choices:
+    - "kubernetes-admin, without impersonation; the second field is decoration"
+    - "The kubelet, on behalf of a Pod"
+    - "The ServiceAccount cleaner, which has the admin's rights"
+    - "kubernetes-admin, acting as the ServiceAccount cleaner; the ServiceAccount's RBAC rules allowed the delete"
+  answer: D
+  explanation: "user is who authenticated; impersonatedUser is the identity that request was authorized as (kubectl --as). RBAC checked the impersonated identity, and the event's annotations name the RoleBinding that allowed it. Both identities matter for the investigation."
+
+- id: ch35-q10
+  type: mcq
+  exams: [KCSA, CKS]
+  question: "An attacker creates a CronJob that starts a Pod every hour with a reverse shell. Which phase of an attack is that?"
+  choices:
+    - "Persistence"
+    - "Initial access"
+    - "Discovery"
+    - "Impact"
+  answer: A
+  explanation: "Persistence is how an attacker keeps access after the first foothold is gone: a CronJob, a new ServiceAccount and RoleBinding, a static Pod, or a backdoored image. The audit log's create events on such objects are where it shows."
+
+- id: ch35-q11
+  type: mcq
+  exams: [CKS]
+  question: "Falco reports a Pod of a Deployment running a crypto miner. What should you do first?"
+  choices:
+    - "Delete the Pod at once"
+    - "Scale the Deployment to 10, so the miner has to share"
+    - "Isolate the Pod (a NetworkPolicy selecting a quarantine label, with no rules) and keep it for investigation; then find and fix the cause"
+    - "Restart the node"
+  answer: C
+  explanation: "Deleting the Pod destroys the evidence, and its ReplicaSet starts an identical, equally vulnerable Pod. Contain first: isolate its network, take it out of the Service, revoke its credentials; then preserve logs and state, fix the root cause in the image or configuration, rotate secrets, and only then remove it."
+
+- id: ch35-q12
+  type: task
+  exams: [CKS]
+  prompt: "Make the Deployment api (image nginx:1.27) run with a read-only root file system, without breaking it."
+  solution: |
+    Set readOnlyRootFilesystem, then give nginx emptyDir volumes for the two directories it writes to:
+
+    ```yaml
+    spec:
+      template:
+        spec:
+          volumes:
+            - name: cache
+              emptyDir: {}
+            - name: run
+              emptyDir: {}
+          containers:
+            - name: nginx
+              image: nginx:1.27
+              securityContext:
+                readOnlyRootFilesystem: true
+              volumeMounts:
+                - name: cache
+                  mountPath: /var/cache/nginx
+                - name: run
+                  mountPath: /var/run
+    ```
+
+    With readOnlyRootFilesystem alone, kubectl logs --previous shows mkdir() "/var/cache/nginx/client_temp" failed (30: Read-only file system); each such message names a directory that needs an emptyDir. Check the result with kubectl exec ... -- touch /usr/share/nginx/html/x, which must fail with "Read-only file system".
+
+- id: ch35-q13
+  type: task
+  exams: [CKS]
+  prompt: "Write an audit policy that logs nothing for the system:kube-proxy user, records Secrets at Metadata, records changes to ConfigMaps in the Namespace prod with their bodies, and everything else at Metadata. Write no RequestReceived events."
+  solution: |
+    ```yaml
+    apiVersion: audit.k8s.io/v1
+    kind: Policy
+    omitStages:
+      - RequestReceived
+    rules:
+      - level: None
+        users: ["system:kube-proxy"]
+      - level: Metadata
+        resources:
+          - group: ""
+            resources: ["secrets"]
+      - level: RequestResponse
+        verbs: ["create", "update", "patch", "delete"]
+        namespaces: ["prod"]
+        resources:
+          - group: ""
+            resources: ["configmaps"]
+      - level: Metadata
+    ```
+
+    The order matters: the first matching rule decides, so the narrow rules come first and the catch-all last. Request would also record the bodies of the changes; RequestResponse adds the stored object. Point --audit-policy-file at the file, with a volume and a mount, and restart the API server.
+
+- id: ch35-q14
+  type: task
+  exams: [CKS]
+  prompt: "Change Falco on a node so that a shell started in any container raises a NOTICE alert that includes the container's image."
+  solution: |
+    In /etc/falco/rules.d/shell.yaml:
+
+    ```yaml
+    - rule: Shell in container
+      desc: A shell was started in a container
+      condition: spawned_process and container and proc.name in (shell_binaries)
+      output: Shell started in a container (command=%proc.cmdline image=%container.image.repository)
+      priority: NOTICE
+    ```
+
+    spawned_process, container, and shell_binaries come from the default rules file. Validate with sudo falco -V /etc/falco/falco_rules.yaml -V /etc/falco/rules.d/shell.yaml, restart Falco, run kubectl exec POD -- sh -c true, and read the alert in the journal (journalctl -u falco-modern-bpf) or the Falco Pod's log.

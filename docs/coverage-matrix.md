@@ -183,11 +183,11 @@ and Maintenance Q9–Q12 (15%), Environment, Configuration and Security Q13–Q1
 | Supply Chain Security | Understand your supply chain (e.g. SBOM, CI/CD, artifact repositories) | 16, 34 | 34/T1–T3 | ch16-q06; ch34-q01–q03, q08 | partly (16 covers CI/CD and GitOps; 34 covers SBOMs and artifacts) |
 | Supply Chain Security | Secure your supply chain (permitted registries, sign and validate artifacts, etc.) | 34 | 34/T1–T2 | ch34-q04, q05, q07, q10 | partly (34 covers registries and digests; signature verification is a concept) |
 | Supply Chain Security | Perform static analysis of user workloads and container images (e.g. Kubesec, KubeLinter) | 34 | | ch34-q02 (concept) | partly (scanning explained; no scanner lab) |
-| Monitoring, Logging and Runtime Security | Perform behavioral analytics to detect malicious activities | 35 | | | planned |
-| Monitoring, Logging and Runtime Security | Detect threats within physical infrastructure, apps, networks, data, users and workloads | 35 | | | planned |
-| Monitoring, Logging and Runtime Security | Investigate and identify phases of attack and bad actors within the environment | 35 | | | planned |
-| Monitoring, Logging and Runtime Security | Ensure immutability of containers at runtime | 35 | | | planned |
-| Monitoring, Logging and Runtime Security | Use Kubernetes audit logs to monitor access | 35 | | | planned |
+| Monitoring, Logging and Runtime Security | Perform behavioral analytics to detect malicious activities | 35 | 35/T2–T3 | ch35-q01, q02, q14 | drafted |
+| Monitoring, Logging and Runtime Security | Detect threats within physical infrastructure, apps, networks, data, users and workloads | 35 | 35/T1–T3 | ch35-q01, q03, q04 | drafted (infrastructure and workloads through Falco, users and data through the audit log; network flows as a concept) |
+| Monitoring, Logging and Runtime Security | Investigate and identify phases of attack and bad actors within the environment | 35 | 35/T1, T5 | ch35-q09, q10 | drafted |
+| Monitoring, Logging and Runtime Security | Ensure immutability of containers at runtime | 35 | 35/T4 | ch35-q12 | drafted |
+| Monitoring, Logging and Runtime Security | Use Kubernetes audit logs to monitor access | 35 | 35/T1 | ch35-q05–q09, q13 | drafted |
 
 ## KCSA
 
@@ -224,18 +224,18 @@ and Maintenance Q9–Q12 (15%), Environment, Configuration and Security Q13–Q1
 | Kubernetes Security Fundamentals | Authentication | 31 | 31/T3 | ch31-q01, q02, q10, q13 | drafted |
 | Kubernetes Security Fundamentals | Secrets | 07, 33 | 03/b2 C2; 33/T3–T4 | ch33-q07–q10 | drafted |
 | Kubernetes Security Fundamentals | Isolation and Segmentation | 06, 33, 36 | 06/T2; 33/T5; 36/T1–T3 | ch06-q02; ch33-q11 | drafted |
-| Kubernetes Security Fundamentals | Audit Logging | 35 | | | planned |
+| Kubernetes Security Fundamentals | Audit Logging | 35 | 35/T1 | ch35-q05, q06, q09 | drafted |
 | Kubernetes Security Fundamentals | Network Policy | 21, 36 | 21/T3–T4; 36/T1–T3 | ch21-q03–q06, q08, q09; ch36-q01–q05, q10, q11 | drafted |
 | Kubernetes Threat Model | Kubernetes Trust Boundaries and Data Flow | 29 | 29 exploration exercise | ch29-q13 | drafted |
-| Kubernetes Threat Model | Persistence | 29, 35 | | ch29-q06, q08 | partly (29 drafted; 35 planned) |
+| Kubernetes Threat Model | Persistence | 29, 35 | 35/T1 | ch29-q06, q08; ch35-q10 | drafted |
 | Kubernetes Threat Model | Denial of Service | 10, 29 | 10/T6 | | drafted |
-| Kubernetes Threat Model | Malicious Code Execution and Compromised Applications in Containers | 29, 35 | | ch29-q12 | partly (29 drafted; 35 planned) |
+| Kubernetes Threat Model | Malicious Code Execution and Compromised Applications in Containers | 29, 35 | 35/T2–T5 | ch29-q12; ch35-q01, q11 | drafted |
 | Kubernetes Threat Model | Attacker on the Network | 29, 36 | 36/T1–T4 | ch29-q04 | drafted |
 | Kubernetes Threat Model | Access to Sensitive Data | 29, 33 | 33/T3–T4 | ch29-q07; ch33-q07–q10 | drafted |
 | Kubernetes Threat Model | Privilege Escalation | 29, 33 | 33/T1–T2 | ch29-q07, q08; ch33-q02, q06 | drafted |
 | Platform Security | Supply Chain Security | 34 | 34/T1–T3 | ch34-q01–q12 | drafted |
 | Platform Security | Image Repository | 34 | 34/T1–T2 | ch34-q10 | partly |
-| Platform Security | Observability | 15, 35 | | | planned |
+| Platform Security | Observability | 15, 35 | 35/T1–T2 | ch35-q01, q05 | drafted (15 covers logs and metrics; 35 runtime alerts and audit logs) |
 | Platform Security | Service Mesh | 28, 36 | | ch28-q01–q04; ch36-q07 | drafted (concepts only, no mesh installed) |
 | Platform Security | PKI | 18, 27, 30 | 27/T4–T5 | ch18-q06, q07; ch27-q07–q09, q11; ch30-q07 | drafted |
 | Platform Security | Connectivity | 21, 36 | 21/T3–T4; 36/T1–T4 | ch21-q01–q05; ch36-q03–q08, q12 | drafted |
