@@ -34,6 +34,7 @@ it asks for is right.
 | [`ckad`](ckad/ckad.md) | The full CKAD: every domain, weighted as in the curriculum | 20 | 120 min | 66% |
 | [`ckad2`](ckad2/ckad2.md) | CKAD set 2: 20 more questions, none repeated from `ckad` | 20 | 120 min | 66% |
 | [`cka`](cka/cka.md) | The full CKA: every domain, weighted as in the curriculum, on the Tier 2 VMs | 18 | 120 min | 66% |
+| [`cks`](cks/cks.md) | The full CKS: every domain, weighted as in the curriculum, on the Tier 2 VMs | 15 | 120 min | 67% |
 
 ```bash
 make cluster                       # once
@@ -44,7 +45,7 @@ make mock-solve EXAM=part1         # reference solution (spoilers!)
 make mock-teardown EXAM=part1      # remove it and restore your kubectl settings
 ```
 
-`part3` and `cka` run on `cp1` of the Tier 2 VMs instead of the kind cluster,
+`part3`, `cka`, and `cks` run on `cp1` of the Tier 2 VMs instead of the kind cluster,
 from the `cluster-prev` and `cluster` snapshots; their question files explain the
 setup. To start one over cleanly, restore its snapshot on the host.
 

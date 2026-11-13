@@ -1,0 +1,22 @@
+# Question 9: a Deployment that runs on the node's kernel.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: untrusted
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: untrusted
+  template:
+    metadata:
+      labels:
+        app: untrusted
+    spec:
+      containers:
+        - name: untrusted
+          image: busybox:1.36
+          command: ["sleep", "infinity"]
+          resources:
+            requests: {cpu: 10m, memory: 16Mi}
+            limits: {memory: 64Mi}

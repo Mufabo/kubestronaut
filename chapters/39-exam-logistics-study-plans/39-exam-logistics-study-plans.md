@@ -219,7 +219,8 @@ concrete. Revisit Chapter 23 (RBAC) and Chapter 21 (NetworkPolicy).
 
 Part IV again, this time every lab, on kind and on the Tier 2 VMs; then Chapters 37
 and 38 for the CKS's allowed documentation, which includes the docs of the
-security tools. Use the killer.sh sessions in the last two weeks.
+security tools. In the last two weeks, take the CKS simulator (`make mock EXAM=cks`,
+on the VMs), timed, then the two killer.sh sessions.
 
 ### Exam day
 

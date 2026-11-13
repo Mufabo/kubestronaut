@@ -46,7 +46,7 @@ bash tools/test-lib.sh             # kubeconfig helpers (needs kubectl, no clust
 bash tools/test-shell.sh           # envs/shell (needs no cluster)
 ```
 
-Tier 2 labs (Chapters 18, 19, 20, 27, 30, 32, 33, 35) and the `part3` and `cka` mocks run on the VMs, never in CI and never in `test-tier1`/`test-mocks`. Test one by hand: `make cluster-pause` in WSL (frees RAM), restore the lab's `LAB_SNAPSHOT` from the host, then run the loop on `cp1`. `test-lab.sh` checks the snapshot and skips the reset phase, so restore again before every run.
+Tier 2 labs (Chapters 18, 19, 20, 27, 30, 32, 33, 35) and the `part3`, `cka`, and `cks` mocks run on the VMs, never in CI and never in `test-tier1`/`test-mocks`. Test one by hand: `make cluster-pause` in WSL (frees RAM), restore the lab's `LAB_SNAPSHOT` from the host, then run the loop on `cp1`. `test-lab.sh` checks the snapshot and skips the reset phase, so restore again before every run.
 
 ```powershell
 .\envs\vagrant\kbook-vm.ps1 restore cluster-prev                          # host; the lab's LAB_SNAPSHOT
