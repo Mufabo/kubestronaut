@@ -144,3 +144,40 @@
 
     `--dry-run=client -o yaml` prints the manifest without creating the Deployment. The
     image reference keeps the `@sha256:` form, so the Pod runs that exact digest.
+
+- id: ch34-q13
+  type: mcq
+  exams: [KCSA, CKS]
+  question: "A Go service is built with one Dockerfile stage on golang:1.27, and the image is over 1 GB with thousands of scanner findings. What shrinks it most, without changing the program?"
+  choices:
+    - "A newer golang tag"
+    - "A multi-stage build: compile in a golang stage, then copy only the static binary into a scratch or distroless final stage"
+    - "Adding a .dockerignore file"
+    - "Running the container with readOnlyRootFilesystem"
+  answer: B
+  explanation: "The single-stage image ships the whole toolchain and a full distribution. A multi-stage build keeps them in the build stage and ships only the binary; for a static Go binary (CGO_ENABLED=0), scratch holds nothing else, so the image drops to a few MB and nearly all findings go with the base. .dockerignore and runtime settings help, but do not remove the base image."
+
+- id: ch34-q14
+  type: mcq
+  exams: [KCSA, CKS]
+  question: "Which tool finds a privileged container and a missing readOnlyRootFilesystem in a Deployment manifest before it is applied?"
+  choices:
+    - "trivy image"
+    - "cosign verify"
+    - "A static analysis tool such as trivy config, kubesec, or KubeLinter"
+    - "An SBOM generator"
+  answer: C
+  explanation: "Static analysis reads the YAML and flags risky settings; it runs in CI before anything reaches the cluster. trivy image looks for vulnerable packages inside an image, cosign verify checks signatures, and an SBOM lists components."
+
+- id: ch34-q15
+  type: task
+  exams: [CKS]
+  prompt: "Create a cosign key pair, sign the image registry.example.com/shop/api:2.1 with it without using the public transparency log, and verify the signature."
+  solution: |
+    ```bash
+    cosign generate-key-pair
+    cosign sign --key cosign.key --use-signing-config=false --tlog-upload=false registry.example.com/shop/api:2.1
+    cosign verify --key cosign.pub --insecure-ignore-tlog=true registry.example.com/shop/api:2.1
+    ```
+
+    generate-key-pair asks for a password to encrypt cosign.key (or reads COSIGN_PASSWORD). sign resolves the tag to its digest, signs the digest, and pushes the signature to the same repository, so you need push access to it. Without the two flags, cosign records the signature in Sigstore's public log, Rekor; verify then checks that entry too, which --insecure-ignore-tlog=true skips. Verification prints the signed digest; an image signed by another key, or not at all, fails.

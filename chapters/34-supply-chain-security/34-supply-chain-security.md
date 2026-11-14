@@ -2,7 +2,7 @@
 
 > **Exams:** KCSA · CKS
 > **Difficulty:** Advanced
-> **Time:** ~60 min reading, ~35 min lab
+> **Time:** ~75 min reading, ~60 min lab
 > **Lab tier:** 1 (kind)
 > **Prerequisites:** Chapter 16 (images and delivery), Chapter 31 (admission control)
 
@@ -16,6 +16,9 @@ After this chapter you can:
 - Pin an image by digest, and say why a tag can change under you
 - Write a ValidatingAdmissionPolicy that allows only images from a trusted registry and only by digest, in containers and in init containers
 - Choose between an admission policy that checks the reference and one that checks a signature, and know which policy engines verify signatures
+- Shrink an image's attack surface with a multi-stage build on a minimal or empty base image
+- Scan images for vulnerabilities and manifests for misconfigurations with Trivy, and act on the findings
+- Sign an image with a cosign key pair and verify the signature
 
 ## Concepts
 
@@ -57,6 +60,45 @@ when you want a new version.
 The `imageID` in a Pod's status shows the digest the node actually pulled, so you can
 compare what runs with what you pinned.
 
+### Minimize the base image
+
+Everything in an image ships to production: the application, and everything the base
+image brought along. A compiler, a package manager, a shell, and hundreds of system
+libraries the application never calls are still files an attacker can use and packages a
+scanner will report. **Minimizing the base image** is the cheapest way to shrink both.
+
+A **multi-stage build** separates building from running. The first stage has the full
+toolchain; the last stage starts from a small base and copies in only the result:
+
+```dockerfile
+FROM golang:1.27 AS build
+WORKDIR /src
+COPY . .
+RUN CGO_ENABLED=0 go build -ldflags="-s -w" -o /hello .
+
+FROM scratch
+COPY --from=build /hello /hello
+USER 65532
+ENTRYPOINT ["/hello"]
+```
+
+The choice of the last stage's base is a trade-off:
+
+| Base | Contains | Use it when |
+| --- | --- | --- |
+| A full distribution (`debian`, `ubuntu`, the language's default image) | Shell, package manager, many libraries | Building; rarely for running |
+| `-slim` variants | A reduced distribution | The application needs a few system packages |
+| `alpine` | musl libc, busybox, `apk` | You want a shell for debugging, in a few MB |
+| Distroless (`gcr.io/distroless/...`) | The language runtime and its libraries; no shell, no package manager | Java, Python, Node, or dynamically linked programs |
+| `scratch` | Nothing at all | A statically linked binary (Go with `CGO_ENABLED=0`, Rust with musl) |
+
+Other habits that keep images lean: install packages without recommendations and clean
+the package cache in the same `RUN` instruction, copy only what the application needs
+(a `.dockerignore`), run as a non-root `USER`, and pin the base image by tag or digest
+instead of `latest`. A minimal image is also harder to debug, because there is no shell
+to `exec` into; Kubernetes' answer is an ephemeral debug container (`kubectl debug`), not
+a fatter image.
+
 ### Scanning finds known vulnerabilities
 
 An **image scanner** reads the packages inside an image, such as the OS packages and the
@@ -75,6 +117,18 @@ A scan has limits you must keep in mind:
 
 The answer to a finding is usually a new base image or a new library version, then a new
 digest, then a new scan.
+
+**Trivy** is a widely used open source scanner. `trivy image` scans an image, from a
+registry or the local Docker daemon, against a vulnerability database it downloads and
+caches. `--severity` limits the report, and `--exit-code 1` makes it fail when it finds
+something, which is how a CI pipeline blocks a build.
+
+**Static analysis** looks at what you are about to deploy rather than what is inside the
+image. Scanners read Kubernetes manifests (and Dockerfiles, Helm charts, and Terraform)
+and flag risky settings: privileged containers, host namespaces, a writable root file
+system, root users, missing resource limits. `trivy config` does this, as do **kubesec**
+(which scores a manifest) and **KubeLinter**. They run in CI on the YAML before it reaches
+the cluster, and catch the same problems Pod Security would reject later, and more.
 
 ### SBOMs list what is inside
 
@@ -96,6 +150,14 @@ signing identity comes from an OpenID Connect login recorded in a transparency l
 
 A signature proves origin and integrity. It does not prove the image is free of
 vulnerabilities, and it does not prove the signer's build process was sound.
+
+With a key pair, `cosign generate-key-pair` writes `cosign.key` (the private key,
+encrypted with a password) and `cosign.pub`. `cosign sign --key cosign.key IMAGE` signs
+the image's digest and stores the signature in the same registry, next to the image;
+`cosign verify --key cosign.pub IMAGE` checks it. By default cosign also records each
+signature in Sigstore's public transparency log, Rekor, which makes signing auditable but
+also publishes the signature's metadata. For a private registry and a private key, keep
+it out of the public log, as the walkthrough does.
 
 A **provenance attestation** records how an artifact was built: the source commit, the
 builder, and the build steps. The SLSA framework grades builds by how strongly that record
@@ -167,6 +229,194 @@ registry.k8s.io/coredns/coredns@sha256:aa5e3ebc0dfed0566805186b9e47110d8f9122291
 The reference now contains `@sha256:`, which is the form the admission policy in the lab
 checks for.
 
+The remaining steps run on your machine, not in the cluster. They need Docker, and Trivy
+and cosign at the versions in `versions.env`; the lab section shows how to install them.
+
+### Compare three base images
+
+[`manifests/hello/`](manifests/hello/) holds a ten-line Go web server and three
+Dockerfiles for it: one stage on `golang:1.27`, two stages ending on `alpine:3.20`, and
+two stages ending on `scratch`. Build all three and compare:
+
+```bash
+cd chapters/34-supply-chain-security/manifests/hello
+for v in single alpine scratch; do docker build -q -f Dockerfile.$v -t hello:$v . ; done
+docker images hello --format "table {{.Repository}}:{{.Tag}}\t{{.Size}}"
+```
+
+```text
+REPOSITORY:TAG   SIZE
+hello:scratch    8.37MB
+hello:alpine     25.6MB
+hello:single     1.43GB
+```
+
+The program is the same in all three. The difference is everything around it: the
+single-stage image carries the Go toolchain and a full Debian. The `scratch` image holds
+one file, so there is nothing else to run in it, not even a shell:
+
+```bash
+docker run --rm --entrypoint sh hello:scratch -c id
+```
+
+```text
+docker: Error response from daemon: failed to create task for container: failed to create shim task: OCI runtime create failed: runc create failed: unable to start container process: error during container init: exec: "sh": executable file not found in $PATH
+```
+
+### Scan images
+
+Scan the single-stage image and the `scratch` image (the first run downloads Trivy's
+database):
+
+```bash
+trivy image --quiet hello:single | grep -E '^(hello|usr|Total)'
+trivy image --quiet hello:scratch | grep -E '^(hello|usr|Total)'
+```
+
+```text
+hello:single (debian 13.7)
+Total: 2319 (UNKNOWN: 14, LOW: 1036, MEDIUM: 1033, HIGH: 233, CRITICAL: 3)
+hello (gobinary)
+Total: 1 (UNKNOWN: 1, LOW: 0, MEDIUM: 0, HIGH: 0, CRITICAL: 0)
+usr/local/go/bin/go (gobinary)
+Total: 1 (UNKNOWN: 1, LOW: 0, MEDIUM: 0, HIGH: 0, CRITICAL: 0)
+hello (gobinary)
+Total: 1 (UNKNOWN: 1, LOW: 0, MEDIUM: 0, HIGH: 0, CRITICAL: 0)
+```
+
+The single-stage image reports 2,319 findings in its Debian packages, and one each in the
+program and the Go toolchain it carries; the `scratch` image reports only the program's
+one. Same program: what a scanner reports lives almost entirely in the base image. A widely used tag is no guarantee either. Only the CRITICAL findings for
+`nginx:1.27`:
+
+```bash
+trivy image --quiet --severity CRITICAL nginx:1.27
+```
+
+The report starts with a summary per target, then a table per target. The first rows of
+the table:
+
+```text
+nginx:1.27 (debian 12.11)
+=========================
+Total: 12 (CRITICAL: 12)
+
+┌─────────────┬─────────────────┬──────────┬──────────────┬─────────────────────────┬─────────────────────────┬────────────────────────────────────────────────────────────┐
+│   Library   │  Vulnerability  │ Severity │    Status    │    Installed Version    │      Fixed Version      │                           Title                            │
+├─────────────┼─────────────────┼──────────┼──────────────┼─────────────────────────┼─────────────────────────┼────────────────────────────────────────────────────────────┤
+│ libaom3     │ CVE-2023-6879   │ CRITICAL │ affected     │ 3.6.0-1+deb12u1         │                         │ aom: heap-buffer-overflow on frame size change             │
+│             │                 │          │              │                         │                         │ https://avd.aquasec.com/nvd/cve-2023-6879                  │
+├─────────────┼─────────────────┤          ├──────────────┼─────────────────────────┼─────────────────────────┼────────────────────────────────────────────────────────────┤
+│ libbrotli1  │ CVE-2026-111497 │          │ fixed        │ 1.0.9-2+b6              │ 1.0.9-2+deb12u1         │ brotli: Out-of-Bounds Write in Google Brotli Decoder       │
+│             │                 │          │              │                         │                         │ https://avd.aquasec.com/nvd/cve-2026-111497                │
+```
+
+Each row names the package, the CVE, the installed version, and the version that fixes
+it. `affected` means no fix exists yet; `fixed` means a newer package does, so a rebuild
+on an updated base image removes the finding. In CI, `--exit-code 1` turns findings into a failed build:
+
+```bash
+trivy image --quiet --severity CRITICAL --exit-code 1 nginx:1.27 >/dev/null; echo "exit code $?"
+```
+
+```text
+exit code 1
+```
+
+### Scan a manifest
+
+`trivy config` reads YAML instead of an image. [`manifests/web.yaml`](manifests/web.yaml) is a
+Deployment with host networking and a privileged container (scanned from that folder):
+
+```bash
+trivy config --quiet --severity HIGH,CRITICAL web.yaml | grep -E '^(Failures|KSV)'
+```
+
+```text
+Failures: 4 (HIGH: 4, CRITICAL: 0)
+KSV-0009 (HIGH): Deployment 'web' should not set 'spec.template.spec.hostNetwork' to true
+KSV-0014 (HIGH): Container 'web' of Deployment 'web' should set 'securityContext.readOnlyRootFilesystem' to true
+KSV-0017 (HIGH): Container 'web' of Deployment 'web' should set 'securityContext.privileged' to false
+KSV-0118 (HIGH): deployment web in default namespace is using the default security context, which allows root privileges
+```
+
+Each check (`KSV-...`) names the setting to change; without `--severity`, the same scan
+also lists 14 lower-severity findings, such as missing resource limits.
+
+### Sign and verify an image
+
+A throwaway registry on your machine is enough to try signing. Push the `scratch` image
+to it, create a key pair, and sign:
+
+```bash
+docker run -d --name demo-registry -p 127.0.0.1:5035:5000 registry:2.8.3
+docker tag hello:scratch localhost:5035/demo/hello:1.0
+docker push localhost:5035/demo/hello:1.0
+COSIGN_PASSWORD= cosign generate-key-pair --output-key-prefix demo
+COSIGN_PASSWORD= cosign sign --yes --key demo.key --use-signing-config=false --tlog-upload=false localhost:5035/demo/hello:1.0
+```
+
+```text
+Private key written to demo.key
+Public key written to demo.pub
+Flag --use-signing-config has been deprecated, an offline signing flag will be added in the future; TUF will continue to provide a signing config by default if one is not provided manually
+Flag --tlog-upload has been deprecated, prefer using a --signing-config file with no transparency log services
+WARNING: Image reference localhost:5035/demo/hello:1.0 uses a tag, not a digest, to identify the image to sign.
+    This can lead you to sign a different image than the intended one. Please use a
+    digest (example.com/ubuntu@sha256:abc123...) rather than tag
+    (example.com/ubuntu:latest) for the input to cosign. The ability to refer to
+    images by tag will be removed in a future release.
+
+Signing artifact...
+Pushing signature to: localhost:5035/demo/hello
+```
+
+An empty `COSIGN_PASSWORD` creates and uses a key without a password, fine for a test and
+nothing else. `--use-signing-config=false --tlog-upload=false` keeps the signature out of
+the public transparency log; cosign v3 warns that both flags are deprecated in favour of a
+signing configuration without a log, and still honours them. Its other warning is the
+lesson of this chapter again: signing a tag signs whatever digest the tag points to right
+now, so sign by digest in a pipeline. Verify it:
+
+```bash
+cosign verify --key demo.pub --insecure-ignore-tlog=true localhost:5035/demo/hello:1.0
+```
+
+```text
+WARNING: Skipping tlog verification is an insecure practice that lacks transparency and auditability verification for the signature.
+
+Verification for localhost:5035/demo/hello:1.0 --
+The following checks were performed on each of these signatures:
+```
+
+`--insecure-ignore-tlog=true` matches the signing: there is no log entry to check. The
+signature is an artifact of its own in the registry, attached to the image's digest:
+
+```bash
+cosign tree localhost:5035/demo/hello:1.0
+```
+
+```text
+📦 Supply Chain Security Related artifacts for an image: localhost:5035/demo/hello:1.0
+└── 🔗 https://sigstore.dev/cosign/sign/v1 artifacts via OCI referrer: localhost:5035/demo/hello@sha256:5f18a3fc8835145d79387832088bb008525e944893f5071274092a1eff00d195
+   └── 🍒 sha256:78813608b7cac3d033cac1c74f79f3503bf0c772211a2be6e65a1efd14554df9
+```
+
+A second image, pushed but never signed, fails the same check:
+
+```bash
+cosign verify --key demo.pub --insecure-ignore-tlog=true localhost:5035/demo/hello:1.1
+```
+
+```text
+Error: no signatures found
+error during command execution: no signatures found
+```
+
+`docker rm -f demo-registry` removes the registry again. In a cluster, an admission
+controller does this verification for every Pod (Kyverno's `verifyImages`, or Sigstore's
+policy-controller), so unsigned images never start.
+
 ## Hands-on lab
 
 The lab works like a KodeKloud lab: one task at a time, a check after each, and
@@ -188,6 +438,24 @@ because a dry run never pulls them.
 
 Tasks 1 and 2 are one policy, written in two steps. The checks test behaviour, so each one
 passes only when the policy refuses or accepts the right Pods, whichever step you have done.
+
+Tasks 4 to 6 need Docker, Trivy, and cosign on your machine. `make lab` refuses to start
+without them. Install the pinned versions, checked against the sums in `versions.env`:
+
+```bash
+source versions.env
+curl -fsSLO "https://github.com/aquasecurity/trivy/releases/download/${TRIVY_VERSION}/trivy_${TRIVY_VERSION#v}_Linux-64bit.tar.gz"
+echo "${TRIVY_SHA256}  trivy_${TRIVY_VERSION#v}_Linux-64bit.tar.gz" | sha256sum -c -
+tar -xzf "trivy_${TRIVY_VERSION#v}_Linux-64bit.tar.gz" trivy && sudo install -m 0755 trivy /usr/local/bin/
+curl -fsSLO "https://github.com/sigstore/cosign/releases/download/${COSIGN_VERSION}/cosign-linux-amd64"
+echo "${COSIGN_SHA256}  cosign-linux-amd64" | sha256sum -c -
+sudo install -m 0755 cosign-linux-amd64 /usr/local/bin/cosign
+```
+
+Tasks 4 and 5 use a second Namespace, `ch34-scan`, which the image policy of Tasks 1 and 2
+does not cover. Setup also downloads Trivy's vulnerability database and starts a local
+registry at `localhost:5034` with two images, `ch34/app:1.0` and `ch34/app:1.1`, for Task 6;
+`make teardown CH=34` removes the registry.
 
 Full solutions are in [`lab/solutions.md`](lab/solutions.md).
 
@@ -219,6 +487,36 @@ not from the tag.
 
 - File `/tmp/ch34-digest.txt`: the digest, in the form `sha256:` followed by 64 hex characters, matching the Pod's `imageID`
 
+### Task 4: Fix what static analysis finds
+
+The Deployment `report` in `ch34-scan` runs `busybox:1.36` with `sleep infinity`. Scan it
+with `trivy config`, and change it until the scan reports no HIGH or CRITICAL
+misconfiguration.
+
+- Deployment `report` in `ch34-scan`: image `busybox:1.36`, 2 ready replicas
+- `trivy config --severity HIGH,CRITICAL` on the Deployment as the cluster stores it (`kubectl get deployment report -o yaml`) finds nothing
+
+### Task 5: Remove the Pods with critical vulnerabilities
+
+Four Pods in `ch34-scan` carry the label `scan=me`. Scan each Pod's image with Trivy,
+delete every Pod whose image has at least one CRITICAL vulnerability, and list the deleted
+Pods.
+
+- File `/tmp/ch34-critical.txt`: the names of the deleted Pods, one per line, sorted alphabetically, nothing else
+- Those Pods are deleted; the other Pods labelled `scan=me` still run, unchanged
+
+Use the database setup downloaded (`--skip-db-update`), so that your scans and the check
+agree.
+
+### Task 6: Sign one image
+
+Create a cosign key pair without a password, and sign `localhost:5034/ch34/app:1.0` with
+it. Do not sign `localhost:5034/ch34/app:1.1`. Keep the signature out of the public
+transparency log.
+
+- Key pair: `/tmp/ch34-cosign.key` and `/tmp/ch34-cosign.pub`
+- `cosign verify --key /tmp/ch34-cosign.pub --insecure-ignore-tlog=true` succeeds for `app:1.0` and fails for `app:1.1`
+
 ## Exam tips
 
 > **Exam tip:** A tag is not a pin. If a question asks how to make a Pod run exactly the same image every time, the answer is the digest, not a newer or more specific tag.
@@ -226,6 +524,10 @@ not from the tag.
 > **Exam tip:** Admission policies on images must cover init containers. A rule that checks only `containers` is the classic gap.
 >
 > **Exam tip:** Match the artifact to the claim. Scan results list known CVEs at a moment; an SBOM lists components; a signature proves the signer of a digest; a provenance attestation proves the build.
+>
+> **Exam tip:** For "which images have critical vulnerabilities?", collect the images first (`kubectl get pods -o jsonpath='{range .items[*]}{.metadata.name}{" "}{.spec.containers[*].image}{"\n"}{end}'`), then run `trivy image --severity CRITICAL` on each. Answer about the image the Pod runs, not the one you think it runs.
+>
+> **Exam tip:** Static analysis findings map to `securityContext` fields: `privileged: false`, `allowPrivilegeEscalation: false`, `readOnlyRootFilesystem: true`, `runAsNonRoot: true`, `capabilities.drop: ["ALL"]`, and no host namespaces.
 
 ## Common mistakes
 
@@ -235,6 +537,9 @@ not from the tag.
 - Confusing a signature with a scan. A signed image can still carry known vulnerabilities.
 - Writing a prefix rule such as `startsWith('registry.kbook.example')` without the slash, which also matches `registry.kbook.example.evil.test/...`.
 - Expecting a ValidatingAdmissionPolicy to verify signatures. It can check strings; verifying a signature needs a policy engine that reaches the registry.
+- Shipping the build toolchain. A single-stage build puts the compiler and a full distribution into production; a multi-stage build ships only the result.
+- Treating the base image as someone else's problem. Most scanner findings are in the base image, not in your code; changing the base is often the fix.
+- Assuming a signature follows a tag. cosign signs the digest the tag points to when you sign; after a re-push, the tag points to a digest nobody signed.
 
 <!-- QUESTIONS:START -->
 
@@ -314,6 +619,22 @@ not from the tag.
 
 **12. (Task)** `CKS` Show a manifest for a Deployment `api` in Namespace `shop` that runs `registry.example.com/shop/api` pinned to the digest `sha256:` followed by 64 `a` characters. Print only the image line from the manifest.
 
+**13.** `KCSA` `CKS` A Go service is built with one Dockerfile stage on golang:1.27, and the image is over 1 GB with thousands of scanner findings. What shrinks it most, without changing the program?
+
+- **A.** A newer golang tag
+- **B.** A multi-stage build: compile in a golang stage, then copy only the static binary into a scratch or distroless final stage
+- **C.** Adding a .dockerignore file
+- **D.** Running the container with readOnlyRootFilesystem
+
+**14.** `KCSA` `CKS` Which tool finds a privileged container and a missing readOnlyRootFilesystem in a Deployment manifest before it is applied?
+
+- **A.** trivy image
+- **B.** cosign verify
+- **C.** A static analysis tool such as trivy config, kubesec, or KubeLinter
+- **D.** An SBOM generator
+
+**15. (Task)** `CKS` Create a cosign key pair, sign the image registry.example.com/shop/api:2.1 with it without using the public transparency log, and verify the signature.
+
 <details>
 <summary>Answers</summary>
 
@@ -357,6 +678,20 @@ kubectl -n shop create deployment api --image=registry.example.com/shop/api@sha2
 
 `--dry-run=client -o yaml` prints the manifest without creating the Deployment. The
 image reference keeps the `@sha256:` form, so the Pod runs that exact digest.
+
+**13. B.** The single-stage image ships the whole toolchain and a full distribution. A multi-stage build keeps them in the build stage and ships only the binary; for a static Go binary (CGO_ENABLED=0), scratch holds nothing else, so the image drops to a few MB and nearly all findings go with the base. .dockerignore and runtime settings help, but do not remove the base image.
+
+**14. C.** Static analysis reads the YAML and flags risky settings; it runs in CI before anything reaches the cluster. trivy image looks for vulnerable packages inside an image, cosign verify checks signatures, and an SBOM lists components.
+
+**15.**
+
+```bash
+cosign generate-key-pair
+cosign sign --key cosign.key --use-signing-config=false --tlog-upload=false registry.example.com/shop/api:2.1
+cosign verify --key cosign.pub --insecure-ignore-tlog=true registry.example.com/shop/api:2.1
+```
+
+generate-key-pair asks for a password to encrypt cosign.key (or reads COSIGN_PASSWORD). sign resolves the tag to its digest, signs the digest, and pushes the signature to the same repository, so you need push access to it. Without the two flags, cosign records the signature in Sigstore's public log, Rekor; verify then checks that entry too, which --insecure-ignore-tlog=true skips. Verification prints the signed digest; an image signed by another key, or not at all, fails.
 
 </details>
 

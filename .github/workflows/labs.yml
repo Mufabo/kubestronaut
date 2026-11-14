@@ -62,6 +62,19 @@ jobs:
           tar -xzf helm.tar.gz linux-amd64/helm
           sudo mv linux-amd64/helm /usr/local/bin/helm
           helm version --short
+      - name: Install the pinned Trivy and cosign (Chapter 34)
+        run: |
+          set -a; source versions.env; set +a
+          tarball="trivy_${TRIVY_VERSION#v}_Linux-64bit.tar.gz"
+          curl -fsSLO "https://github.com/aquasecurity/trivy/releases/download/${TRIVY_VERSION}/${tarball}"
+          echo "${TRIVY_SHA256}  ${tarball}" | sha256sum -c -
+          tar -xzf "${tarball}" trivy
+          sudo install -m 0755 trivy /usr/local/bin/trivy
+          curl -fsSLO "https://github.com/sigstore/cosign/releases/download/${COSIGN_VERSION}/cosign-linux-amd64"
+          echo "${COSIGN_SHA256}  cosign-linux-amd64" | sha256sum -c -
+          sudo install -m 0755 cosign-linux-amd64 /usr/local/bin/cosign
+          trivy --version | head -1
+          cosign version | grep GitVersion
       - name: Unit-test shared helpers
         run: make test-lib
       - run: make test-tier1

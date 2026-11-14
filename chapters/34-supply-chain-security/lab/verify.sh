@@ -54,11 +54,61 @@ t3() {
   [[ "$(tr -d '[:space:]' < "$LAB_DIGEST_FILE")" == "$digest" ]]
 }
 
+t4() {
+  local tmp rc
+  [[ "$(kubectl -n "$LAB_SCAN_NS" get deployment report -o jsonpath='{.spec.replicas}/{.status.readyReplicas}/{.status.updatedReplicas}/{.status.replicas}' 2>/dev/null)" == 2/2/2/2 ]] || return 1
+  [[ "$(kubectl -n "$LAB_SCAN_NS" get deployment report -o jsonpath='{.spec.template.spec.containers[*].image}' 2>/dev/null)" == busybox:1.36 ]] || return 1
+  # Scan the live object, as the cluster has it.
+  tmp="$(mktemp -d)"
+  kubectl -n "$LAB_SCAN_NS" get deployment report -o yaml > "${tmp}/report.yaml" 2>/dev/null
+  trivy config --quiet --severity HIGH,CRITICAL --exit-code 1 "${tmp}/report.yaml" >/dev/null 2>&1
+  rc=$?
+  rm -rf "$tmp"
+  return "$rc"
+}
+
+# critical_pods: the Pods labelled scan=me whose image has a CRITICAL vulnerability,
+# sorted, by the vulnerability database the reader's scans used.
+critical_pods() {
+  local pod image count
+  while read -r pod image; do
+    count="$(trivy image --quiet --skip-db-update --severity CRITICAL --format template \
+      --template '{{range .}}{{range .Vulnerabilities}}x{{end}}{{end}}' "$image" 2>/dev/null </dev/null)" || return 1
+    if [[ -n "$count" ]]; then printf '%s\n' "$pod"; fi
+  done < "${here}/.state/scan-images"
+}
+
+t5() {
+  local expected pod image
+  [[ -s "${here}/.state/scan-images" && -f "$LAB_CRITICAL_FILE" ]] || return 1
+  expected="$(critical_pods | LC_ALL=C sort)" || return 1
+  [[ -n "$expected" && "$(cat "$LAB_CRITICAL_FILE")" == "$expected" ]] || return 1
+  while read -r pod image; do
+    if grep -qx "$pod" <<<"$expected"; then
+      ! kubectl -n "$LAB_SCAN_NS" get pod "$pod" >/dev/null 2>&1 </dev/null || return 1
+    else
+      [[ "$(kubectl -n "$LAB_SCAN_NS" get pod "$pod" -o jsonpath='{.spec.containers[0].image}/{.status.phase}' 2>/dev/null </dev/null)" == "${image}/Running" ]] || return 1
+    fi
+  done < "${here}/.state/scan-images"
+}
+
+t6() {
+  [[ -f "$LAB_COSIGN_KEY" && -f "$LAB_COSIGN_PUB" ]] || return 1
+  cosign verify --key "$LAB_COSIGN_PUB" --insecure-ignore-tlog=true "${LAB_REGISTRY}/ch34/app:1.0" >/dev/null 2>&1 || return 1
+  ! cosign verify --key "$LAB_COSIGN_PUB" --insecure-ignore-tlog=true "${LAB_REGISTRY}/ch34/app:1.1" >/dev/null 2>&1
+}
+
 check 1 "ValidatingAdmissionPolicy ${LAB_POLICY} accepts only images from ${TRUSTED}, in containers and init containers, bound to ${LAB_NS}" \
   "the binding needs validationActions Deny and a namespaceSelector for ${LAB_NS}; a Docker Hub image must be refused" t1
 check 2 "The policy also refuses trusted images that are not pinned by digest, in containers and init containers" \
   "a digest reference contains @sha256:; a tag such as :1.0 does not pin the image" t2
 check 3 "${LAB_DIGEST_FILE} holds the digest of the image Pod runner runs" \
   "the digest is the part of the imageID after @, in pod status" t3
+check 4 "Deployment report in ${LAB_SCAN_NS} runs 2 ready busybox:1.36 replicas, and trivy config finds no HIGH or CRITICAL misconfiguration in it" \
+  "kubectl get deployment report -o yaml > report.yaml; trivy config --severity HIGH,CRITICAL report.yaml lists what to change" t4
+check 5 "The Pods labelled scan=me whose image has a CRITICAL vulnerability are deleted and listed in ${LAB_CRITICAL_FILE}; the others still run" \
+  "trivy image --severity CRITICAL IMAGE for each Pod's image" t5
+check 6 "${LAB_REGISTRY}/ch34/app:1.0 is signed with the key pair ${LAB_COSIGN_KEY} / ${LAB_COSIGN_PUB}, and app:1.1 is not" \
+  "cosign generate-key-pair, then cosign sign --key; check with cosign verify --key --insecure-ignore-tlog=true" t6
 
 finish_checks

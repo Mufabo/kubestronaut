@@ -179,10 +179,10 @@ and Maintenance Q9–Q12 (15%), Environment, Configuration and Security Q13–Q1
 | Minimize Microservice Vulnerabilities | Manage kubernetes secrets | 07, 33 | 07/T2; 33/T3–T4 | ch07-q01, q09; ch33-q07–q10 | drafted |
 | Minimize Microservice Vulnerabilities | Understand and implement isolation techniques (multi-tenancy, sandboxed containers, etc.) | 33 | 33/T5 | ch33-q11, q12 | drafted |
 | Minimize Microservice Vulnerabilities | Implement Pod-to-Pod encryption (Cilium, Istio) | 36 | | ch36-q07 (concept) | partly (encryption explained; no mesh or CNI encryption lab) |
-| Supply Chain Security | Minimize base image footprint | 34 | | | partly (gap: 34 is written but covers digests, not base image size; add distroless, multi-stage and scratch images to 34 or 16) |
+| Supply Chain Security | Minimize base image footprint | 34 | 34 walkthrough (three builds compared) | ch34-q13 | drafted |
 | Supply Chain Security | Understand your supply chain (e.g. SBOM, CI/CD, artifact repositories) | 16, 34 | 34/T1–T3 | ch16-q06; ch34-q01–q03, q08 | partly (16 covers CI/CD and GitOps; 34 covers SBOMs and artifacts) |
-| Supply Chain Security | Secure your supply chain (permitted registries, sign and validate artifacts, etc.) | 34 | 34/T1–T2 | ch34-q04, q05, q07, q10 | partly (34 covers registries and digests; signature verification is a concept) |
-| Supply Chain Security | Perform static analysis of user workloads and container images (e.g. Kubesec, KubeLinter) | 34 | | ch34-q02 (concept) | partly (scanning explained; no scanner lab) |
+| Supply Chain Security | Secure your supply chain (permitted registries, sign and validate artifacts, etc.) | 34 | 34/T1–T2, T6 | ch34-q04, q05, q07, q10, q15 | drafted (signing and verifying with cosign; admission-time signature checks are a concept) |
+| Supply Chain Security | Perform static analysis of user workloads and container images (e.g. Kubesec, KubeLinter) | 34 | 34/T4–T5 | ch34-q02, q14 | drafted (Trivy for images and manifests; kubesec and KubeLinter as concepts) |
 | Monitoring, Logging and Runtime Security | Perform behavioral analytics to detect malicious activities | 35 | 35/T2–T3 | ch35-q01, q02, q14 | drafted |
 | Monitoring, Logging and Runtime Security | Detect threats within physical infrastructure, apps, networks, data, users and workloads | 35 | 35/T1–T3 | ch35-q01, q03, q04 | drafted (infrastructure and workloads through Falco, users and data through the audit log; network flows as a concept) |
 | Monitoring, Logging and Runtime Security | Investigate and identify phases of attack and bad actors within the environment | 35 | 35/T1, T5 | ch35-q09, q10 | drafted |
@@ -234,7 +234,7 @@ and Maintenance Q9–Q12 (15%), Environment, Configuration and Security Q13–Q1
 | Kubernetes Threat Model | Access to Sensitive Data | 29, 33 | 33/T3–T4 | ch29-q07; ch33-q07–q10 | drafted |
 | Kubernetes Threat Model | Privilege Escalation | 29, 33 | 33/T1–T2 | ch29-q07, q08; ch33-q02, q06 | drafted |
 | Platform Security | Supply Chain Security | 34 | 34/T1–T3 | ch34-q01–q12 | drafted |
-| Platform Security | Image Repository | 34 | 34/T1–T2 | ch34-q10 | partly |
+| Platform Security | Image Repository | 34 | 34/T1–T2, T6 | ch34-q10, q15 | drafted |
 | Platform Security | Observability | 15, 35 | 35/T1–T2 | ch35-q01, q05 | drafted (15 covers logs and metrics; 35 runtime alerts and audit logs) |
 | Platform Security | Service Mesh | 28, 36 | | ch28-q01–q04; ch36-q07 | drafted (concepts only, no mesh installed) |
 | Platform Security | PKI | 18, 27, 30 | 27/T4–T5 | ch18-q06, q07; ch27-q07–q09, q11; ch30-q07 | drafted |

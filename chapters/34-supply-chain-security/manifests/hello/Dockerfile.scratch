@@ -1,0 +1,10 @@
+# Two stages, and an empty final image: only the static binary.
+FROM golang:1.27 AS build
+WORKDIR /src
+COPY . .
+RUN CGO_ENABLED=0 go build -ldflags="-s -w" -o /hello .
+
+FROM scratch
+COPY --from=build /hello /hello
+USER 65532
+ENTRYPOINT ["/hello"]
