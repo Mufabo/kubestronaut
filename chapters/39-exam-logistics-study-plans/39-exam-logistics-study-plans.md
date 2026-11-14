@@ -213,7 +213,9 @@ Chapters 26 and 27 deserve a second pass.
 
 Part IV of the book (Chapters 29 to 36): read every chapter, answer the
 KCSA-tagged questions, and do the labs where they exist; they make the concepts
-concrete. Revisit Chapter 23 (RBAC) and Chapter 21 (NetworkPolicy).
+concrete. Revisit Chapter 23 (RBAC) and Chapter 21 (NetworkPolicy). In the last
+week, take the KCSA practice exam (`make quiz EXAM=kcsa`), timed, and reread the
+chapters behind the questions you missed.
 
 #### CKS (five to six weeks, after the CKA and KCSA)
 

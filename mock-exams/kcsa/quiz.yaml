@@ -1,0 +1,30 @@
+# Settings for `make quiz EXAM=kcsa` (tools/quiz.py). Question ids are
+# kcsa-<domain>-NN; each domain's count must match the bank.
+title: KCSA practice exam
+minutes: 90
+pass_percent: 75
+domains:
+  over:
+    title: Overview of Cloud Native Security
+    weight: 14
+    questions: 8
+  comp:
+    title: Kubernetes Cluster Component Security
+    weight: 22
+    questions: 13
+  fund:
+    title: Kubernetes Security Fundamentals
+    weight: 22
+    questions: 13
+  threat:
+    title: Kubernetes Threat Model
+    weight: 16
+    questions: 10
+  plat:
+    title: Platform Security
+    weight: 16
+    questions: 10
+  compl:
+    title: Compliance and Security Frameworks
+    weight: 10
+    questions: 6

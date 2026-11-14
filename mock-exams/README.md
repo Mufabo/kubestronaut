@@ -13,6 +13,7 @@ attempt.
 | --- | --- | --- | --- | --- |
 | [`kcna`](kcna/kcna.md) | The four KCNA domains, weighted as in the curriculum | 60 | 90 min | 75% |
 | [`kcna2`](kcna2/kcna2.md) | Set 2: 60 more questions, none repeated from `kcna` | 60 | 90 min | 75% |
+| [`kcsa`](kcsa/kcsa.md) | The six KCSA domains, weighted as in the curriculum | 60 | 90 min | 75% |
 
 ```bash
 make quiz EXAM=kcna          # start or resume; answer with a letter, flag, review, submit
