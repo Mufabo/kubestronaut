@@ -58,7 +58,7 @@ if [[ "$NODE_NAME" == cp1 ]]; then
   install -m 600 -o vagrant -g vagrant "$STATE/id_ed25519" /home/vagrant/.ssh/id_ed25519
   install -m 644 -o vagrant -g vagrant "$STATE/id_ed25519.pub" /home/vagrant/.ssh/id_ed25519.pub
   cat > /home/vagrant/.ssh/config <<SSHCONFIG
-Host node1 node2 cp1
+Host node1 node2 cp1 cp2 cp3 lb
   StrictHostKeyChecking accept-new
   UserKnownHostsFile /home/vagrant/.ssh/known_hosts
 SSHCONFIG

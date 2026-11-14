@@ -1,0 +1,12 @@
+# cka2-data: question 13. The claim shared, bound to the volume cka2-shared.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: shared
+spec:
+  storageClassName: manual
+  volumeName: cka2-shared
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: 1Gi

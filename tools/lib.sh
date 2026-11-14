@@ -85,7 +85,8 @@ require_snapshot() {
     [[ "$current" == "$want" ]] && return 0
   done
   [[ -n "$current" ]] || die "this lab runs on the Tier 2 VMs (snapshot '$1'), but this machine is not one of them. Work on cp1: envs/vagrant/kbook-vm ssh"
-  die "this lab needs the VM snapshot '$1', but the VMs are on '${current}'. On the host, run: envs/vagrant/kbook-vm restore $1"
+  local cmd="restore $1"; [[ "$1" == ha-prereqs ]] && cmd="restore-ha"
+  die "this lab needs the VM snapshot '$1', but the VMs are on '${current}'. On the host, run: envs/vagrant/kbook-vm ${cmd}"
 }
 
 # wait_for <description> <timeout-seconds> <command...>

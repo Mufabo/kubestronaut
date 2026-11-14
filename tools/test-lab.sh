@@ -31,12 +31,20 @@ run()  { bash "${here}/run-lab.sh" "$@"; }
 # no cluster yet, so there is no cluster state to guard; and no Tier 2 lab can
 # reset itself (only the host restores snapshots), so the reset phase is skipped.
 labdir="$(bash "${here}/lab-path.sh" "$ch")" || exit 1
-read -r tier snap t2ctx t2name < <(bash -c 'source "$1" 2>/dev/null
-  printf "%s %s %s %s\n" "${LAB_TIER:-1}" "${LAB_SNAPSHOT:--}" "${LAB_CONTEXT:--}" "${LAB_CLUSTER_NAME:--}"' _ "${labdir}/lab/lab.env")
+# A Tier 2 part may start from its own snapshot (LAB_SNAPSHOT_<part>, for example
+# Chapter 18's Part ha); such a lab is tested one part at a time, since only the
+# host can switch snapshots.
+read -r tier snap t2ctx t2name partsnaps < <(bash -c 'source "$1" 2>/dev/null
+  v="LAB_SNAPSHOT_${2}"; n="$(compgen -v LAB_SNAPSHOT_ | grep -vc "^LAB_SNAPSHOT_NS" || true)"
+  printf "%s %s %s %s %s\n" "${LAB_TIER:-1}" "${!v:-${LAB_SNAPSHOT:--}}" "${LAB_CONTEXT:--}" "${LAB_CLUSTER_NAME:--}" "$n"' _ "${labdir}/lab/lab.env" "$only")
 guard_cluster=1
 if [[ "$tier" == 2 ]]; then
+  if ((partsnaps > 0)) && [[ -z "$only" ]]; then
+    echo "LAB TEST FAILED (chapter ${ch}): its parts start from different snapshots; test one part: make test CH=${ch} PART=<part>" >&2
+    exit 2
+  fi
   require_snapshot "$snap"
-  if [[ "$snap" == prereqs ]]; then
+  if [[ "$snap" == prereqs || "$snap" == *-prereqs ]]; then
     guard_cluster=0
   else
     LAB_TIER=2 LAB_CONTEXT="$t2ctx" LAB_CLUSTER_NAME="$t2name" require_lab_cluster

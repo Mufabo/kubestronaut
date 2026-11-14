@@ -179,9 +179,10 @@ extra pieces:
 2. On each additional control plane node: `kubeadm join lb.example.com:6443 --token ... --discovery-token-ca-cert-hash ... --control-plane --certificate-key ...` (the key is printed by `init`, and is valid for two hours).
 3. Workers join through the load balancer's address as usual.
 
-The lab cluster has one control plane node, so you will not build HA here; know
-the topologies, the flags, and why the endpoint must be set at `init` time
-(adding it later means re-issuing certificates).
+Part ha of the lab builds one: three control plane nodes with stacked etcd behind
+an HAProxy load balancer, then takes one of them down. Know the topologies, the
+flags, and why the endpoint must be set at `init` time (adding it later means
+re-issuing certificates).
 
 ## Guided walkthrough
 
@@ -381,8 +382,14 @@ no `admin.conf`. The real installation is the lab.
 ## Hands-on lab
 
 The lab works like a KodeKloud lab, one task at a time with a check after each,
-but on the Tier 2 VMs. You build the cluster yourself, on `cp1`, from the
-`prereqs` snapshot. On the host, restore it, then work on `cp1`:
+but on the Tier 2 VMs. It has two parts: in Part single you build a cluster with
+one control plane node and two workers; in Part ha, three control plane nodes
+behind a load balancer.
+
+### Part single: one control plane, two workers
+
+You build the cluster yourself, on `cp1`, from the `prereqs` snapshot. On the
+host, restore it, then work on `cp1`:
 
 ```powershell
 .\envs\vagrant\kbook-vm.ps1 restore prereqs
@@ -403,7 +410,7 @@ commands on a worker. The tasks build on each other, so do them in order. The
 VMs have one CPU each, so add `--ignore-preflight-errors=NumCPU` to
 `kubeadm init`. Full solutions are in [`lab/solutions.md`](lab/solutions.md).
 
-### Task 1: Initialize the control plane
+#### Task 1: Initialize the control plane
 
 Initialize a control plane on `cp1` with kubeadm.
 
@@ -412,7 +419,7 @@ Initialize a control plane on `cp1` with kubeadm.
 - Pod network: `10.244.0.0/16`
 - Kubernetes version: `v1.37.0`
 
-### Task 2: kubectl for your user
+#### Task 2: kubectl for your user
 
 Make `kubectl` work for the `vagrant` user, without `sudo` and without passing a
 kubeconfig file.
@@ -420,7 +427,7 @@ kubeconfig file.
 - Kubeconfig: `~/.kube/config`, owned by `vagrant`
 - Current context name: `kbook-vm`
 
-### Task 3: Install the Pod network
+#### Task 3: Install the Pod network
 
 Install Calico, the CNI plugin this book uses, so the nodes become `Ready`.
 
@@ -428,14 +435,14 @@ Install Calico, the CNI plugin this book uses, so the nodes become `Ready`.
 - Calico IP pool: `10.244.0.0/16` (the manifest's default, `192.168.0.0/16`, would overlap the VM network)
 - Calico running on every node, and `cp1` `Ready`
 
-### Task 4: Join the workers
+#### Task 4: Join the workers
 
 Join both workers to the cluster.
 
 - Nodes: `node1` and `node2`
 - All three nodes `Ready`, at version `v1.37.0`
 
-### Task 5: Label the workers
+#### Task 5: Label the workers
 
 Give the workers the role label that `kubectl get nodes` shows in its `ROLES`
 column.
@@ -443,6 +450,76 @@ column.
 - Nodes: `node1` and `node2`
 - Label: `node-role.kubernetes.io/worker=` (empty value)
 - `cp1` keeps only its control plane role
+
+### Part ha: a highly available control plane
+
+Part ha needs three more VMs: `cp2` (`192.168.56.13`) and `cp3`
+(`192.168.56.14`), prepared like `cp1`, and `lb` (`192.168.56.15`), which runs
+HAProxy: it forwards port 6443 to the API servers of `cp1`, `cp2`, and `cp3`, and
+takes a server out of rotation while its `/readyz` does not answer. `node1` and
+`node2` stay halted, so the four VMs need about 6 GB of RAM, 1 GB more than the
+other Tier 2 labs. On the host, build the extra VMs once (about 15 minutes), then
+restore their snapshot:
+
+```powershell
+.\envs\vagrant\kbook-vm.ps1 build-ha       # once; Linux and macOS: envs/vagrant/kbook-vm.sh build-ha
+.\envs\vagrant\kbook-vm.ps1 restore-ha     # cp1, cp2, cp3, and lb on ha-prereqs
+.\envs\vagrant\kbook-vm.ps1 ssh
+```
+
+```bash
+cd /kbook
+make lab CH=18 PART=ha        # checks you are on ha-prereqs, then shows task 1
+make check CH=18 PART=ha      # check the current task; if it is right, show the next
+```
+
+`make reset CH=18 PART=ha` prints the restore command. Work on `cp1`, and use
+`ssh cp2` and `ssh cp3` for the other control plane nodes. The tasks build on each
+other. Add `--ignore-preflight-errors=NumCPU` to `kubeadm init`, as in Part
+single. `cp2` and `cp3` have 1.5 GB of RAM, below the 1700 MB kubeadm requires on a
+control plane node, so add `--ignore-preflight-errors=NumCPU,Mem` to their joins;
+enough for a lab, not for production. `kubeadm init` prints the join command for
+control plane nodes, with the certificate key; keep it for Task 3.
+
+#### Task 1: Initialize the first control plane behind the load balancer
+
+Initialize the control plane on `cp1`, with the load balancer as the endpoint every
+node and client uses, and with the control plane certificates uploaded for the
+other control plane nodes.
+
+- Control plane endpoint: `192.168.56.15:6443`
+- API server advertise address: `192.168.56.10`
+- Pod network: `10.244.0.0/16`
+- Kubernetes version: `v1.37.0`
+- `/etc/kubernetes/admin.conf` points at `https://192.168.56.15:6443`, and the API server's certificate includes `192.168.56.15`
+
+#### Task 2: Install the Pod network
+
+Install Calico as in Part single.
+
+- Calico IP pool: `10.244.0.0/16`
+- Calico running on every node, and `cp1` `Ready`
+
+#### Task 3: Join cp2 and cp3 as control plane nodes
+
+Join `cp2` and `cp3` through the load balancer, each as a control plane node that
+advertises its own address.
+
+- `cp1`, `cp2`, and `cp3` are `Ready` and have the control plane role
+- Each runs an API server, and etcd has three started members
+
+#### Task 4: Lose one control plane node
+
+Take `cp3`'s control plane down: move all four static Pod manifests on `cp3` from
+`/etc/kubernetes/manifests` to `/etc/kubernetes/manifests-off`. The cluster must
+keep working through the load balancer.
+
+- `cp3`'s `kube-apiserver.yaml` and `etcd.yaml` are in `/etc/kubernetes/manifests-off`, not in `/etc/kubernetes/manifests`
+- The API answers through `https://192.168.56.15:6443`
+- etcd still lists three members, two of them healthy: a quorum
+
+`cp3` itself turns `NotReady` a few minutes later, which is expected: its kubelet
+talks to its own API server. The checks of Tasks 2 and 3 allow for that.
 
 ## Exam tips
 

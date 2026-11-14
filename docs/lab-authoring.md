@@ -24,6 +24,7 @@ LAB_TIER=1          # 1 = kind, 2 = multi-VM kubeadm
 # LAB_NS_b1=...     # optional: per-part namespace (used by `make use-namespace` and CI)
 # LAB_SNAPSHOT_NS="ns1 ns2"      # optional: every namespace CI must prove verify leaves untouched
 # LAB_SNAPSHOT_NS_b1="ns1 ns2"   # ...or per part (this wins over LAB_SNAPSHOT_NS)
+# LAB_SNAPSHOT_ha=ha-prereqs      # Tier 2: a part that starts from another VM snapshot (tested one part at a time)
 # LAB_EXTRA_CONTEXTS="ch03-a"    # contexts the READER creates and may be sitting on (see below)
 ```
 

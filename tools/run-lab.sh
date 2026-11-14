@@ -40,10 +40,14 @@ fi
 
 # Tier 2 labs reset by restoring a VM snapshot, which only the host can do.
 if [[ "$action" == reset && -f "${dir}/lab/lab.env" ]]; then
-  read -r tier snap < <(bash -c 'source "$1"; printf "%s %s\n" "${LAB_TIER:-1}" "${LAB_SNAPSHOT:-cluster}"' _ "${dir}/lab/lab.env")
+  read -r tier snap < <(bash -c 'source "$1"; v="LAB_SNAPSHOT_${2}"
+    printf "%s %s\n" "${LAB_TIER:-1}" "${!v:-${LAB_SNAPSHOT:-cluster}}"' _ "${dir}/lab/lab.env" "$part")
   if [[ "$tier" == 2 ]]; then
+    # ha-prereqs (Chapter 18 Part ha) has its own driver command.
+    restore="restore ${snap}"
+    [[ "$snap" == ha-prereqs ]] && restore="restore-ha"
     echo "Tier 2 labs reset by restoring the VMs' snapshot. On the host, run:" >&2
-    printf '  envs/vagrant/kbook-vm restore %s      (Windows: .\\envs\\vagrant\\kbook-vm.ps1 restore %s)\n' "$snap" "$snap" >&2
+    printf '  envs/vagrant/kbook-vm %s      (Windows: .\\envs\\vagrant\\kbook-vm.ps1 %s)\n' "$restore" "$restore" >&2
     echo "then, back on cp1: make lab CH=${ch}${part:+ PART=${part}}" >&2
     exit 2
   fi

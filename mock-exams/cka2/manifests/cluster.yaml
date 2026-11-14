@@ -1,0 +1,98 @@
+# Cluster-scoped objects of the CKA simulator, set 2.
+# Question 2: the custom resource whose read access the reader aggregates into view.
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: reports.cka2.kbook.io
+spec:
+  group: cka2.kbook.io
+  scope: Namespaced
+  names:
+    plural: reports
+    singular: report
+    kind: Report
+  versions:
+    - name: v1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          x-kubernetes-preserve-unknown-fields: true
+---
+# Question 8: a class no controller implements; the question is about the route.
+apiVersion: gateway.networking.k8s.io/v1
+kind: GatewayClass
+metadata:
+  name: cka2-class
+spec:
+  controllerName: example.com/cka2-gateway-controller
+---
+# Question 12: two static volumes; only one is labeled for reports.
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: cka2-archive
+  labels:
+    tier: archive
+spec:
+  capacity:
+    storage: 2Gi
+  accessModes: [ReadWriteOnce]
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: manual
+  hostPath:
+    path: /srv/cka2-archive
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values: [node1]
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: cka2-reports
+  labels:
+    tier: reports
+spec:
+  capacity:
+    storage: 3Gi
+  accessModes: [ReadWriteOnce]
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: manual
+  hostPath:
+    path: /srv/cka2-reports
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values: [node1]
+---
+# Question 13: the volume behind the claim shared.
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: cka2-shared
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes: [ReadWriteOnce]
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: manual
+  claimRef:
+    namespace: cka2-data
+    name: shared
+  hostPath:
+    path: /srv/cka2-shared
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values: [node1]

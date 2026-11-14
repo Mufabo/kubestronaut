@@ -102,7 +102,7 @@ Storage Q12–Q13 (10%), Troubleshooting Q14–Q18 (30%).
 | Cluster Architecture, Installation and Configuration | Prepare underlying infrastructure for installing a Kubernetes cluster | 18 | 18 walkthrough (prepared on the `prereqs` snapshot) | ch18-q03, q04, q05, q13 | drafted (the reader inspects the preparation; `bootstrap-os.sh` and `bootstrap-tools.sh` script it) |
 | Cluster Architecture, Installation and Configuration | Create and manage Kubernetes clusters using kubeadm | 18 | 18/T1–T5; P3 Q3 | ch18-q01, q02, q06, q07, q10–q12, q14 | drafted (verified by hand on the Tier 2 VMs) |
 | Cluster Architecture, Installation and Configuration | Manage the lifecycle of Kubernetes clusters | 19, 20 | 19/T1–T5; 20/T1–T4; P3 Q4, Q6 | ch19-q01–q09, q11–q13; ch20-q01–q12 | drafted |
-| Cluster Architecture, Installation and Configuration | Implement and configure a highly-available control plane | 18 | | ch18-q08, q09 | partly (gap: concepts and flags only; a lab needs a load balancer and more control plane nodes than Tier 2 has) |
+| Cluster Architecture, Installation and Configuration | Implement and configure a highly-available control plane | 18 | 18/ha T1–T4 | ch18-q08, q09 | drafted |
 | Cluster Architecture, Installation and Configuration | Use Helm and Kustomize to install cluster components | 12, 14 | 12/T6; 14/T1–T4 | ch12-q13; ch14-q01, q06, q11 | drafted (12 installs the Ingress controller with Helm) |
 | Cluster Architecture, Installation and Configuration | Understand extension interfaces (CNI, CSI, CRI, etc.) | 01, 22, 24 | 21/T1–T2; 22/T5; 24/T5 | ch01-q04, q05; ch22-q01–q03; ch24-q03, q04 | drafted |
 | Cluster Architecture, Installation and Configuration | Understand CRDs, install and configure operators | 24 | 24/T1–T4, T6; P3 Q12 | ch24-q01, q02, q05–q07, q12, q13 | drafted (cert-manager installed with Helm and configured through its custom resources) |
@@ -268,7 +268,7 @@ already reflect it.
 
 A review of every KCNA, CKA, and CKAD row after Part III found these bullets
 marked `partly (gap: ...)`: the chapters exist, but no hands-on work covers the
-whole bullet yet. The three CKAD gaps, the two Ingress and Helm gaps, and the operator gap were closed the same day; only the highly available control plane stays conceptual.
+whole bullet yet. The three CKAD gaps, the two Ingress and Helm gaps, and the operator gap were closed the same day; the highly available control plane followed on 2026-10-30 (Chapter 18, Part ha).
 
 | Exam | Bullet | Planned fix |
 | --- | --- | --- |
@@ -278,7 +278,7 @@ whole bullet yet. The three CKAD gaps, the two Ingress and Helm gaps, and the op
 | CKA | Ingress controllers | Closed 2026-10-23: Traefik installed with Helm at a pinned chart version, and requests routed through it (12/T6) |
 | CKA | Helm and Kustomize to install cluster components | Closed 2026-10-23 by the same install (12/T6) |
 | CKA | CRDs and operators | Closed 2026-10-23: cert-manager installed with Helm, issuing and re-issuing a certificate (24/T6) |
-| CKA | Highly available control plane | Stays conceptual: a real one needs a load balancer and more control plane nodes than the Tier 2 VMs provide |
+| CKA | Highly available control plane | Closed 2026-10-30: Chapter 18 Part ha builds three stacked control plane nodes behind HAProxy (kbook-vm build-ha) and loses one |
 
 ## Supporting skills (not curriculum bullets)
 

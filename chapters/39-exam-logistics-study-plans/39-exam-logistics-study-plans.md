@@ -203,7 +203,7 @@ the vocabulary stick.
 | 5 | 23, 24, 25 | Labs |
 | 6 | 26, 27 | Labs; mock exam `part3`, timed |
 | 7 | 37, 38; review | Redo every lab you needed the solution for; the CKA simulator (`make mock EXAM=cka`, on the VMs), timed; killer.sh session 1 |
-| 8 | Review | Redo the missed questions of the CKA simulator, then take it again from a restored snapshot until it passes in time; killer.sh session 2 |
+| 8 | Review | Redo the missed questions of the CKA simulator; then set 2 (`make mock EXAM=cka2`, on the VMs), timed, as the fresh measure; killer.sh session 2 |
 
 After the CKAD, weeks 1 and 2 shrink to a review of the CKA-only topics, and the
 plan takes four to five weeks. Troubleshooting is the largest CKA domain (30%):

@@ -90,6 +90,23 @@ the host. `make reset` on `cp1` prints the command to run on the host instead:
 Restoring takes about two minutes and puts all three VMs back exactly as they
 were when the snapshot was saved.
 
+## The highly available control plane (Chapter 18, Part ha)
+
+Part ha of Chapter 18 needs three more VMs: `cp2` (`192.168.56.13`) and `cp3`
+(`192.168.56.14`), prepared like `cp1`, and `lb` (`192.168.56.15`), which runs
+HAProxy in front of the three API servers. Build them once, after the base build:
+
+```powershell
+.\kbook-vm.ps1 build-ha       # about 15 minutes; saves the snapshot ha-prereqs
+.\kbook-vm.ps1 restore-ha     # cp1, cp2, cp3, and lb on ha-prereqs
+```
+
+Both stop `node1` and `node2`, so the memory budget grows only to about 6 GB: `cp1`
+2 GB, `cp2` and `cp3` 1.5 GB each, `lb` 1 GB. `ha-prereqs` is `cp1`'s `prereqs`
+plus the HA VMs' names. The HA VMs exist for Vagrant only while `KBOOK_HA=1`,
+which these two commands set; `restore` and `halt` stop them, so every other lab
+sees the three base VMs alone.
+
 ## Other commands
 
 ```text

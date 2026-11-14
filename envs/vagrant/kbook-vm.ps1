@@ -6,6 +6,8 @@
 .DESCRIPTION
   kbook-vm.ps1 build                   build all VMs and snapshots (about 30-45 min)
   kbook-vm.ps1 restore <snapshot>      prereqs | cluster | cluster-prev
+  kbook-vm.ps1 build-ha                add cp2, cp3, and lb for Chapter 18 Part ha (about 15 min)
+  kbook-vm.ps1 restore-ha              cp1, cp2, cp3, and lb at ha-prereqs; node1 and node2 halted
   kbook-vm.ps1 snapshots               list the snapshots
   kbook-vm.ps1 up | halt | status      start, stop, or show the VMs
   kbook-vm.ps1 ssh [vm]                open a shell on a VM (default cp1)
@@ -15,6 +17,7 @@
     prereqs        containerd and kubeadm/kubelet/kubectl at K8S_VERSION, no cluster (Chapter 18)
     cluster        a ready three-node cluster at K8S_VERSION (most Tier 2 labs)
     cluster-prev   a ready three-node cluster at K8S_PREV_VERSION (Chapter 19 upgrades it)
+    ha-prereqs     cp1, cp2, cp3 with the tools and no cluster, lb running HAProxy (Chapter 18 Part ha)
 #>
 param(
   [Parameter(Position = 0)] [string] $Command = "help",
@@ -25,6 +28,15 @@ Set-Location -LiteralPath $PSScriptRoot
 
 $Snapshots = @("prereqs", "cluster", "cluster-prev")
 $Workers = @("node1", "node2")
+$HaVms = @("cp1", "cp2", "cp3", "lb")
+
+# The HA VMs exist for Vagrant only with KBOOK_HA=1; stop them (if they exist) so
+# that the base VMs have the memory to themselves.
+function Stop-Ha {
+  $env:KBOOK_HA = "1"
+  & vagrant halt cp2 cp3 lb *> $null
+  Remove-Item Env:\KBOOK_HA -ErrorAction SilentlyContinue
+}
 
 function Read-Versions {
   $versions = @{}
@@ -111,9 +123,46 @@ switch ($Command) {
     Remove-Item Env:\KBOOK_K8S_VERSION, Env:\KBOOK_SNAPSHOT -ErrorAction SilentlyContinue
     Step ("Build finished in {0:N0} minutes. The VMs are on snapshot cluster." -f ((Get-Date) - $started).TotalMinutes)
   }
+  "build-ha" {
+    $started = Get-Date
+    $env:KBOOK_HA = "1"
+    Step "Stopping node1 and node2 (the HA VMs need their memory)"
+    V halt @Workers
+    Step "Creating cp2, cp3, and lb (no provisioning yet)"
+    V up --no-provision cp2 cp3 lb
+    Step "Preparing the operating system on cp2, cp3, and lb"
+    V provision cp2 cp3 lb --provision-with os
+    Step ("Installing kubeadm, kubelet and kubectl {0} on cp2 and cp3" -f $versions["K8S_VERSION"])
+    $env:KBOOK_K8S_VERSION = $versions["K8S_VERSION"]
+    V provision cp2 cp3 --provision-with k8s-tools
+    Step "HAProxy on lb"
+    V provision lb --provision-with lb
+    Step "cp1 back to prereqs, with the HA VMs' names"
+    V snapshot restore cp1 prereqs --no-provision
+    V provision cp1 --provision-with ha-hosts
+    $env:KBOOK_SNAPSHOT = "ha-prereqs"
+    foreach ($vm in $HaVms) { V provision $vm --provision-with mark }
+    Step "Saving snapshot ha-prereqs"
+    foreach ($vm in $HaVms) { V snapshot save --force $vm ha-prereqs }
+    Remove-Item Env:\KBOOK_HA, Env:\KBOOK_K8S_VERSION, Env:\KBOOK_SNAPSHOT -ErrorAction SilentlyContinue
+    Step ("Build finished in {0:N0} minutes. cp1, cp2, cp3, and lb are on ha-prereqs." -f ((Get-Date) - $started).TotalMinutes)
+  }
+  "restore-ha" {
+    $started = Get-Date
+    $env:KBOOK_HA = "1"
+    Step "Stopping node1 and node2"
+    V halt @Workers
+    foreach ($vm in $HaVms) {
+      Step "Restoring ha-prereqs on $vm"
+      V snapshot restore $vm ha-prereqs --no-provision
+    }
+    Remove-Item Env:\KBOOK_HA -ErrorAction SilentlyContinue
+    Step ("Snapshot ha-prereqs restored in {0:N0} seconds. Work on cp1: kbook-vm.ps1 ssh" -f ((Get-Date) - $started).TotalSeconds)
+  }
   "restore" {
     if ($Snapshots -notcontains $Name) { throw "usage: kbook-vm.ps1 restore <$($Snapshots -join '|')>" }
     $started = Get-Date
+    Stop-Ha
     Step "Restoring snapshot $Name on every VM"
     V snapshot restore $Name --no-provision
     if ($Name -ne "prereqs") { Wait-Cluster }
@@ -121,7 +170,7 @@ switch ($Command) {
   }
   "snapshots" { V snapshot list }
   "up"        { V up --no-provision }
-  "halt"      { V halt }
+  "halt"      { Stop-Ha; V halt }
   "status"    { V status }
   "ssh"       { if ($Name -eq "") { $Name = "cp1" }; V ssh $Name }
   "destroy"   { V destroy -f }

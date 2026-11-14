@@ -32,12 +32,26 @@ SNAPSHOT = ENV.fetch("KBOOK_SNAPSHOT", "")
 # Hyper-V can set KBOOK_VM_CPUS=2 before building.
 CPUS = Integer(ENV.fetch("KBOOK_VM_CPUS", "1"))
 
-NODES = {
-  "cp1"   => { ip: "192.168.56.10", role: "control-plane", memory: 2048 },
-  "node1" => { ip: "192.168.56.11", role: "worker",        memory: 1536 },
-  "node2" => { ip: "192.168.56.12", role: "worker",        memory: 1536 },
+BASE_NODES = {
+  "cp1"   => { ip: "192.168.56.10", role: "control-plane", memory: 2048, ssh_port: 2222 },
+  "node1" => { ip: "192.168.56.11", role: "worker",        memory: 1536, ssh_port: 2200 },
+  "node2" => { ip: "192.168.56.12", role: "worker",        memory: 1536, ssh_port: 2201 },
 }.freeze
-HOSTS = NODES.map { |name, node| "#{node[:ip]} #{name}" }.join("\n")
+# Chapter 18's highly available control plane (Part ha): two more control plane
+# nodes and an HAProxy load balancer. They exist only with KBOOK_HA=1, which the
+# driver's build-ha and restore-ha commands set, so every other command sees the
+# three base VMs alone. node1 and node2 stay halted while they run.
+HA_NODES = {
+  "cp2" => { ip: "192.168.56.13", role: "ha-control-plane", memory: 1536, ssh_port: 2202 },
+  "cp3" => { ip: "192.168.56.14", role: "ha-control-plane", memory: 1536, ssh_port: 2203 },
+  "lb"  => { ip: "192.168.56.15", role: "load-balancer",    memory: 1024, ssh_port: 2204 },  # 512 MB cannot unpack the box's initrd
+}.freeze
+HA = ENV.fetch("KBOOK_HA", "") == "1"
+NODES = HA ? BASE_NODES.merge(HA_NODES) : BASE_NODES
+HOSTS = BASE_NODES.merge(HA_NODES).map { |name, node| "#{node[:ip]} #{name}" }.join("\n")
+# lb forwards to the API servers of every control plane node.
+LB_BACKENDS = BASE_NODES.merge(HA_NODES).select { |_, n| n[:role].end_with?("control-plane") }
+                        .map { |name, n| "#{name}:#{n[:ip]}" }.join(" ")
 
 Vagrant.configure("2") do |config|
   config.vm.box = VERSIONS.fetch("VAGRANT_BOX")
@@ -53,6 +67,10 @@ Vagrant.configure("2") do |config|
     config.vm.define name do |vm|
       vm.vm.hostname = name
       vm.vm.network "private_network", ip: node[:ip]
+      # A fixed SSH port per VM: Vagrant would otherwise hand out ports in creation
+      # order, and a VM created while another was off could take its port.
+      vm.vm.network "forwarded_port", id: "ssh", guest: 22, host: node[:ssh_port],
+        host_ip: "127.0.0.1", auto_correct: false
       vm.vm.provider "virtualbox" do |vb|
         vb.name = "kbook-#{name}"
         vb.cpus = CPUS
@@ -65,8 +83,18 @@ Vagrant.configure("2") do |config|
 
       vm.vm.provision "os", type: "shell", run: "never", path: "bootstrap-os.sh",
         env: { "NODE_NAME" => name, "NODE_IP" => node[:ip], "HOSTS" => HOSTS }
-      vm.vm.provision "k8s-tools", type: "shell", run: "never", path: "bootstrap-tools.sh",
-        env: { "K8S_VERSION" => K8S_VERSION, "K8S_MINOR" => K8S_MINOR, "NODE_IP" => node[:ip] }
+      if node[:role] == "load-balancer"
+        vm.vm.provision "lb", type: "shell", run: "never", path: "bootstrap-lb.sh",
+          env: { "BACKENDS" => LB_BACKENDS }
+      else
+        vm.vm.provision "k8s-tools", type: "shell", run: "never", path: "bootstrap-tools.sh",
+          env: { "K8S_VERSION" => K8S_VERSION, "K8S_MINOR" => K8S_MINOR, "NODE_IP" => node[:ip] }
+      end
+      if name == "cp1" && HA
+        # cp1's base snapshots predate the HA VMs: add them to /etc/hosts and SSH.
+        vm.vm.provision "ha-hosts", type: "shell", run: "never", path: "bootstrap-ha-hosts.sh",
+          env: { "HOSTS" => HOSTS }
+      end
       if node[:role] == "control-plane"
         vm.vm.provision "cluster-init", type: "shell", run: "never", path: "bootstrap-control-plane.sh",
           env: {
@@ -75,7 +103,7 @@ Vagrant.configure("2") do |config|
             "NODE_IP" => node[:ip],
           }
         vm.vm.provision "network-ready", type: "shell", run: "never", path: "bootstrap-network-ready.sh"
-      else
+      elsif node[:role] == "worker"
         vm.vm.provision "cluster-join", type: "shell", run: "never", path: "bootstrap-worker.sh"
       end
       vm.vm.provision "mark", type: "shell", run: "never",
