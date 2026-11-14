@@ -178,7 +178,7 @@ and Maintenance Q9–Q12 (15%), Environment, Configuration and Security Q13–Q1
 | Minimize Microservice Vulnerabilities | Use appropriate pod security standards | 33 | 33/T1–T2 | ch33-q01–q06 | drafted |
 | Minimize Microservice Vulnerabilities | Manage kubernetes secrets | 07, 33 | 07/T2; 33/T3–T4 | ch07-q01, q09; ch33-q07–q10 | drafted |
 | Minimize Microservice Vulnerabilities | Understand and implement isolation techniques (multi-tenancy, sandboxed containers, etc.) | 33 | 33/T5 | ch33-q11, q12 | drafted |
-| Minimize Microservice Vulnerabilities | Implement Pod-to-Pod encryption (Cilium, Istio) | 36 | | ch36-q07 (concept) | partly (encryption explained; no mesh or CNI encryption lab) |
+| Minimize Microservice Vulnerabilities | Implement Pod-to-Pod encryption (Cilium, Istio) | 36 | 36/mesh T1–T3; 36 walkthrough (mTLS on the wire) | ch36-q07, q13–q15 | drafted (Istio mTLS hands-on; Cilium and Calico WireGuard as concepts) |
 | Supply Chain Security | Minimize base image footprint | 34 | 34 walkthrough (three builds compared) | ch34-q13 | drafted |
 | Supply Chain Security | Understand your supply chain (e.g. SBOM, CI/CD, artifact repositories) | 16, 34 | 34/T1–T3; 34 walkthrough (an SBOM generated and scanned) | ch16-q06; ch34-q01–q03, q08 | drafted (16 covers CI/CD and GitOps; 34 SBOMs and artifacts) |
 | Supply Chain Security | Secure your supply chain (permitted registries, sign and validate artifacts, etc.) | 34 | 34/T1–T2, T6 | ch34-q04, q05, q07, q10, q15 | drafted (signing and verifying with cosign; admission-time signature checks are a concept) |

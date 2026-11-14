@@ -103,3 +103,70 @@ The `tls` subcommand sets the type to `kubernetes.io/tls`, and stores the two fi
 
 `make teardown CH=36` removes the Namespace, the policies, the Secret, and the certificate
 files in `/tmp/ch36`.
+
+## Part mesh: mutual TLS with Istio
+
+### Task 1: put the shop in the mesh
+
+```bash
+kubectl label namespace ch36-mesh istio-injection=enabled
+kubectl -n ch36-mesh rollout restart deployment api client other
+kubectl -n ch36-mesh rollout status deployment api
+kubectl -n ch36-mesh get pods -o custom-columns=NAME:.metadata.name,INIT:.spec.initContainers[*].name,CONTAINERS:.spec.containers[*].name
+```
+
+The label affects only Pods created from now on, which is why the Deployments must
+roll out new Pods. Each new Pod lists `istio-init` and `istio-proxy` among its init
+containers: the sidecar runs as a native sidecar, an init container that keeps running.
+
+### Task 2: require mutual TLS
+
+```bash
+kubectl apply -f - <<'EOF2'
+apiVersion: security.istio.io/v1
+kind: PeerAuthentication
+metadata:
+  name: default
+  namespace: ch36-mesh
+spec:
+  mtls:
+    mode: STRICT
+EOF2
+kubectl -n ch36-mesh exec deploy/client -c client -- wget -qO- -T 3 http://api.ch36-mesh:8088          # ok
+kubectl -n ch36-outside exec deploy/outsider -- wget -qO- -T 3 http://api.ch36-mesh:8088           # Connection reset by peer
+```
+
+The name `default` and the missing `selector` make it apply to the whole Namespace.
+Before Task 1 is done, the same policy would cut off `client` too: STRICT needs a
+sidecar on both ends.
+
+### Task 3: only the client may call the api
+
+```bash
+kubectl apply -f - <<'EOF2'
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: api-allow
+  namespace: ch36-mesh
+spec:
+  selector:
+    matchLabels:
+      app: api
+  action: ALLOW
+  rules:
+    - from:
+        - source:
+            principals: ["cluster.local/ns/ch36-mesh/sa/caller"]
+EOF2
+kubectl -n ch36-mesh exec deploy/client -c client -- wget -qO- -T 3 http://api.ch36-mesh:8088         # ok
+kubectl -n ch36-mesh exec deploy/other -c other -- wget -qO- -T 3 http://api.ch36-mesh:8088           # 403 Forbidden
+```
+
+An ALLOW policy that selects a workload denies everything it does not allow, so `other`,
+whose identity is `cluster.local/ns/ch36-mesh/sa/default`, gets HTTP 403 from the `api`'s
+sidecar. The principal is the caller's ServiceAccount, proved by its mTLS certificate,
+not its IP address.
+
+`make teardown CH=36 PART=mesh` removes both Namespaces and uninstalls Istio
+(`istioctl uninstall --purge`, then the `istio-system` Namespace).

@@ -75,6 +75,15 @@ jobs:
           sudo install -m 0755 cosign-linux-amd64 /usr/local/bin/cosign
           trivy --version | head -1
           cosign version | grep GitVersion
+      - name: Install the pinned istioctl (Chapter 36 Part mesh)
+        run: |
+          set -a; source versions.env; set +a
+          tarball="istioctl-${ISTIO_VERSION}-linux-amd64.tar.gz"
+          curl -fsSLO "https://github.com/istio/istio/releases/download/${ISTIO_VERSION}/${tarball}"
+          echo "${ISTIO_SHA256}  ${tarball}" | sha256sum -c -
+          tar -xzf "${tarball}"
+          sudo install -m 0755 istioctl /usr/local/bin/istioctl
+          istioctl version --remote=false
       - name: Unit-test shared helpers
         run: make test-lib
       - run: make test-tier1

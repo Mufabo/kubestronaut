@@ -224,7 +224,7 @@ Estimates assume one author working part-time; adjust for your pace and any co-a
 
 - [x] Chapters 01 to 16 drafted and tested
 - [ ] Chapters 01 to 16 reviewed by a reader at the target level
-- [ ] Tier 3 devcontainer working (`envs/devcontainer` does not exist yet)
+- [ ] Tier 3 devcontainer working (`envs/devcontainer` does not exist yet). Backlog since 2026-11-14
 - **Exit criterion:** all Tier 1 labs pass the CI loop; coverage matrix shows KCNA and CKAD material complete.
 
 ### Phase 2: Part III (~8 weeks)
@@ -283,5 +283,5 @@ Estimates assume one author working part-time; adjust for your pace and any co-a
 2. ~~Finish Part III on the VMs~~ Done 2026-10-15: Chapters 18, 19, 20, and 27.
 3. ~~Write the Part III mock exam~~ Done 2026-10-15 (`mock-exams/part3`).
 4. ~~Finish Part IV~~ Done 2026-11-13 (29, 30, and 33 drafted 2026-10-24; 32 on 2026-11-09; 35 on 2026-11-13). Close the "Minimize base image footprint" gap in 34 (or 16).
-5. Build the Tier 3 devcontainer, so readers without the hardware for Tier 2 have a path.
+5. Backlog (2026-11-14): build the Tier 3 devcontainer, so readers without the hardware for Tier 2 have a path. Deferred until outside readers ask for it.
 6. Find the first outside reader, starting with the pilot chapter (04).

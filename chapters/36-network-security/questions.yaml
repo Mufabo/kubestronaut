@@ -153,3 +153,39 @@
     The `tls` subcommand sets the type to `kubernetes.io/tls`, and stores the files
     under the keys `tls.crt` and `tls.key`. The last command prints
     `kubernetes.io/tls`.
+
+- id: ch36-q13
+  type: mcq
+  exams: [CKS]
+  question: "A Namespace is in an Istio mesh, and a PeerAuthentication named default in it sets mode STRICT. A Pod in another Namespace, without a sidecar, calls a Service in it. What happens?"
+  choices:
+    - "The call succeeds, but unencrypted"
+    - "The sidecar adds TLS for the caller automatically"
+    - "The connection is refused, because the workloads accept only mutual TLS and the caller cannot present a certificate"
+    - "The call succeeds only if a NetworkPolicy allows it"
+  answer: C
+  explanation: "STRICT accepts only mTLS. A client without a sidecar has no mesh certificate, so the TLS handshake fails and the connection is reset. PERMISSIVE, the default, would accept the plain-text call; it exists for migrating clients into the mesh."
+
+- id: ch36-q14
+  type: mcq
+  exams: [KCSA, CKS]
+  question: "What identity does Istio give a workload in its mTLS certificate?"
+  choices:
+    - "The Pod's IP address"
+    - "A SPIFFE ID built from its Namespace and ServiceAccount, such as spiffe://cluster.local/ns/shop/sa/api"
+    - "The node's host name"
+    - "The name of its Deployment"
+  answer: B
+  explanation: "istiod issues each workload a short-lived certificate for its ServiceAccount. AuthorizationPolicies can then name callers by that identity (principals: cluster.local/ns/shop/sa/api), which stays correct when Pods move and IP addresses change."
+
+- id: ch36-q15
+  type: mcq
+  exams: [KCSA, CKS]
+  question: "What does Cilium's or Calico's WireGuard encryption provide that differs from a service mesh's mTLS?"
+  choices:
+    - "Encryption of all Pod traffic between nodes at the network layer, for every protocol and without sidecars, but no per-workload identity"
+    - "An identity for each workload that AuthorizationPolicies can use"
+    - "Encryption of traffic between containers in the same Pod"
+    - "Encryption of Secrets in etcd"
+  answer: A
+  explanation: "CNI encryption tunnels traffic between nodes, so it covers every protocol with nothing to inject, but it authenticates nodes, not workloads. A mesh encrypts per connection between sidecars and proves which ServiceAccount is calling, which policies can use. Traffic between containers of one Pod never leaves the Pod, and etcd encryption is a separate feature."

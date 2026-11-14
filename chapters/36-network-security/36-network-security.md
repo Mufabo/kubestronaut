@@ -2,8 +2,8 @@
 
 > **Exams:** KCSA · CKS
 > **Difficulty:** Advanced
-> **Time:** ~60 min reading, ~40 min lab
-> **Lab tier:** 1 (kind, with Calico as the CNI)
+> **Time:** ~75 min reading, ~70 min lab (two parts)
+> **Lab tier:** 1 (kind, with Calico as the CNI; Part mesh installs Istio)
 > **Prerequisites:** Chapter 11 (Services and cluster DNS), Chapter 21 (NetworkPolicy basics), Chapter 28 (service meshes)
 
 ## Learning objectives
@@ -15,6 +15,8 @@ After this chapter you can:
 - Allow a flow of traffic by writing both halves of it: an egress rule on the sender and an ingress rule on the receiver
 - Distinguish server-side TLS, mutual TLS (mTLS), and encryption of the network path, and say which one each tool provides
 - Create a TLS Secret from a certificate and key, and say what a TLS Secret is used for
+- Encrypt Pod-to-Pod traffic with a service mesh: turn on sidecar injection, require mTLS with a PeerAuthentication, and allow callers by identity with an AuthorizationPolicy
+- Prove that traffic is encrypted, and compare mesh mTLS with the CNI encryption of Cilium or Calico
 - Say what the API server, etcd, and Secrets at rest protect, and which of those a NetworkPolicy does not cover
 
 ## Concepts
@@ -155,6 +157,45 @@ The Secret type is `kubernetes.io/tls`, which is how the API server knows the ke
 present. The private key is sensitive, so limit who can read Secrets in the Namespace
 (Chapter 23).
 
+### Pod-to-Pod encryption with a service mesh
+
+A service mesh provides mTLS without changing the application. With **Istio** in its
+sidecar mode:
+
+- **istiod**, the control plane, runs a certificate authority. It gives every workload a
+  short-lived certificate whose identity is a SPIFFE ID built from its ServiceAccount:
+  `spiffe://cluster.local/ns/<namespace>/sa/<serviceaccount>`.
+- An **Envoy sidecar** (`istio-proxy`) joins every Pod of a Namespace labelled
+  `istio-injection=enabled`, when the Pod is created. An init container redirects the
+  Pod's traffic through the sidecar, so the application still speaks plain HTTP to
+  `localhost`, while the sidecars speak mTLS to each other.
+- A **PeerAuthentication** sets what a workload accepts. `PERMISSIVE`, the default,
+  accepts mTLS and plain text, so that clients outside the mesh keep working while you
+  migrate; `STRICT` accepts only mTLS. A PeerAuthentication named `default` applies to
+  its whole Namespace; one in `istio-system` applies to the whole mesh.
+- An **AuthorizationPolicy** decides which identities may call a workload. Because mTLS
+  proves who the caller is, a rule can name a ServiceAccount (`principals`) instead of an
+  IP address.
+
+```mermaid
+flowchart LR
+  A[client container] -->|plain HTTP, localhost| SA[istio-proxy]
+  SA -->|mTLS on the wire| SB[istio-proxy]
+  SB -->|plain HTTP, localhost| B[api container]
+  I[istiod: CA and configuration] -.->|certificates, policies| SA
+  I -.-> SB
+```
+
+The application containers talk plain HTTP to their own sidecar. Between Pods, and so
+between nodes, only the sidecars talk, and they use mTLS with certificates istiod issues
+and rotates.
+
+The CNI alternatives encrypt at the network layer instead. **Cilium** can encrypt all
+Pod traffic between nodes with WireGuard or IPsec (and adds its own mutual
+authentication), and **Calico** has a WireGuard mode. They need no sidecars and protect
+every protocol, but they encrypt per node, not per workload, so they do not give each
+workload an identity to authorize.
+
 ### The rest of the control plane
 
 Three more protections belong to the cluster itself, and they are outside NetworkPolicy:
@@ -247,18 +288,141 @@ notAfter=Oct 14 13:56:59 2026 GMT
 A self-signed certificate has the same subject and issuer. The expiry date differs on
 every run. A certificate issued by a real authority has a different issuer.
 
+### See mTLS on the wire
+
+This walkthrough needs Istio, which Part mesh of the lab installs (`make lab CH=36
+PART=mesh`); the output below comes from such a cluster, with an `api` Pod in a meshed
+Namespace `mesh-x` answering on port 8088, a meshed caller `trusted`, and a `client` in
+a Namespace without the mesh. A meshed Pod has two extra containers: `istio-init`, which
+redirects its traffic, and `istio-proxy`, the sidecar, which since Kubernetes' native
+sidecars runs as an init container that keeps running:
+
+```bash
+kubectl -n mesh-x get pod api -o jsonpath='{range .spec.initContainers[*]}{.name}{" restartPolicy="}{.restartPolicy}{"\n"}{end}'
+```
+
+```text
+istio-init restartPolicy=
+istio-proxy restartPolicy=Always
+```
+
+To watch the wire on a kind cluster, run `tcpdump` in the node's network namespace, from
+a container that has it (`nicolaka/netshoot`), while a Pod calls the `api`:
+
+```bash
+node=$(kubectl -n mesh-x get pod api -o jsonpath='{.spec.nodeName}')
+docker run --rm --net "container:${node}" nicolaka/netshoot:v0.14 \
+  tcpdump -i any -nn -A -c 2 'tcp dst port 8088 and greater 120'
+```
+
+The request from `client`, outside the mesh, crosses the node as plain text (an excerpt
+of the capture):
+
+```text
+15:39:41.806364 cali0f6581258b8 Out IP 192.168.145.228.42388 > 192.168.145.230.8088: Flags [P.], seq 1488598825:1488598903, ack 1598846889, win 64, options [nop,nop,TS val 460190119 ecr 1419821417], length 78
+.m..T..iGET / HTTP/1.1
+Host: api.mesh-x:8088
+User-Agent: Wget
+```
+
+The same request from the meshed `trusted` is a TLS handshake. Only the name the sidecar
+asks for is legible; the HTTP request inside is encrypted:
+
+```text
+15:39:47.566276 cali0f6581258b8 Out IP 192.168.145.229.59856 > 192.168.145.230.8088: Flags [P.], seq 0:301, ack 1, win 64, options [nop,nop,TS val 2603547696 ecr 3649683148], length 301
+N..R.........].<...T.........+.../...,.0.......3.1...outbound_.8088_._.api.mesh-x.svc.cluster.local..........
+```
+
+Both calls succeed so far, because the Namespace is `PERMISSIVE`. Require mTLS:
+
+```yaml
+apiVersion: security.istio.io/v1
+kind: PeerAuthentication
+metadata:
+  name: default
+  namespace: mesh-x
+spec:
+  mtls:
+    mode: STRICT
+```
+
+```bash
+kubectl -n plain-x exec client -- wget -qO- -T 3 http://api.mesh-x:8088
+kubectl -n mesh-x exec trusted -c trusted -- wget -qO- -T 3 http://api.mesh-x:8088
+```
+
+```text
+wget: error getting response: Connection reset by peer
+command terminated with exit code 1
+ok
+```
+
+The client without a sidecar cannot complete the TLS handshake, and is cut off. `istioctl`
+shows which policy applies to a Pod:
+
+```bash
+istioctl x describe pod api -n mesh-x | sed -n '/Effective PeerAuthentication/,$p'
+```
+
+```text
+Effective PeerAuthentication:
+   Workload mTLS mode: STRICT
+Applied PeerAuthentication:
+   default.mesh-x
+Skipping Gateway information (no ingress gateway pods)
+```
+
+mTLS also proves who is calling. An AuthorizationPolicy on the `api` that allows only the
+ServiceAccount `caller` (which `trusted` runs as) turns away every other meshed Pod, with an
+HTTP 403 from the sidecar:
+
+```yaml
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: api-allow
+  namespace: mesh-x
+spec:
+  selector:
+    matchLabels:
+      app: api
+  action: ALLOW
+  rules:
+    - from:
+        - source:
+            principals: ["cluster.local/ns/mesh-x/sa/caller"]
+```
+
+```bash
+kubectl -n mesh-x exec trusted -c trusted -- wget -qO- -T 3 http://api.mesh-x:8088
+kubectl -n mesh-x exec other -c other -- wget -qO- -T 3 http://api.mesh-x:8088
+```
+
+```text
+ok
+wget: server returned error: HTTP/1.1 403 Forbidden
+command terminated with exit code 1
+```
+
 ## Hands-on lab
 
 The lab works like a KodeKloud lab: one task at a time, a check after each, and
-progress that is saved between sessions.
+progress that is saved between sessions. It has two parts: `policy`, NetworkPolicies
+and a TLS Secret, and `mesh`, mutual TLS with Istio. Choose one with `PART`; `policy` is
+the default.
 
 ```bash
-make lab CH=36       # set up the lab and show task 1
-make check CH=36     # check the current task; if it is right, show the next
-make question CH=36  # show the current task again
-make reset CH=36     # back to the starting state and task 1
-make verify CH=36    # check every task at once
+make lab CH=36 PART=policy       # set up a part and show its task 1
+make check CH=36 PART=policy     # check the current task; if it is right, show the next
+make question CH=36 PART=policy  # show the current task again
+make reset CH=36 PART=policy     # back to the starting state and task 1
+make verify CH=36 PART=policy    # check every task of the part at once
+make teardown CH=36 PART=mesh    # remove a part (for mesh, Istio too)
 ```
+
+Full solutions are in [`lab/solutions.md`](lab/solutions.md).
+
+### Part policy: NetworkPolicies and a TLS Secret
 
 Everything happens in the Namespace `ch36-shop`, where the setup starts four Pods, each
 with a Service: `frontend` (label `app=frontend`), `api` (`app=api`, port 8080), `db`
@@ -271,9 +435,7 @@ The setup also writes a self-signed certificate and key to `/tmp/ch36/api.crt` a
 so you can see the result of each policy at once. Tasks 2 and 3 do not depend on Task 1, but
 the checks expect the policies in the names given.
 
-Full solutions are in [`lab/solutions.md`](lab/solutions.md).
-
-### Task 1: Deny everything, and allow DNS
+#### Task 1: Deny everything, and allow DNS
 
 Create a NetworkPolicy `default-deny` that selects every Pod in the Namespace and
 denies both ingress and egress. Then create a NetworkPolicy `allow-dns` that lets every
@@ -284,7 +446,7 @@ Pod send DNS queries to the cluster DNS in `kube-system`, on port 53 over UDP an
 - The `stranger` Pod cannot reach `api` on port 8080
 - The `stranger` Pod can still resolve the Service name `api`
 
-### Task 2: The frontend may call the api, and nothing else may
+#### Task 2: The frontend may call the api, and nothing else may
 
 Create the NetworkPolicy `frontend-to-api`, which lets the `frontend` Pods send TCP to the
 `api` Pods on port 8080. Create `api-from-frontend`, which lets the `api` Pods receive TCP
@@ -295,7 +457,7 @@ on port 8080 from the `frontend` Pods.
 - The `frontend` Pod gets `ok` from `http://api:8080/`
 - The `stranger` Pod still cannot reach `http://api:8080/`
 
-### Task 3: The api may reach the db, and the frontend may not
+#### Task 3: The api may reach the db, and the frontend may not
 
 Create the NetworkPolicy `api-to-db`, which lets the `api` Pods send TCP to the `db` Pods on
 port 5432. Create `db-from-api`, which lets the `db` Pods receive TCP on port 5432 from the
@@ -306,7 +468,7 @@ port 5432. Create `db-from-api`, which lets the `db` Pods receive TCP on port 54
 - The `api` Pod gets `ok` from `http://db:5432/`
 - The `frontend` Pod cannot reach `http://db:5432/`
 
-### Task 4: A TLS Secret for the api
+#### Task 4: A TLS Secret for the api
 
 Create a Secret named `api-tls` of type `kubernetes.io/tls`, from the certificate in
 `/tmp/ch36/api.crt` and the key in `/tmp/ch36/api.key`. Its contents must be exactly
@@ -315,6 +477,48 @@ those two files.
 - Secret `api-tls` in `ch36-shop`: type `kubernetes.io/tls`
 - Key `tls.crt` holds the contents of `/tmp/ch36/api.crt`, and key `tls.key` holds the contents of `/tmp/ch36/api.key`
 
+### Part mesh: mutual TLS with Istio
+
+This part needs `istioctl` at the version in `versions.env`, installed on your machine
+like the other tools:
+
+```bash
+source versions.env
+curl -fsSLO "https://github.com/istio/istio/releases/download/${ISTIO_VERSION}/istioctl-${ISTIO_VERSION}-linux-amd64.tar.gz"
+echo "${ISTIO_SHA256}  istioctl-${ISTIO_VERSION}-linux-amd64.tar.gz" | sha256sum -c -
+tar -xzf "istioctl-${ISTIO_VERSION}-linux-amd64.tar.gz" && sudo install -m 0755 istioctl /usr/local/bin/
+```
+
+`make lab CH=36 PART=mesh` installs Istio into the kind cluster (the minimal profile:
+istiod only, in `istio-system`), and `make teardown CH=36 PART=mesh` removes it again,
+with its CRDs and webhooks. In `ch36-mesh`, the setup starts three Deployments: `api`
+(label `app=api`, a Service `api` on port 8088 that answers `ok`), `client` (running as
+the ServiceAccount `caller`), and `other` (the default ServiceAccount). In `ch36-outside`
+it starts `outsider`, which will never be in the mesh. Nothing is in the mesh yet, so
+every Pod can reach the `api`. The tasks build on each other.
+
+#### Task 1: Put the shop in the mesh
+
+Turn on sidecar injection for `ch36-mesh`, and make the Pods of all three Deployments run
+with the sidecar.
+
+- Namespace `ch36-mesh`: label `istio-injection=enabled`
+- Deployments `api`, `client`, and `other`: 1 ready replica each, every Pod with the `istio-proxy` sidecar
+
+#### Task 2: Require mutual TLS
+
+Make every workload in `ch36-mesh` accept only mutual TLS.
+
+- PeerAuthentication `default` in `ch36-mesh`, mode `STRICT`
+- `client` still reaches the `api`; `outsider`, which has no sidecar, does not
+
+#### Task 3: Only the client may call the api
+
+Allow calls to the `api` only from workloads that run as the ServiceAccount `caller`.
+
+- AuthorizationPolicy `api-allow` in `ch36-mesh`
+- `client` is answered; `other`, in the mesh but with a different identity, gets HTTP 403
+
 ## Exam tips
 
 > **Exam tip:** For any NetworkPolicy question, write down both halves of the flow before you type anything: the egress on the sender and the ingress on the receiver. Missing one half is the most common reason a correct-looking policy fails.
@@ -322,6 +526,8 @@ those two files.
 > **Exam tip:** `kubectl describe networkpolicy NAME` states which directions a policy isolates in plain words. Use it to check a policy's effect before you test traffic.
 >
 > **Exam tip:** Know the three encryption layers and which one a question means: server TLS, mTLS, or the encrypted network path. "Authenticate both sides" means mTLS; "protect traffic between nodes" means the CNI or a mesh.
+>
+> **Exam tip:** Sidecar injection happens when a Pod is created. After labelling a Namespace `istio-injection=enabled`, restart its Deployments (`kubectl rollout restart`), then check that every Pod shows the `istio-proxy` container before you add a STRICT PeerAuthentication; otherwise the Pods without a sidecar are cut off.
 
 ## Common mistakes
 
@@ -331,6 +537,9 @@ those two files.
 - Assuming a NetworkPolicy encrypts traffic. It decides delivery only.
 - Forgetting that a NetworkPolicy has no effect in a cluster whose CNI does not enforce it.
 - Creating a TLS Secret from the wrong pair of files. The certificate must match the key, and the Secret's type must be `kubernetes.io/tls`.
+- Labelling a Namespace for injection and expecting the running Pods to change. Only new Pods get the sidecar.
+- Switching a Namespace to STRICT while some clients are still outside the mesh. `PERMISSIVE` exists for the migration; check who still connects in plain text first.
+- Writing an AuthorizationPolicy with `principals` for workloads without sidecars. Without mTLS there is no verified identity, and the rule never matches.
 
 <!-- QUESTIONS:START -->
 
@@ -410,6 +619,27 @@ those two files.
 
 **12. (Task)** `CKS` Create a TLS Secret named `web-tls` in Namespace `shop` from the files `web.crt` and `web.key` in the current directory. Show the Secret's type.
 
+**13.** `CKS` A Namespace is in an Istio mesh, and a PeerAuthentication named default in it sets mode STRICT. A Pod in another Namespace, without a sidecar, calls a Service in it. What happens?
+
+- **A.** The call succeeds, but unencrypted
+- **B.** The sidecar adds TLS for the caller automatically
+- **C.** The connection is refused, because the workloads accept only mutual TLS and the caller cannot present a certificate
+- **D.** The call succeeds only if a NetworkPolicy allows it
+
+**14.** `KCSA` `CKS` What identity does Istio give a workload in its mTLS certificate?
+
+- **A.** The Pod's IP address
+- **B.** A SPIFFE ID built from its Namespace and ServiceAccount, such as spiffe://cluster.local/ns/shop/sa/api
+- **C.** The node's host name
+- **D.** The name of its Deployment
+
+**15.** `KCSA` `CKS` What does Cilium's or Calico's WireGuard encryption provide that differs from a service mesh's mTLS?
+
+- **A.** Encryption of all Pod traffic between nodes at the network layer, for every protocol and without sidecars, but no per-workload identity
+- **B.** An identity for each workload that AuthorizationPolicies can use
+- **C.** Encryption of traffic between containers in the same Pod
+- **D.** Encryption of Secrets in etcd
+
 <details>
 <summary>Answers</summary>
 
@@ -462,6 +692,12 @@ kubectl -n shop get secret web-tls -o jsonpath='{.type}'
 The `tls` subcommand sets the type to `kubernetes.io/tls`, and stores the files
 under the keys `tls.crt` and `tls.key`. The last command prints
 `kubernetes.io/tls`.
+
+**13. C.** STRICT accepts only mTLS. A client without a sidecar has no mesh certificate, so the TLS handshake fails and the connection is reset. PERMISSIVE, the default, would accept the plain-text call; it exists for migrating clients into the mesh.
+
+**14. B.** istiod issues each workload a short-lived certificate for its ServiceAccount. AuthorizationPolicies can then name callers by that identity (principals: cluster.local/ns/shop/sa/api), which stays correct when Pods move and IP addresses change.
+
+**15. A.** CNI encryption tunnels traffic between nodes, so it covers every protocol with nothing to inject, but it authenticates nodes, not workloads. A mesh encrypts per connection between sidecars and proves which ServiceAccount is calling, which policies can use. Traffic between containers of one Pod never leaves the Pod, and etcd encryption is a separate feature.
 
 </details>
 
