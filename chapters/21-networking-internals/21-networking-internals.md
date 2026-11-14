@@ -103,6 +103,54 @@ You rarely need to configure kube-proxy in an exam. You do need to know that it
 is the component turning a Service into rules, because a Service with no endpoints
 has no rules that forward anywhere.
 
+### kube-proxy's privileges
+
+To write the node's packet filter, kube-proxy needs more than an ordinary Pod. In a
+kubeadm cluster (here the kind cluster) it runs as a DaemonSet in the host's network
+namespace, privileged, with the host's kernel modules mounted:
+
+```bash
+kubectl -n kube-system get daemonset kube-proxy -o jsonpath='{.spec.template.spec.hostNetwork}{" "}{.spec.template.spec.containers[0].securityContext}{"\n"}'
+kubectl -n kube-system get daemonset kube-proxy -o jsonpath='{range .spec.template.spec.volumes[*]}{.name}{" "}{.hostPath.path}{"\n"}{end}'
+```
+
+```text
+true {"privileged":true}
+kube-proxy
+xtables-lock /run/xtables.lock
+lib-modules /lib/modules
+```
+
+Whoever controls kube-proxy on a node can therefore redirect any Service's traffic
+on that node, and act as root on it. Its rights in the API, by contrast, are narrow.
+The ServiceAccount `kube-proxy` is bound to the ClusterRole `system:node-proxier`:
+
+```bash
+kubectl describe clusterrole system:node-proxier | sed -n '/PolicyRule/,$p'
+```
+
+```text
+PolicyRule:
+  Resources                        Non-Resource URLs  Resource Names  Verbs
+  ---------                        -----------------  --------------  -----
+  events                           []                 []              [create patch update]
+  events.events.k8s.io             []                 []              [create patch update]
+  nodes                            []                 []              [get list watch]
+  endpoints                        []                 []              [list watch]
+  services                         []                 []              [list watch]
+  endpointslices.discovery.k8s.io  []                 []              [list watch]
+  servicecidrs.networking.k8s.io   []                 []              [list watch]
+```
+
+It reads Services, endpoints, and nodes, and writes Events; it cannot read Secrets
+or change workloads. What it exposes on the network is set in its ConfigMap: a
+metrics endpoint (port 10249) that should stay on `127.0.0.1`, and a health check
+(port 10256) that load balancers may need to reach. On the Tier 2 VMs, `ss -tlnp`
+shows exactly that (Chapter 32). Hardening kube-proxy means keeping it patched with
+the rest of the cluster, keeping its metrics local, and protecting the nodes it runs
+on; or replacing it, since some CNI plugins (Cilium, for example) can take over Service
+forwarding themselves.
+
 ### NetworkPolicy: a firewall for Pods
 
 A NetworkPolicy selects Pods with a label selector and says which traffic may
@@ -465,6 +513,20 @@ for example `iptables`.
 
 **11. (Task)** `CKA` In namespace `prod`, the Service `web` exists. From the Pod `client` (image `busybox:1.36`, running `sleep 3600`), look up `web` with DNS. Write the IP address it returns to `/tmp/ch21-q11-ip.txt`, and nothing else.
 
+**12.** `KCSA` `CKA` kube-proxy runs privileged and in the host's network namespace on every node. What could an attacker who takes control of it on one node do?
+
+- **A.** Read every Secret in the cluster through its ServiceAccount
+- **B.** Rewrite the node's packet filter rules, for example to send a Service's traffic on that node elsewhere, and act as root on the node
+- **C.** Change the API server's flags
+- **D.** Nothing, because kube-proxy has no network access
+
+**13.** `KCSA` Which kube-proxy endpoint should listen only on 127.0.0.1?
+
+- **A.** The metrics endpoint, port 10249
+- **B.** The health check, port 10256, because no one outside the node needs it
+- **C.** The API server's port 6443
+- **D.** None; kube-proxy listens on no port
+
 <details>
 <summary>Answers</summary>
 
@@ -551,6 +613,10 @@ cat /tmp/ch21-q11-ip.txt
 for the server and takes the Service's address. The simpler and safer method is to
 read `kubectl -n prod get svc web -o jsonpath='{.spec.clusterIP}'`, which gives the
 same address.
+
+**12. B.** kube-proxy's power is local: it programs the node's packet filter, so on its node it can redirect Service traffic, and as a privileged container it is root there. Its API rights are narrow: the ClusterRole system:node-proxier reads Services, endpoints, EndpointSlices, and nodes, and writes Events, and gives no access to Secrets.
+
+**13. A.** Metrics describe the node's Services and are only for local scraping or a trusted collector, so they stay on the loopback address (metricsBindAddress). The health check on 10256 may need to be reachable, because cloud load balancers use it to decide which nodes can take traffic for a Service. Port 6443 belongs to the API server, not to kube-proxy.
 
 </details>
 

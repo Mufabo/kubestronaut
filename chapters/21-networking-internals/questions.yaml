@@ -163,3 +163,27 @@
     for the server and takes the Service's address. The simpler and safer method is to
     read `kubectl -n prod get svc web -o jsonpath='{.spec.clusterIP}'`, which gives the
     same address.
+
+- id: ch21-q12
+  type: mcq
+  exams: [KCSA, CKA]
+  question: "kube-proxy runs privileged and in the host's network namespace on every node. What could an attacker who takes control of it on one node do?"
+  choices:
+    - "Read every Secret in the cluster through its ServiceAccount"
+    - "Rewrite the node's packet filter rules, for example to send a Service's traffic on that node elsewhere, and act as root on the node"
+    - "Change the API server's flags"
+    - "Nothing, because kube-proxy has no network access"
+  answer: B
+  explanation: "kube-proxy's power is local: it programs the node's packet filter, so on its node it can redirect Service traffic, and as a privileged container it is root there. Its API rights are narrow: the ClusterRole system:node-proxier reads Services, endpoints, EndpointSlices, and nodes, and writes Events, and gives no access to Secrets."
+
+- id: ch21-q13
+  type: mcq
+  exams: [KCSA]
+  question: "Which kube-proxy endpoint should listen only on 127.0.0.1?"
+  choices:
+    - "The metrics endpoint, port 10249"
+    - "The health check, port 10256, because no one outside the node needs it"
+    - "The API server's port 6443"
+    - "None; kube-proxy listens on no port"
+  answer: A
+  explanation: "Metrics describe the node's Services and are only for local scraping or a trusted collector, so they stay on the loopback address (metricsBindAddress). The health check on 10256 may need to be reachable, because cloud load balancers use it to decide which nodes can take traffic for a Service. Port 6443 belongs to the API server, not to kube-proxy."

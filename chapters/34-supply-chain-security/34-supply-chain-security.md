@@ -18,6 +18,7 @@ After this chapter you can:
 - Choose between an admission policy that checks the reference and one that checks a signature, and know which policy engines verify signatures
 - Shrink an image's attack surface with a multi-stage build on a minimal or empty base image
 - Scan images for vulnerabilities and manifests for misconfigurations with Trivy, and act on the findings
+- Generate an SBOM for an image, read it, and scan the SBOM instead of the image
 - Sign an image with a cosign key pair and verify the signature
 
 ## Concepts
@@ -342,6 +343,82 @@ KSV-0118 (HIGH): deployment web in default namespace is using the default securi
 
 Each check (`KSV-...`) names the setting to change; without `--severity`, the same scan
 also lists 14 lower-severity findings, such as missing resource limits.
+
+### Generate and use an SBOM
+
+The same scanner writes an SBOM instead of a report. For the Alpine image of the
+walkthrough above, in CycloneDX format:
+
+```bash
+trivy image --quiet --format cyclonedx --output hello.cdx.json hello:alpine
+jq -r '.bomFormat, .specVersion, (.components | length)' hello.cdx.json
+jq -r '.components[] | [.type, .name, .version] | @tsv' hello.cdx.json | column -t
+```
+
+```text
+CycloneDX
+1.7
+18
+operating-system  alpine                  3.20.10
+application       hello
+library           alpine-baselayout-data  3.6.5-r0
+library           alpine-baselayout       3.6.5-r0
+library           alpine-keys             2.4-r1
+library           apk-tools               2.14.4-r1
+library           busybox-binsh           1.36.1-r31
+library           busybox                 1.36.1-r31
+library           ca-certificates-bundle  20260413-r0
+library           libcrypto3              3.3.7-r0
+library           libssl3                 3.3.7-r0
+library           musl-utils              1.2.5-r3
+library           musl                    1.2.5-r3
+library           scanelf                 1.3.7-r2
+library           ssl_client              1.36.1-r31
+library           zlib                    1.3.2-r0
+library           hello
+library           stdlib                  v1.27.3
+```
+
+Eighteen components: the Alpine release, its packages, the Go program, and the Go
+standard library compiled into it. Each one carries a **package URL** (purl), a
+standard name that tools across ecosystems understand:
+
+```bash
+jq -r '.components[] | select(.name=="busybox") | .purl' hello.cdx.json
+```
+
+```text
+pkg:apk/alpine/busybox@1.36.1-r31?arch=x86_64&distro=3.20.10
+```
+
+`--format spdx-json` writes the other standard, SPDX (here an `SPDX-2.3` document with
+19 packages). The point of an SBOM is that you can work with it without the image:
+when a new vulnerability is published, scan the stored SBOMs instead of pulling and
+unpacking every image again:
+
+```bash
+trivy sbom --quiet hello.cdx.json
+```
+
+```text
+hello.cdx.json (alpine 3.20.10)
+===============================
+Total: 2 (UNKNOWN: 0, LOW: 0, MEDIUM: 0, HIGH: 2, CRITICAL: 0)
+
+┌────────────┬─────────────────┬──────────┬────────┬───────────────────┬───────────────┬──────────────────────────────────────────────────────────────┐
+│  Library   │  Vulnerability  │ Severity │ Status │ Installed Version │ Fixed Version │                            Title                             │
+├────────────┼─────────────────┼──────────┼────────┼───────────────────┼───────────────┼──────────────────────────────────────────────────────────────┤
+│ musl       │ CVE-2026-107891 │ HIGH     │ fixed  │ 1.2.5-r3          │ 1.2.5-r4      │ musl: musl: Arbitrary code execution via integer overflow in │
+│            │                 │          │        │                   │               │ regcomp                                                      │
+│            │                 │          │        │                   │               │ https://avd.aquasec.com/nvd/cve-2026-107891                  │
+├────────────┤                 │          │        │                   │               │                                                              │
+│ musl-utils │                 │          │        │                   │               │                                                              │
+```
+
+The findings are the image's own (the report also lists one for the Go standard
+library), found from 28 KB of JSON. In a pipeline, the SBOM is generated at build
+time and stored with the image, for example as an attestation that cosign signs
+(`cosign attest --type cyclonedx`), so that it, too, is tied to the digest.
 
 ### Sign and verify an image
 

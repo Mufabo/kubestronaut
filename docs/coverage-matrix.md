@@ -180,7 +180,7 @@ and Maintenance Q9–Q12 (15%), Environment, Configuration and Security Q13–Q1
 | Minimize Microservice Vulnerabilities | Understand and implement isolation techniques (multi-tenancy, sandboxed containers, etc.) | 33 | 33/T5 | ch33-q11, q12 | drafted |
 | Minimize Microservice Vulnerabilities | Implement Pod-to-Pod encryption (Cilium, Istio) | 36 | | ch36-q07 (concept) | partly (encryption explained; no mesh or CNI encryption lab) |
 | Supply Chain Security | Minimize base image footprint | 34 | 34 walkthrough (three builds compared) | ch34-q13 | drafted |
-| Supply Chain Security | Understand your supply chain (e.g. SBOM, CI/CD, artifact repositories) | 16, 34 | 34/T1–T3 | ch16-q06; ch34-q01–q03, q08 | partly (16 covers CI/CD and GitOps; 34 covers SBOMs and artifacts) |
+| Supply Chain Security | Understand your supply chain (e.g. SBOM, CI/CD, artifact repositories) | 16, 34 | 34/T1–T3; 34 walkthrough (an SBOM generated and scanned) | ch16-q06; ch34-q01–q03, q08 | drafted (16 covers CI/CD and GitOps; 34 SBOMs and artifacts) |
 | Supply Chain Security | Secure your supply chain (permitted registries, sign and validate artifacts, etc.) | 34 | 34/T1–T2, T6 | ch34-q04, q05, q07, q10, q15 | drafted (signing and verifying with cosign; admission-time signature checks are a concept) |
 | Supply Chain Security | Perform static analysis of user workloads and container images (e.g. Kubesec, KubeLinter) | 34 | 34/T4–T5 | ch34-q02, q14 | drafted (Trivy for images and manifests; kubesec and KubeLinter as concepts) |
 | Monitoring, Logging and Runtime Security | Perform behavioral analytics to detect malicious activities | 35 | 35/T2–T3 | ch35-q01, q02, q14 | drafted |
@@ -213,10 +213,10 @@ and Maintenance Q9–Q12 (15%), Environment, Configuration and Security Q13–Q1
 | Cluster Component Security | Scheduler | 02, 30 | 02/T4; 17/T5; 30/T2 | ch02-q02; ch17-q01, q06, q07; ch30-q13 | drafted |
 | Kubernetes Cluster Component Security | Kubelet | 02, 30 | 30/T1, 30/T3 | ch02-q03, q07; ch30-q05, q11 | drafted |
 | Kubernetes Cluster Component Security | Container Runtime | 01, 33 | 33/T5 | ch01-q04, q05; ch33-q11, q12 | drafted |
-| Kubernetes Cluster Component Security | KubeProxy | 02, 21 | P1 Q14 | | partly |
+| Kubernetes Cluster Component Security | KubeProxy | 02, 21 | 21/T5; P1 Q14 | ch21-q02, q10, q12, q13 | drafted (21 covers its modes and its privileges) |
 | Kubernetes Cluster Component Security | Pod | 04, 33 | 04/T1-T5; 33/T2–T3 | ch04-q01, q02; ch33-q06 | drafted |
 | Kubernetes Cluster Component Security | Etcd | 02, 20, 30, 33 | 02/T2; 20/T1–T4; 33/T4 | ch02-q01, q08; ch30-q04 | drafted |
-| Kubernetes Cluster Component Security | Container Networking | 21, 36 | 21/T1–T2 | ch21-q01, q02 | partly (36 planned) |
+| Kubernetes Cluster Component Security | Container Networking | 21, 36 | 21/T1–T4; 36/T1–T4 | ch21-q01, q02; ch36-q01–q07 | drafted |
 | Kubernetes Cluster Component Security | Client Security | 03, 30 | 03/b1 | ch02-q10; ch03-q08; ch30-q07 | drafted |
 | Kubernetes Cluster Component Security | Storage | 13, 22, 33, 36 | 13/T5; 22/T2; 33/T4 | ch13-q05; ch22-q07; ch33-q09, q10; ch36-q09 | drafted |
 | Kubernetes Security Fundamentals | Pod Security Standards | 33 | 33/T1–T2 | ch33-q01–q06 | drafted |
@@ -242,7 +242,7 @@ and Maintenance Q9–Q12 (15%), Environment, Configuration and Security Q13–Q1
 | Platform Security | Admission Control | 31 | 31/T1–T2, T4 | ch31-q05–q07, q11 | drafted |
 | Compliance and Security Frameworks | Compliance Frameworks | 29 | | ch29-q11 | drafted |
 | Compliance and Security Frameworks | Threat Modeling Frameworks | 29 | 29 exploration exercise | ch29-q09 | drafted |
-| Compliance and Security Frameworks | Supply Chain Compliance | 34 | 34/T1–T3 | ch34-q03–q05, q08 | partly (SBOMs, signing and provenance described; compliance frameworks come with 29) |
+| Compliance and Security Frameworks | Supply Chain Compliance | 29, 34 | 34/T1–T3, T6; 34 walkthrough (SBOM) | ch29-q11; ch34-q03–q05, q08, q15 | drafted (SBOMs and signing hands-on; provenance and compliance frameworks as concepts) |
 | Compliance and Security Frameworks | Automation and Tooling | 30, 34 | 30/T1 | ch29-q10; ch30-q02 | drafted |
 
 ## Gaps found and how they were closed
