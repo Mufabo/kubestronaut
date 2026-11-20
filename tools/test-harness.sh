@@ -132,6 +132,29 @@ expect "LAB_ALLOW_ANY_CONTEXT=1 is the explicit override" 0 "" -- env LAB_ALLOW_
 fresh_state kind-kbook kbook
 expect "the right context plus marker is accepted" 0 "" -- bash tools/run-lab.sh 94 setup
 
+# ---- cluster profiles (Tier 1) ----------------------------------------------------
+# Lab 87 is lab 94 on Tier 1 with LAB_PROFILE=cilium; lab 86 the same on the default.
+for nn in 86 87; do
+  cp -r "${sb}/chapters/94-single" "${sb}/chapters/${nn}-profile"
+  mv "${sb}/chapters/${nn}-profile/94-single.md" "${sb}/chapters/${nn}-profile/${nn}-profile.md"
+  sed -i "s/^LAB_TIER=9$/LAB_TIER=1/; s/fx-94/fx-${nn}/" "${sb}/chapters/${nn}-profile/lab/lab.env"
+done
+echo "LAB_PROFILE=cilium" >> "${sb}/chapters/87-profile/lab/lab.env"
+set_profile() { # set_profile <profile or "">: the marker's data.profile
+  python3 -c "import json,sys; p='$FAKE_KUBE_STATE'; st=json.load(open(p)); d=st['namespaces']['kube-system']['configmaps']['kbook-lab-marker']['data']
+if sys.argv[1]: d['profile']=sys.argv[1]
+else: d.pop('profile', None)
+json.dump(st, open(p,'w'))" "$1"
+}
+fresh_state kind-kbook kbook
+expect "a marker without a profile counts as calico (default-profile lab accepted)" 0 "" -- bash tools/run-lab.sh 86 setup
+expect "a marker without a profile is refused for a cilium lab" nonzero "needs the cluster profile 'cilium'" -- bash tools/run-lab.sh 87 setup
+set_profile cilium
+expect "a cilium cluster is accepted for a cilium lab" 0 "" -- bash tools/run-lab.sh 87 setup
+expect "a cilium cluster is refused for a default-profile lab" nonzero "make cluster PROFILE=calico" -- bash tools/run-lab.sh 86 setup
+set_profile installing:cilium
+expect "a cluster whose profile install did not finish is refused" nonzero "needs the cluster profile 'cilium'" -- bash tools/run-lab.sh 87 setup
+
 # ---- the test loop catches bad labs ---------------------------------------------
 fresh_state kind-kbook kbook
 expect "a correct multi-part lab passes the loop (all parts)" 0 "LAB TEST OK" -- bash tools/test-lab.sh 90

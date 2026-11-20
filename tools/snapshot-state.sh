@@ -24,7 +24,7 @@ read -r extra nodes < <(bash -c 'source "$1"; printf "%s %s\n" "${LAB_SNAPSHOT_C
 types="pods,services,configmaps,secrets,serviceaccounts,persistentvolumeclaims,roles.rbac.authorization.k8s.io,rolebindings.rbac.authorization.k8s.io,deployments.apps,replicasets.apps,daemonsets.apps,statefulsets.apps,jobs.batch,cronjobs.batch,ingresses.networking.k8s.io,networkpolicies.networking.k8s.io"
 for ns in $namespaces; do
   echo "## namespace ${ns}"
-  if kubectl get namespace "$ns" >/dev/null 2>&1; then
+  if [[ -n "$(kubectl get namespace "$ns" -o jsonpath='{.metadata.uid}' 2>/dev/null)" ]]; then
     kubectl -n "$ns" get "$types" -o json | python3 "${here}/snapshot-normalize.py"
   else
     echo "(absent)"
