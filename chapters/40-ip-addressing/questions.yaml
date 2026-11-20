@@ -1,0 +1,132 @@
+- id: ch40-q01
+  type: mcq
+  question: "What does the `/24` in `10.0.4.10/24` mean?"
+  choices:
+    - "The host has 24 neighbours"
+    - "The first 24 bits of the address are the network part; the remaining 8 are the host part"
+    - "The address is valid for 24 hours"
+    - "The last octet must be smaller than 24"
+  answer: B
+  explanation: "The prefix length says how many leading bits identify the network. A /24 leaves 8 host bits, so the subnet is 10.0.4.0 to 10.0.4.255."
+
+- id: ch40-q02
+  type: mcq
+  question: "Which subnet mask is the same as a /26 prefix?"
+  choices:
+    - "255.255.255.0"
+    - "255.255.255.128"
+    - "255.255.255.192"
+    - "255.255.255.224"
+  answer: C
+  explanation: "26 one-bits: three full octets (255.255.255) plus two bits in the fourth octet, 128 + 64 = 192. /25 is .128 and /27 is .224."
+
+- id: ch40-q03
+  type: mcq
+  question: "What is the network address of `192.168.10.77/26`?"
+  choices:
+    - "192.168.10.0"
+    - "192.168.10.64"
+    - "192.168.10.76"
+    - "192.168.10.128"
+  answer: B
+  explanation: "A /26 subnet has 64 addresses, so subnets start at 0, 64, 128, 192 in the last octet. 77 is in the one that starts at 64. In binary: 77 = 01 001101; keeping the first two bits gives 01 000000 = 64."
+
+- id: ch40-q04
+  type: mcq
+  question: "How many usable host addresses does a /28 subnet have?"
+  choices:
+    - "16"
+    - "14"
+    - "28"
+    - "30"
+  answer: B
+  explanation: "A /28 leaves 4 host bits: 2^4 = 16 addresses, minus the network and broadcast addresses, gives 14 usable."
+
+- id: ch40-q05
+  type: mcq
+  question: "Which pair of subnets overlaps?"
+  choices:
+    - "10.0.4.0/25 and 10.0.4.128/25"
+    - "10.0.4.0/25 and 10.0.4.64/26"
+    - "10.0.4.0/26 and 10.0.4.64/26"
+    - "10.0.4.0/24 and 10.0.5.0/24"
+  answer: B
+  explanation: "10.0.4.0/25 covers 10.0.4.0 to 10.0.4.127, and 10.0.4.64/26 covers 10.0.4.64 to 10.0.4.127, which is inside it. The other pairs sit side by side without sharing addresses."
+
+- id: ch40-q06
+  type: mcq
+  question: "Which of these addresses is a private (RFC 1918) address?"
+  choices:
+    - "8.8.8.8"
+    - "172.20.13.150"
+    - "172.32.0.1"
+    - "169.254.169.254"
+  answer: B
+  explanation: "The private ranges are 10.0.0.0/8, 172.16.0.0/12 (172.16.0.0 to 172.31.255.255), and 192.168.0.0/16. 172.32.0.1 is just outside the /12. 169.254.0.0/16 is link-local, not private, and 8.8.8.8 is a public address."
+
+- id: ch40-q07
+  type: mcq
+  question: "Host c has `10.0.4.200/25`; all other hosts on the switch use `/24`. Host a (`10.0.4.10`) pings c. What happens?"
+  choices:
+    - "The ping works normally"
+    - "a's ARP request goes unanswered"
+    - "c answers the ARP request, but drops the ping"
+    - "The switch drops the frame because the prefixes differ"
+  answer: B
+  explanation: "a believes c is on-link and broadcasts an ARP request. c receives it, but its connected route only covers 10.0.4.128/25, so it has no route back to 10.0.4.10, and Linux does not answer ARP requests from addresses it cannot reach. Without a MAC address, a never sends the ping. Switches never look at IP prefixes."
+
+- id: ch40-q08
+  type: mcq
+  question: "A host with address `10.0.4.10/24` and no other routes runs `ping 10.0.9.1`. What does it print?"
+  choices:
+    - "Request timeout"
+    - "Network is unreachable"
+    - "Destination host unknown"
+    - "It sends an ARP request for 10.0.9.1"
+  answer: B
+  explanation: "10.0.9.1 is outside 10.0.4.0/24, and the host has no route (no router) for it, so the kernel refuses to send at all: Network is unreachable. ARP is only used for on-link destinations."
+
+- id: ch40-q09
+  type: mcq
+  exams: [CKNE]
+  question: "A cluster uses the Pod CIDR `10.244.0.0/16`, and each node gets a /24 from it. How many nodes can receive a Pod subnet?"
+  choices:
+    - "16"
+    - "24"
+    - "256"
+    - "65,536"
+  answer: C
+  explanation: "Going from /16 to /24 adds 8 bits, so the /16 splits into 2^8 = 256 subnets of /24. Each gives a node up to 254 usable Pod addresses."
+
+- id: ch40-q10
+  type: mcq
+  question: "What is the shortest correct way to write `fd00:0004:0000:0000:0000:0000:0000:000a`?"
+  choices:
+    - "fd00:4::a"
+    - "fd:4::a"
+    - "fd00:4:::a"
+    - "fd00::4::a"
+  answer: A
+  explanation: "Drop leading zeros in each group (0004 to 4, 000a to a) and replace the one run of zero groups with ::. Trailing zeros (fd00) cannot be dropped, and :: may appear only once."
+
+- id: ch40-q11
+  type: mcq
+  question: "Every IPv6 interface has an address starting with `fe80::` even though nobody configured it. What is it?"
+  choices:
+    - "A public internet address"
+    - "A link-local address the interface gives itself; it is only valid on that one link"
+    - "The IPv6 version of the broadcast address"
+    - "An error"
+  answer: B
+  explanation: "fe80::/10 addresses are created automatically, often from the MAC address, and are used for communication on the local link only, for example by Neighbor Discovery. IPv6 has no broadcast address."
+
+- id: ch40-q12
+  type: mcq
+  question: "Which command gives interface eth0 the address 10.0.4.30 in a /24?"
+  choices:
+    - "ip link set eth0 10.0.4.30/24"
+    - "ip address add 10.0.4.30/24 dev eth0"
+    - "ip route add 10.0.4.30/24 dev eth0"
+    - "ifconfig add eth0 10.0.4.30"
+  answer: B
+  explanation: "`ip address add <address>/<prefix> dev <interface>` adds an address. Adding it also creates the connected route for 10.0.4.0/24. ip link manages interfaces, not addresses."

@@ -1,0 +1,136 @@
+- id: ch44-q01
+  type: mcq
+  question: "One web server at 10.0.8.80 serves two sites. How does it know which site a request is for?"
+  choices:
+    - "From the client's IP address"
+    - "From the Host header in the HTTP request (and, for HTTPS, the SNI in the TLS handshake)"
+    - "From the TCP port the client uses"
+    - "From the MAC address"
+  answer: B
+  explanation: "Virtual hosting relies on the Host header. With HTTPS the server must pick a certificate before it can read headers, so the client also sends the name as SNI in the ClientHello."
+
+- id: ch44-q02
+  type: mcq
+  exams: [CKNE]
+  question: "A Gateway returns `503 Service Unavailable`. What does that most likely mean?"
+  choices:
+    - "The client sent a malformed request"
+    - "The gateway has no healthy backend to send the request to"
+    - "The client is not authenticated"
+    - "The page does not exist"
+  answer: B
+  explanation: "503 from a proxy usually means no available backend, for example a route whose Service has no ready endpoints. 400 is a malformed request, 401 is missing authentication, 404 is a missing resource."
+
+- id: ch44-q03
+  type: mcq
+  question: "Which curl command fetches the site `api.lab.internal` from the server at 10.0.8.80 without any DNS or hosts entry, in a way that also works for HTTPS name checks?"
+  choices:
+    - "`curl http://10.0.8.80/api.lab.internal`"
+    - "`curl --resolve api.lab.internal:443:10.0.8.80 https://api.lab.internal/`"
+    - "`curl -k https://10.0.8.80/`"
+    - "`curl --host api.lab.internal 10.0.8.80`"
+  answer: B
+  explanation: "--resolve makes curl use the given address for that host name, so SNI, the Host header, and the certificate name check all use api.lab.internal. -H 'Host: ...' works for plain HTTP, but TLS would still check the certificate against the IP."
+
+- id: ch44-q04
+  type: mcq
+  question: "Which three things does TLS add on top of TCP?"
+  choices:
+    - "Speed, compression, and caching"
+    - "Confidentiality (encryption), integrity (tamper detection), and authentication of the server"
+    - "Routing, NAT, and load balancing"
+    - "Name resolution, retries, and ordering"
+  answer: B
+  explanation: "TLS encrypts the data, detects changes on the way, and lets the client verify the server's identity through its certificate. Ordering and retries are TCP's job."
+
+- id: ch44-q05
+  type: mcq
+  exams: [CKNE]
+  question: "curl reports `SSL certificate problem: unable to get local issuer certificate`. What is the right fix?"
+  choices:
+    - "Add -k to the curl command"
+    - "Tell the client to trust the CA that signed the server's certificate, for example with --cacert ca.crt"
+    - "Regenerate the server's private key"
+    - "Use HTTP instead"
+  answer: B
+  explanation: "The client cannot build a chain to a CA it trusts. Trusting the right CA fixes it. -k disables the check entirely, which removes the protection TLS provides."
+
+- id: ch44-q06
+  type: mcq
+  exams: [CKNE]
+  question: "A certificate's subject is `CN=web.lab.internal`, but it has no Subject Alternative Name. Clients connecting to `web.lab.internal` reject it. Why?"
+  choices:
+    - "CN must be lowercase"
+    - "Modern clients check the name against the SANs, not the CN"
+    - "Certificates cannot contain host names"
+    - "The CA must be in the SAN"
+  answer: B
+  explanation: "Clients ignore the CN for host name checks. Include every host name in the subjectAltName extension, and when signing with openssl x509 -req, copy the extensions from the CSR."
+
+- id: ch44-q07
+  type: mcq
+  question: "What is a certificate signing request (CSR)?"
+  choices:
+    - "A request to a CA to revoke a certificate"
+    - "A file containing a public key and the requested names, which a CA signs to produce a certificate"
+    - "The CA's private key"
+    - "A TLS handshake message"
+  answer: B
+  explanation: "You create a key pair, put the public key and names in a CSR, and the CA signs it. The private key never leaves you. Kubernetes has a CertificateSigningRequest API object built on the same idea."
+
+- id: ch44-q08
+  type: mcq
+  question: "What can an eavesdropper read in an HTTPS connection to `https://web.lab.internal/admin`?"
+  choices:
+    - "Everything, including the path /admin"
+    - "Nothing at all, not even the server's address"
+    - "The IP addresses and ports, and the host name web.lab.internal (from SNI), but not the path, headers, or body"
+    - "Only the response body"
+  answer: C
+  explanation: "IP and TCP headers are never encrypted, and SNI in the ClientHello is sent in clear so the server can choose a certificate. The HTTP request, including the path, is encrypted."
+
+- id: ch44-q09
+  type: mcq
+  exams: [CKNE]
+  question: "What is different about mutual TLS (mTLS) compared to ordinary TLS?"
+  choices:
+    - "Both sides use the same private key"
+    - "The client also presents a certificate, which the server verifies against a trusted CA"
+    - "The connection is encrypted twice"
+    - "No certificates are needed"
+  answer: B
+  explanation: "In mTLS both sides authenticate. Service meshes give every workload a certificate and use mTLS so that each side knows the other's identity, which authorization policies then use."
+
+- id: ch44-q10
+  type: mcq
+  question: "How can you check that a private key and a certificate belong together?"
+  choices:
+    - "Compare their file sizes"
+    - "Compare the public key derived from the private key (openssl pkey -pubout) with the public key in the certificate (openssl x509 -pubkey)"
+    - "Run openssl verify on the key"
+    - "Check that they have the same file name"
+  answer: B
+  explanation: "A certificate contains the public key of its key pair. If the public key extracted from the private key is the same, they match. openssl verify checks the certificate's chain, not the key."
+
+- id: ch44-q11
+  type: mcq
+  exams: [CKNE]
+  question: "Which pair of entries does a Kubernetes TLS Secret contain?"
+  choices:
+    - "ca.crt and ca.key"
+    - "tls.crt and tls.key"
+    - "cert.pem and chain.pem"
+    - "public.key and private.key"
+  answer: B
+  explanation: "Secrets of type kubernetes.io/tls hold tls.crt (the certificate, optionally with its chain) and tls.key (the private key). Gateway listeners reference such Secrets."
+
+- id: ch44-q12
+  type: mcq
+  question: "What do HTTP status codes 401 and 403 mean?"
+  choices:
+    - "401: server error; 403: client error"
+    - "401: authentication is missing or failed; 403: the client is known but not allowed"
+    - "Both mean the page does not exist"
+    - "401: redirect; 403: rate limited"
+  answer: B
+  explanation: "401 Unauthorized really means unauthenticated: who are you? 403 Forbidden means the server knows who you are and refuses."

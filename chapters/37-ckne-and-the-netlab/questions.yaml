@@ -1,0 +1,109 @@
+- id: ch37-q01
+  type: mcq
+  question: "What kind of exam is the CKNE?"
+  choices:
+    - "Multiple choice, taken in a browser"
+    - "Performance-based: hands-on tasks on real clusters, graded by their end state"
+    - "An oral interview with a network engineer"
+    - "A written essay about Kubernetes architecture"
+  answer: B
+  explanation: "The CKNE gives you a remote Linux environment and clusters to work on. Each task is graded by checking the resulting state, which is why every chapter of this book has a hands-on lab."
+
+- id: ch37-q02
+  type: mcq
+  question: "Which two CKNE domains carry the most weight (25% each)?"
+  choices:
+    - "Core Infrastructure and CNI, and Observability"
+    - "Service Networking and DNS, and Network Security and Policy"
+    - "Advanced Traffic Management, and Observability"
+    - "Core Infrastructure and CNI, and Advanced Traffic Management"
+  answer: B
+  explanation: "Service Networking and DNS (Part VII) and Network Security and Policy (Part IX) are 25% each. Advanced Traffic Management is 20%; Core Infrastructure and CNI, and Observability, are 15% each."
+
+- id: ch37-q03
+  type: mcq
+  question: "What is a network namespace?"
+  choices:
+    - "A DNS domain such as example.com"
+    - "A Kubernetes object that groups Pods"
+    - "A separate copy of the operating system's networking (interfaces, addresses, rules) that programs inside it see as their whole network"
+    - "A Docker image that contains networking tools"
+  answer: C
+  explanation: "A network namespace gives a process its own interfaces, addresses, routes, and firewall rules. The netlab uses one namespace per simulated computer. Do not confuse it with a Kubernetes Namespace, which only groups API objects and does not isolate networking."
+
+- id: ch37-q04
+  type: mcq
+  question: "You are in the lab shell at the prompt `netlab:~#`. Which command runs `ip address show` on host `beta`?"
+  choices:
+    - "ip address show beta"
+    - "ip netns exec beta ip address show"
+    - "ssh beta ip address show"
+    - "docker exec beta ip address show"
+  answer: B
+  explanation: "`ip netns exec <namespace> <command>` runs a command inside a network namespace. The netlab's `on beta ip address show` is a shortcut for the same thing. There is no SSH server, and beta is not a separate container."
+
+- id: ch37-q05
+  type: mcq
+  question: "You ran `make reset CH=37`, and now your lab shell prints errors or has frozen. Why?"
+  choices:
+    - "The reset failed and the lab is broken"
+    - "make reset replaced the netlab container, so the old shell's container is gone; open a new one with make shell"
+    - "You must run make teardown before make reset"
+    - "The reset changed your computer's network settings"
+  answer: B
+  explanation: "make lab and make reset always start a brand-new container, which is what makes a reset reliable. Shells opened in the old container end with it."
+
+- id: ch37-q06
+  type: mcq
+  question: "Where do you type `make check CH=37`?"
+  choices:
+    - "In the lab shell, at the netlab:~# prompt"
+    - "In a terminal on your own machine, in the repository's top folder"
+    - "Inside host gamma, after on gamma"
+    - "Anywhere; make works in every folder"
+  answer: B
+  explanation: "The make commands run on your machine, from the repository folder, and reach into the netlab container. The netlab itself does not contain the book's Makefile."
+
+- id: ch37-q07
+  type: mcq
+  question: "Why does the netlab container run with no network connection to your computer or the internet?"
+  choices:
+    - "To make the labs harder"
+    - "Because Docker cannot give a privileged container a network"
+    - "So nothing you do in a lab can affect your own machine's networking, and every reader sees the same addresses"
+    - "To save memory"
+  answer: C
+  explanation: "Every network in Part V is built inside the container out of namespaces. Keeping the container disconnected makes the labs safe to break and identical for every reader."
+
+- id: ch37-q08
+  type: mcq
+  question: "In `ip address show` output, what is the `lo` interface?"
+  choices:
+    - "A broken interface that should be deleted"
+    - "The loopback interface: the host's connection to itself, present on every host"
+    - "The interface that connects to the switch"
+    - "A tunnel to the internet"
+  answer: B
+  explanation: "Every host has a loopback interface, lo, with the address 127.0.0.1. Traffic sent to it never leaves the host. Chapter 38 uses it again."
+
+- id: ch37-q09
+  type: mcq
+  question: "You type `ip link set eth0 up` at the `netlab:~#` prompt and get `Cannot find device \"eth0\"`. What is the most likely reason?"
+  choices:
+    - "eth0 has been deleted by the lab"
+    - "The command ran in the container itself, which has no eth0; it must run inside a host, for example with `on gamma`"
+    - "You need sudo"
+    - "eth0 is already up"
+  answer: B
+  explanation: "Only the namespaces that play hosts have an eth0. Commands typed at netlab:~# run in the container's own namespace. Prefix them with `on <host>` or `ip netns exec <host>`."
+
+- id: ch37-q10
+  type: mcq
+  question: "Which statement about the lab checks is true?"
+  choices:
+    - "They check which commands you typed"
+    - "They check the end state, for example whether gamma can now ping alpha, no matter how you got there"
+    - "They only check that you read the chapter"
+    - "They change your lab to the solution if you fail"
+  answer: B
+  explanation: "Like the exam, the checks test the result. Any correct way to reach it passes. make solve is the only command that applies the solution for you."

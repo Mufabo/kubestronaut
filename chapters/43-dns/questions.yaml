@@ -1,0 +1,134 @@
+- id: ch43-q01
+  type: mcq
+  question: "Which DNS record type maps a name to an IPv4 address?"
+  choices:
+    - "AAAA"
+    - "A"
+    - "PTR"
+    - "CNAME"
+  answer: B
+  explanation: "A records hold IPv4 addresses, AAAA records IPv6 addresses. PTR maps an address back to a name, and CNAME makes a name an alias of another name."
+
+- id: ch43-q02
+  type: mcq
+  question: "What is the role of a recursive resolver?"
+  choices:
+    - "It holds the official records of a zone"
+    - "It takes a question from a client and does the work of finding the answer, asking other servers if needed, and caches the result"
+    - "It is the library inside every program that reads /etc/resolv.conf"
+    - "It translates private addresses to public ones"
+  answer: B
+  explanation: "Stub resolvers (in programs) ask recursive resolvers, which walk the DNS tree to authoritative servers and cache answers for their TTL. CoreDNS plays this role for Kubernetes Pods."
+
+- id: ch43-q03
+  type: mcq
+  question: "A record has a TTL of 300. What does that mean?"
+  choices:
+    - "The record will be deleted after 300 seconds"
+    - "Resolvers may cache the answer for up to 300 seconds before asking again"
+    - "The query must be answered within 300 milliseconds"
+    - "The record can be used by 300 clients"
+  answer: B
+  explanation: "TTL controls caching. A change to the record may not be seen by clients of a resolver that cached the old answer until the TTL expires."
+
+- id: ch43-q04
+  type: mcq
+  question: "`dig api.lab.internal` returns `status: NXDOMAIN`. What does it mean?"
+  choices:
+    - "The DNS server is unreachable"
+    - "The name does not exist in DNS"
+    - "The name exists but has no A record"
+    - "The server failed to contact other servers"
+  answer: B
+  explanation: "NXDOMAIN means non-existent domain. A name that exists without a record of the requested type gives NOERROR with an empty answer; an unreachable server gives a timeout; a broken resolver gives SERVFAIL."
+
+- id: ch43-q05
+  type: mcq
+  question: "`/etc/resolv.conf` contains `search lab.internal`. A program looks up `web`. What does the resolver do?"
+  choices:
+    - "It fails, because web is not a full name"
+    - "It tries web.lab.internal"
+    - "It looks up web only in /etc/hosts"
+    - "It sends web to the root servers"
+  answer: B
+  explanation: "The search list supplies domains to append to names that are not fully qualified. With ndots:1 (the default), web has zero dots, so the search list is tried first."
+
+- id: ch43-q06
+  type: mcq
+  exams: [CKNE]
+  question: "A Pod has `options ndots:5` and the search list `shop.svc.cluster.local svc.cluster.local cluster.local`. It looks up `api.github.com`. Which query is sent first?"
+  choices:
+    - "api.github.com"
+    - "api.github.com.shop.svc.cluster.local"
+    - "api.github.com.cluster.local"
+    - "github.com"
+  answer: B
+  explanation: "api.github.com has two dots, fewer than five, so the resolver goes through the search list first, starting with the first domain. Only after all of those fail does it try the name as written. A trailing dot (api.github.com.) avoids this."
+
+- id: ch43-q07
+  type: mcq
+  exams: [CKNE]
+  question: "`getent hosts db` returns an address, but `dig db` returns nothing. Which explanation fits?"
+  choices:
+    - "The DNS server is down"
+    - "getent uses /etc/hosts and the search list; dig ignores both unless told otherwise (+search), so the name is probably in /etc/hosts or only resolvable via the search list"
+    - "dig only supports IPv6"
+    - "getent uses a different DNS server than dig"
+  answer: B
+  explanation: "getent follows nsswitch.conf like real programs do (files, then DNS with the search list). dig is a pure DNS tool and asks exactly the name you typed."
+
+- id: ch43-q08
+  type: mcq
+  question: "Which command finds the name that belongs to the address 10.0.7.99?"
+  choices:
+    - "dig 10.0.7.99"
+    - "dig -x 10.0.7.99"
+    - "dig PTR 10.0.7.99.lab.internal"
+    - "getent hosts -r 10.0.7.99"
+  answer: B
+  explanation: "dig -x builds the reverse name 99.7.0.10.in-addr.arpa and asks for its PTR record."
+
+- id: ch43-q09
+  type: mcq
+  question: "What does a CNAME record do?"
+  choices:
+    - "It gives a name a second IP address"
+    - "It makes one name an alias for another name; resolvers follow it to the target's records"
+    - "It names the authoritative servers of a zone"
+    - "It encrypts DNS answers"
+  answer: B
+  explanation: "`www.lab.internal CNAME web.lab.internal` means: for www, look up web instead. dig shows both the CNAME and the target's A record."
+
+- id: ch43-q10
+  type: mcq
+  exams: [CKNE]
+  question: "A NetworkPolicy allows Pods to send UDP to port 53 on CoreDNS, but nothing else. Most lookups work, but a few names with large answers fail. Why?"
+  choices:
+    - "DNS only uses UDP, so this cannot happen"
+    - "Large DNS answers are retried over TCP port 53, which the policy blocks"
+    - "CoreDNS cannot answer large queries"
+    - "The search list is too long"
+  answer: B
+  explanation: "When an answer is too big for a UDP response, the server marks it truncated and the client retries over TCP. Policies and firewalls must allow both UDP 53 and TCP 53."
+
+- id: ch43-q11
+  type: mcq
+  question: "In a network namespace created with `ip netns`, which file does `ip netns exec client cat /etc/resolv.conf` show?"
+  choices:
+    - "The container's own /etc/resolv.conf"
+    - "/etc/netns/client/resolv.conf, which ip netns exec mounts over /etc/resolv.conf"
+    - "A file generated by the DNS server"
+    - "Nothing; namespaces cannot use DNS"
+  answer: B
+  explanation: "`ip netns exec` bind-mounts every file in `/etc/netns/<name>/` over the matching file in `/etc`. That is how each host in the netlab has its own resolver configuration."
+
+- id: ch43-q12
+  type: mcq
+  question: "You added a record to a DNS server, but a client still gets NXDOMAIN for the name a minute later. What are two likely causes?"
+  choices:
+    - "The client's MTU is wrong, or its default route is missing"
+    - "The DNS server has not reloaded its data, or a resolver is still serving a cached negative answer"
+    - "The name is too long, or it has a trailing dot"
+    - "DNS changes take 24 hours to reach any client"
+  answer: B
+  explanation: "Servers often need a reload or restart to see new data, and resolvers cache NXDOMAIN answers too (negative caching). Check the server directly with dig @server first."

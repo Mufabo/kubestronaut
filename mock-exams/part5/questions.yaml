@@ -1,0 +1,461 @@
+# Part V quiz: 40 original questions, none repeated from the chapters.
+# ids: part5-<domain>-NN (domains in quiz.yaml)
+
+# ---- link: packets, Ethernet, switching (8) ----------------------------------
+- id: part5-link-01
+  type: mcq
+  question: "A colleague says a firewall works \"at L3 and L4\". What can such a firewall decide on?"
+  choices:
+    - "MAC addresses only"
+    - "IP addresses, protocols, and ports, but not HTTP paths"
+    - "HTTP paths and headers"
+    - "Only whether a cable is plugged in"
+  answer: B
+  explanation: "L3 is the internet layer (IP addresses) and L4 the transport layer (TCP/UDP ports). Reading HTTP paths needs L7."
+
+- id: part5-link-02
+  type: mcq
+  question: "In an Ethernet frame carrying a web request, which header comes first on the wire?"
+  choices:
+    - "The TCP header"
+    - "The IP header"
+    - "The Ethernet header"
+    - "The HTTP request line"
+  answer: C
+  explanation: "Encapsulation puts the outermost envelope first: Ethernet, then IP, then TCP, then the HTTP data."
+
+- id: part5-link-03
+  type: mcq
+  question: "Which tcpdump filter shows only traffic between the host 10.0.2.10 and port 53, in either direction?"
+  choices:
+    - "`host 10.0.2.10 and port 53`"
+    - "`10.0.2.10:53`"
+    - "`src 10.0.2.10 port 53 only`"
+    - "`ip 10.0.2.10 udp`"
+  answer: A
+  explanation: "BPF filters combine primitives with and, or, and not. host matches source or destination, and port matches TCP or UDP source or destination ports."
+
+- id: part5-link-04
+  type: mcq
+  question: "Which statement about MAC addresses on virtual interfaces (such as veth pairs) is true?"
+  choices:
+    - "They are burned in by the manufacturer"
+    - "They are generated randomly when the interface is created, and change when it is recreated"
+    - "They are always 00:00:00:00:00:00"
+    - "They are the same as the host's IP address"
+  answer: B
+  explanation: "Virtual interfaces get random, locally administered MAC addresses. That is why lab MAC addresses differ between runs."
+
+- id: part5-link-05
+  type: mcq
+  question: "A switch has just been powered on, so its MAC table is empty. Host A sends a frame to host B. What happens to that frame?"
+  choices:
+    - "It is dropped until the switch learns B's address"
+    - "It is flooded out of every port except A's, and the switch learns A's port"
+    - "It is sent back to A"
+    - "The switch asks a DNS server where B is"
+  answer: B
+  explanation: "Unknown destinations are flooded. The switch learns from the source address of every frame, so A's location is learned right away and B's when B answers."
+
+- id: part5-link-06
+  type: mcq
+  question: "Host A has never talked to B, which is on the same subnet. What is the very first packet A sends when you run `ping B`?"
+  choices:
+    - "An ICMP echo request to B's MAC address"
+    - "An ARP request broadcast asking who has B's IP address"
+    - "A DNS query"
+    - "A TCP SYN"
+  answer: B
+  explanation: "Before A can address a frame to B, it needs B's MAC address. ARP asks for it with a broadcast; the echo request follows once B replies."
+
+- id: part5-link-07
+  type: mcq
+  exams: [CKNE]
+  question: "On a node, `ip link show master cni0` lists four interfaces. What are they most likely?"
+  choices:
+    - "The node's physical network cards"
+    - "The node-side ends of the veth pairs of four Pods, attached to the bridge cni0"
+    - "Four VLANs"
+    - "Four routes"
+  answer: B
+  explanation: "Bridge-based CNI plugins attach one veth end per Pod to the node's bridge. `ip link show master <bridge>` lists the bridge's ports."
+
+- id: part5-link-08
+  type: mcq
+  question: "On one switch, host A's interface has MTU 1500 and host B's has MTU 1400. Small pings between them work. What fails?"
+  choices:
+    - "Nothing; the switch adjusts frame sizes automatically"
+    - "Packets bigger than 1400 bytes sent to B are dropped, so large transfers between A and B stall"
+    - "All traffic to A"
+    - "ARP between A and B"
+  answer: B
+  explanation: "B refuses frames larger than its own MTU, and switches never resize frames. Every interface in a broadcast domain must use the same MTU; fix the odd one out."
+
+# ---- ip: addressing, routing, NAT (10) ---------------------------------------
+- id: part5-ip-01
+  type: mcq
+  question: "What is the broadcast address of `10.20.30.40/27`?"
+  choices:
+    - "10.20.30.31"
+    - "10.20.30.63"
+    - "10.20.30.255"
+    - "10.20.30.47"
+  answer: B
+  explanation: "A /27 has 32 addresses, so subnets start at multiples of 32: 40 falls in 32 to 63. The broadcast is the last address, 10.20.30.63."
+
+- id: part5-ip-02
+  type: mcq
+  question: "Which prefix length gives exactly 2 usable host addresses, as used on point-to-point links between routers?"
+  choices:
+    - "/24"
+    - "/29"
+    - "/30"
+    - "/32"
+  answer: C
+  explanation: "A /30 has 4 addresses: network, two hosts, broadcast. A /32 is a single address."
+
+- id: part5-ip-03
+  type: mcq
+  exams: [CKNE]
+  question: "A cluster's Pod CIDR is `10.244.0.0/16` and its Service CIDR is `10.96.0.0/12`. Do they overlap?"
+  choices:
+    - "Yes: 10.96.0.0/12 contains 10.244.0.0/16"
+    - "No: 10.96.0.0/12 covers 10.96.0.0 to 10.111.255.255, which does not include 10.244.x.x"
+    - "Yes: both start with 10"
+    - "It cannot be determined"
+  answer: B
+  explanation: "A /12 spans 16 values in the second octet: 96 to 111. 244 is outside that range, so the two ranges are separate."
+
+- id: part5-ip-04
+  type: mcq
+  question: "A host has routes `default via 10.1.0.1` and `10.2.0.0/16 via 10.1.0.2`. Which gateway does a packet to `10.2.5.5` use, and why?"
+  choices:
+    - "10.1.0.1, because the default route is checked first"
+    - "10.1.0.2, because /16 is a longer (more specific) prefix than the default /0"
+    - "Both, alternately"
+    - "Neither; the packet is dropped"
+  answer: B
+  explanation: "Longest prefix match: the most specific matching route wins, regardless of the order in which routes were added."
+
+- id: part5-ip-05
+  type: mcq
+  question: "Why does `ip route add default via 10.5.0.2` fail on a host whose only address is `10.5.1.10/24`?"
+  choices:
+    - "Default routes need a /0 mask"
+    - "The gateway 10.5.0.2 is not on-link: it is outside every subnet the host is directly connected to"
+    - "Only routers can have default routes"
+    - "10.5.0.2 is a broadcast address"
+  answer: B
+  explanation: "A host can only send to a gateway it can reach directly (ARP for). The next hop must be inside one of its connected subnets."
+
+- id: part5-ip-06
+  type: mcq
+  question: "`traceroute -n` to a host shows the same two routers repeating, `10.0.0.1`, `10.0.0.2`, `10.0.0.1`, `10.0.0.2`, until the hop limit. What is happening?"
+  choices:
+    - "The destination is down"
+    - "A routing loop: each router sends the packet to the other, until the TTL runs out"
+    - "The MTU is too small"
+    - "DNS is failing"
+  answer: B
+  explanation: "When two routers each point at the other for the same destination, packets bounce between them. The TTL stops them from circling forever."
+
+- id: part5-ip-07
+  type: mcq
+  question: "A ping prints `From 192.168.9.1 icmp_seq=1 Destination Net Unreachable`. Which device should you inspect first?"
+  choices:
+    - "Your own host"
+    - "The router 192.168.9.1, which has no route to the destination's network"
+    - "The destination host"
+    - "The DNS server"
+  answer: B
+  explanation: "The From address names the device that gave up. Net Unreachable means it had no matching route."
+
+- id: part5-ip-08
+  type: mcq
+  exams: [CKNE]
+  question: "Pods with private addresses must reach a partner's API, which only accepts connections from one fixed, known source address. Which mechanism provides that?"
+  choices:
+    - "DNAT on the partner's side"
+    - "SNAT on a chosen exit point, so traffic leaves with that exit point's address (an egress gateway)"
+    - "A larger MTU"
+    - "A CNAME record"
+  answer: B
+  explanation: "Source NAT rewrites the source address. Doing it on one designated node or gateway gives all egress traffic one predictable address, which is what egress gateways (Chapter 60) are for."
+
+- id: part5-ip-09
+  type: mcq
+  question: "Without NAT or extra routes, which statement about a host with a private address and an internet server is true?"
+  choices:
+    - "The server can reply, because private addresses are routed on the internet"
+    - "The request may reach the server, but the server has no route back to the private address, so no reply arrives"
+    - "Private addresses cannot send packets at all"
+    - "The server will reply over IPv6 instead"
+  answer: B
+  explanation: "Private ranges are not routed on the internet. The edge router's source NAT is what makes replies possible."
+
+- id: part5-ip-10
+  type: mcq
+  question: "Which address is IPv6's equivalent of 127.0.0.1?"
+  choices:
+    - "fe80::1"
+    - "::1"
+    - "ff02::1"
+    - "fd00::1"
+  answer: B
+  explanation: "::1/128 is the IPv6 loopback address. fe80::/10 is link-local, ff02::1 is a multicast group, and fd00::/8 is the unique local (private) range."
+
+# ---- transport: TCP, UDP, ports (6) ------------------------------------------
+- id: part5-transport-01
+  type: mcq
+  question: "A client connects from `10.0.6.10:51544` to `10.0.6.20:443`. Which of these values was chosen by the client's kernel, not by any configuration?"
+  choices:
+    - "443"
+    - "51544"
+    - "10.0.6.20"
+    - "All of them"
+  answer: B
+  explanation: "51544 is an ephemeral port picked for this one connection. 443 is the server's well-known port, and 10.0.6.20 the server's address."
+
+- id: part5-transport-02
+  type: mcq
+  question: "In a capture of a TCP connection, which flag sequence shows the server refusing the connection?"
+  choices:
+    - "[S] then [S.]"
+    - "[S] then [R.]"
+    - "[P.] then [.]"
+    - "[F.] then [.]"
+  answer: B
+  explanation: "A reset (R) in answer to a SYN is a refusal: nothing listens there, or a firewall rejects it. [S] then [S.] is an accepted connection."
+
+- id: part5-transport-03
+  type: mcq
+  question: "`ss -tn` on a client shows a socket stuck in `SYN-SENT`. What does that mean?"
+  choices:
+    - "The connection is established and idle"
+    - "The client sent a SYN and has received no answer: the SYN or its reply is being lost or dropped"
+    - "The server refused the connection"
+    - "The connection is closing"
+  answer: B
+  explanation: "SYN-SENT is the state while waiting for the SYN-ACK. If it lasts, nothing comes back: a route, a filter, or a dead host. A refusal would end the attempt at once."
+
+- id: part5-transport-04
+  type: mcq
+  question: "A service must accept connections from other hosts. Which listening address is correct?"
+  choices:
+    - "127.0.0.1:8080"
+    - "0.0.0.0:8080"
+    - "localhost:8080"
+    - "255.255.255.255:8080"
+  answer: B
+  explanation: "0.0.0.0 means every address the host has. 127.0.0.1 and localhost are loopback only."
+
+- id: part5-transport-05
+  type: mcq
+  question: "Which protocol would you pick for a protocol that sends one small question and gets one small answer, where a lost answer is simply asked again?"
+  choices:
+    - "TCP, because it is reliable"
+    - "UDP, because it needs no connection setup and the application handles retries"
+    - "ICMP"
+    - "ARP"
+  answer: B
+  explanation: "This is DNS's reasoning. A TCP handshake would cost more than the question itself."
+
+- id: part5-transport-06
+  type: mcq
+  question: "`curl` exits with code 28. What does that tell you?"
+  choices:
+    - "The connection was refused"
+    - "The operation timed out"
+    - "The server returned HTTP 500"
+    - "The certificate is invalid"
+  answer: B
+  explanation: "Exit code 28 is a timeout, 7 is a failed connection (refused or unreachable), and 60 is a certificate problem. HTTP errors exit 0 unless you add --fail."
+
+# ---- apps: DNS, HTTP, TLS (8) --------------------------------------------------
+- id: part5-apps-01
+  type: mcq
+  question: "`dig AAAA web.lab.internal` returns `status: NOERROR` with no answer, while `dig A web.lab.internal` returns an address. What does that mean?"
+  choices:
+    - "The name does not exist"
+    - "The name exists but has no IPv6 (AAAA) record"
+    - "The DNS server is broken"
+    - "IPv6 is blocked by a firewall"
+  answer: B
+  explanation: "NOERROR with an empty answer means the name exists without a record of that type. A missing name would be NXDOMAIN."
+
+- id: part5-apps-02
+  type: mcq
+  question: "Which record type does Kubernetes publish so that clients can discover both the host and the port of a named Service port?"
+  choices:
+    - "A"
+    - "CNAME"
+    - "SRV"
+    - "PTR"
+  answer: C
+  explanation: "SRV records carry a target host and a port, for example _http._tcp.web.shop.svc.cluster.local."
+
+- id: part5-apps-03
+  type: mcq
+  exams: [CKNE]
+  question: "A Pod's `/etc/resolv.conf` has `options ndots:5`. Writing which form of an external name avoids the search list completely?"
+  choices:
+    - "`api.github.com`"
+    - "`api.github.com.` (with a trailing dot)"
+    - "`API.GITHUB.COM`"
+    - "`https://api.github.com`"
+  answer: B
+  explanation: "A trailing dot makes the name fully qualified, so the resolver asks for exactly that name and skips the search domains."
+
+- id: part5-apps-04
+  type: mcq
+  question: "You changed a DNS record five minutes ago, but one client still gets the old address. The record had a TTL of 3600. What is the most likely explanation?"
+  choices:
+    - "The change failed"
+    - "A resolver cached the old answer and may keep it for up to an hour"
+    - "The client's MTU is wrong"
+    - "The client uses IPv6"
+  answer: B
+  explanation: "Caches keep answers for their TTL. Lower the TTL well before a planned change."
+
+- id: part5-apps-05
+  type: mcq
+  exams: [CKNE]
+  question: "A request through a Gateway returns `504 Gateway Timeout`. Where is the problem most likely?"
+  choices:
+    - "In the client's DNS"
+    - "In the backend behind the gateway, which did not answer in time"
+    - "In the client's TLS configuration"
+    - "In the Gateway's certificate"
+  answer: B
+  explanation: "504 means the proxy reached out to the backend and gave up waiting. 502 is a bad answer, 503 no available backend."
+
+- id: part5-apps-06
+  type: mcq
+  exams: [CKNE]
+  question: "curl reports `SSL: no alternative certificate subject name matches target host name 'shop.example.com'`. What is wrong?"
+  choices:
+    - "The CA is not trusted"
+    - "The certificate has expired"
+    - "The certificate's SANs do not include shop.example.com"
+    - "The server's private key is wrong"
+  answer: C
+  explanation: "Name mismatch: the certificate is valid but issued for other names. Trust problems say unable to get local issuer; expiry says certificate has expired."
+
+- id: part5-apps-07
+  type: mcq
+  exams: [CKNE]
+  question: "Which file must never leave the CA, and is not needed by servers or clients for TLS to work?"
+  choices:
+    - "ca.crt"
+    - "ca.key"
+    - "server.crt"
+    - "server.csr"
+  answer: B
+  explanation: "The CA's private key signs certificates. Anyone holding it can issue trusted certificates for any name. Clients only need ca.crt."
+
+- id: part5-apps-08
+  type: mcq
+  exams: [CKNE]
+  question: "Two websites are hosted on one IP address with HTTPS. How does the server know which certificate to present before any HTTP has been exchanged?"
+  choices:
+    - "From the Host header"
+    - "From the SNI field in the TLS ClientHello"
+    - "From the client's IP address"
+    - "From DNS"
+  answer: B
+  explanation: "The Host header is encrypted inside TLS, so it arrives too late. SNI carries the name in the unencrypted ClientHello."
+
+# ---- linux: namespaces, overlays, netfilter, troubleshooting (8) ----------
+- id: part5-linux-01
+  type: mcq
+  exams: [CKNE]
+  question: "Why do two containers in the same Kubernetes Pod reach each other on localhost?"
+  choices:
+    - "Kubernetes adds hosts file entries"
+    - "They share one network namespace, so they share the loopback interface"
+    - "kube-proxy forwards localhost traffic"
+    - "They run on the same node"
+  answer: B
+  explanation: "A Pod is one network namespace. Containers on the same node but in different Pods do not share localhost."
+
+- id: part5-linux-02
+  type: mcq
+  exams: [CKNE]
+  question: "Which command moves the interface `veth-x` into the network namespace `pod1`?"
+  choices:
+    - "ip netns add veth-x pod1"
+    - "ip link set veth-x netns pod1"
+    - "ip addr add veth-x dev pod1"
+    - "ip route add veth-x via pod1"
+  answer: B
+  explanation: "`ip link set <interface> netns <namespace>` moves an interface between namespaces. Its configuration (addresses, state) is reset when it moves."
+
+- id: part5-linux-03
+  type: mcq
+  exams: [CKNE]
+  question: "Pods on the same node can talk to each other, but Pods on different nodes cannot. Which of these is NOT a likely cause?"
+  choices:
+    - "Missing routes between nodes for the other nodes' Pod subnets"
+    - "A firewall between nodes blocking the overlay's UDP port"
+    - "An application listening on 127.0.0.1"
+    - "A broken VXLAN tunnel configuration"
+  answer: C
+  explanation: "A loopback-only listener would fail for Pods on the same node too. The other three only affect traffic between nodes."
+
+- id: part5-linux-04
+  type: mcq
+  exams: [CKNE]
+  question: "In a capture on a node's main interface you see UDP packets to port 4789. What are they?"
+  choices:
+    - "DNS queries"
+    - "VXLAN overlay traffic carrying Pod packets between nodes"
+    - "BGP sessions"
+    - "kubelet health checks"
+  answer: B
+  explanation: "4789 is the standard VXLAN port. tcpdump decodes the inner Pod packet for you."
+
+- id: part5-linux-05
+  type: mcq
+  exams: [CKNE]
+  question: "Which netfilter hook sees packets that local programs on the host send, before the routing decision?"
+  choices:
+    - "PREROUTING"
+    - "INPUT"
+    - "OUTPUT"
+    - "FORWARD"
+  answer: C
+  explanation: "Locally generated packets enter netfilter at OUTPUT, then pass routing and POSTROUTING. PREROUTING is for packets arriving from an interface."
+
+- id: part5-linux-06
+  type: mcq
+  exams: [CKNE]
+  question: "On a node using kube-proxy in iptables mode, which command is the quickest way to see the rules for the Service with ClusterIP 10.96.0.10?"
+  choices:
+    - "ip route get 10.96.0.10"
+    - "iptables-save | grep 10.96.0.10"
+    - "ss -ltn | grep 10.96.0.10"
+    - "dig 10.96.0.10"
+  answer: B
+  explanation: "The ClusterIP appears in the KUBE-SERVICES rule that jumps to the Service's KUBE-SVC chain. The address is on no interface, so ss and ip route show nothing useful."
+
+- id: part5-linux-07
+  type: mcq
+  question: "You fixed a firewall rule and the error changed from `Connection timed out` to `Connection refused`. What is the right next step?"
+  choices:
+    - "Undo the fix, because the error is still there"
+    - "Check the listener on the target (ss -ltnp): packets now arrive, and nothing accepts them on that address and port"
+    - "Restart the router"
+    - "Check DNS"
+  answer: B
+  explanation: "The symptom moved up a layer, which is progress. Refused points at the listener."
+
+- id: part5-linux-08
+  type: mcq
+  question: "A request from a laptop to an app fails. Captures show the SYN leaving the laptop and arriving at the router, but never arriving at the app. Where is the fault?"
+  choices:
+    - "On the laptop"
+    - "Between the router and the app: the router's forwarding, filtering, or routes, or the app's link"
+    - "In the app's listener"
+    - "In DNS"
+  answer: B
+  explanation: "Capture points split the path. The packet got as far as the router and no further, so the fault lies in the second half."

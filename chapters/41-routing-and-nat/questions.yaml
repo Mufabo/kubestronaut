@@ -1,0 +1,145 @@
+- id: ch41-q01
+  type: mcq
+  question: "What is the main difference between a switch and a router?"
+  choices:
+    - "A switch is hardware, a router is software"
+    - "A switch forwards frames by MAC address inside one network; a router forwards packets by IP address between networks"
+    - "A router only works with Wi-Fi"
+    - "A switch can connect to the internet, a router cannot"
+  answer: B
+  explanation: "Switches work at layer 2 within one broadcast domain. Routers work at layer 3 and connect different subnets. Any Linux host with interfaces on several networks and forwarding switched on is a router."
+
+- id: ch41-q02
+  type: mcq
+  question: "A host has the routes `default via 10.5.0.2`, `10.5.0.0/16 via 10.5.0.3`, and `10.5.2.0/24 via 10.5.0.4`. Which gateway does a packet for `10.5.2.20` use?"
+  choices:
+    - "10.5.0.2"
+    - "10.5.0.3"
+    - "10.5.0.4"
+    - "It is sent to all three"
+  answer: C
+  explanation: "All three routes match, and the longest prefix wins: /24 beats /16, which beats /0 (default)."
+
+- id: ch41-q03
+  type: mcq
+  question: "What does the route `default via 10.5.1.1 dev eth0` mean?"
+  choices:
+    - "Only traffic for 10.5.1.1 goes out of eth0"
+    - "Any destination that matches no other route is sent to the router 10.5.1.1 on eth0"
+    - "10.5.1.1 is the host's own address"
+    - "eth0 is disabled by default"
+  answer: B
+  explanation: "default is 0.0.0.0/0: it matches every address but has the shortest possible prefix, so it is used only when nothing more specific matches. 10.5.1.1 is the default gateway and must be on-link."
+
+- id: ch41-q04
+  type: mcq
+  question: "h1 pings srv through router r1. The ping gets no answer and no error message. On r1, `sysctl net.ipv4.ip_forward` prints 0. What is happening?"
+  choices:
+    - "r1 is forwarding, but srv is down"
+    - "r1 drops every packet that is not addressed to r1 itself, without reporting an error"
+    - "r1 has no IP address"
+    - "h1 has no default route"
+  answer: B
+  explanation: "With forwarding off, a Linux host answers packets for its own addresses but silently drops transit packets. h1 does have a route (otherwise it would print Network is unreachable locally)."
+
+- id: ch41-q05
+  type: mcq
+  question: "`ping` prints `From 10.5.1.1 icmp_seq=1 Destination Net Unreachable`. What does that tell you?"
+  choices:
+    - "Your own host has no route"
+    - "The router 10.5.1.1 received the packet but has no route to the destination's network"
+    - "The destination host is down"
+    - "The packet's TTL ran out"
+  answer: B
+  explanation: "The From address says which device gave up. Net Unreachable from a router means that router's routing table has no match for the destination. A missing local route is printed as connect: Network is unreachable without a From line."
+
+- id: ch41-q06
+  type: mcq
+  question: "A capture on srv shows ping requests from h1 arriving, but h1 never receives a reply. Which is the most likely cause?"
+  choices:
+    - "h1 has no default route"
+    - "A router on the return path has no route back to h1's subnet"
+    - "srv's MTU is too large"
+    - "The switch is not learning MAC addresses"
+  answer: B
+  explanation: "The request got there, so the forward path works. Each router decides independently, so the reply needs its own route back. Missing return routes are the most common routing mistake."
+
+- id: ch41-q07
+  type: mcq
+  question: "A ping reply shows `ttl=61`. If the replying host started with TTL 64, how many routers did the reply cross?"
+  choices:
+    - "1"
+    - "3"
+    - "61"
+    - "64"
+  answer: B
+  explanation: "Every router lowers the TTL by one: 64 - 61 = 3 routers."
+
+- id: ch41-q08
+  type: mcq
+  question: "How does traceroute discover the routers on a path?"
+  choices:
+    - "It asks each router for its routing table"
+    - "It sends packets with TTL 1, 2, 3, ...; each router that drops one because its TTL ran out replies with ICMP time exceeded, revealing itself"
+    - "It reads the MAC addresses of every hop"
+    - "It uses DNS to look up each router"
+  answer: B
+  explanation: "A router that receives a packet with TTL 1 drops it and sends time exceeded back. Increasing the starting TTL by one each round makes each hop in turn reveal itself."
+
+- id: ch41-q09
+  type: mcq
+  question: "As a packet travels from h1 through two routers to srv, which addresses change at every hop?"
+  choices:
+    - "The source and destination IP addresses"
+    - "The source and destination MAC addresses"
+    - "Both the IP and MAC addresses"
+    - "Nothing changes"
+  answer: B
+  explanation: "Each frame crosses only one link, so each router builds a new frame with new MAC addresses. Without NAT, the IP addresses stay the same end to end (only the TTL goes down)."
+
+- id: ch41-q10
+  type: mcq
+  exams: [CKNE]
+  question: "Hosts with private addresses reach an internet server through an edge router. What does masquerade (source NAT) on the router's internet interface do?"
+  choices:
+    - "It encrypts the packets"
+    - "It replaces the private source address with the router's public address, and translates replies back using connection tracking"
+    - "It adds a route for the private network on the internet server"
+    - "It changes the destination address of incoming connections"
+  answer: B
+  explanation: "SNAT rewrites the source of outgoing packets so that the server can reply to a reachable address. conntrack remembers each mapping to reverse it for the reply. Changing the destination of incoming traffic is DNAT."
+
+- id: ch41-q11
+  type: mcq
+  exams: [CKNE]
+  question: "Why are DNAT rules placed in the PREROUTING chain?"
+  choices:
+    - "Because PREROUTING runs after the packet has left the host"
+    - "Because the destination must be changed before the routing decision, so that routing sends the packet toward its new destination"
+    - "Because only PREROUTING can match TCP ports"
+    - "It is an arbitrary convention"
+  answer: B
+  explanation: "Routing decides where a packet goes from its destination address. If DNAT ran after routing, the packet would already be headed to the old destination. SNAT goes in POSTROUTING, after routing has chosen the outgoing interface."
+
+- id: ch41-q12
+  type: mcq
+  exams: [CKNE]
+  question: "Which Kubernetes mechanism is an example of destination NAT?"
+  choices:
+    - "A Pod reaching the internet through its node's address"
+    - "kube-proxy rewriting packets sent to a Service's virtual IP so they go to one of the Service's Pods"
+    - "CoreDNS answering a query"
+    - "A NetworkPolicy blocking traffic"
+  answer: B
+  explanation: "A Service's ClusterIP is not assigned to any interface. kube-proxy (or an eBPF replacement) DNATs connections for it to a Pod's address and port. Pods reaching the internet through their node is SNAT."
+
+- id: ch41-q13
+  type: mcq
+  question: "Which command shows which route a host would use for `10.5.2.20`, without sending a packet?"
+  choices:
+    - "ip route show 10.5.2.20"
+    - "ip route get 10.5.2.20"
+    - "traceroute 10.5.2.20"
+    - "ip neigh 10.5.2.20"
+  answer: B
+  explanation: "ip route get performs the routing lookup and prints the result: gateway, interface, and source address. ip route show only lists routes; traceroute sends probes."

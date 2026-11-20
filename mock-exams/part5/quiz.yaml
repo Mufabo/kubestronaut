@@ -1,0 +1,26 @@
+# Settings for `make quiz EXAM=part5` (tools/quiz.py). Question ids are
+# part5-<domain>-NN; each domain's count must match the bank.
+title: Part V quiz, networking from zero
+minutes: 60
+pass_percent: 75
+domains:
+  link:
+    title: Packets, Ethernet, and switching (Chapters 38 and 39)
+    weight: 20
+    questions: 8
+  ip:
+    title: Addressing, routing, and NAT (Chapters 40 and 41)
+    weight: 25
+    questions: 10
+  transport:
+    title: TCP, UDP, and ports (Chapter 42)
+    weight: 15
+    questions: 6
+  apps:
+    title: DNS, HTTP, and TLS (Chapters 43 and 44)
+    weight: 20
+    questions: 8
+  linux:
+    title: Namespaces, overlays, netfilter, and troubleshooting (Chapters 45 to 47)
+    weight: 20
+    questions: 8

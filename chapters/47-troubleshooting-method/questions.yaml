@@ -1,0 +1,137 @@
+- id: ch47-q01
+  type: mcq
+  question: "What is the first step of the troubleshooting method?"
+  choices:
+    - "Restart the service"
+    - "Define the symptom precisely: source, destination, port, and the exact error"
+    - "Run tcpdump on every host"
+    - "Check the firewall"
+  answer: B
+  explanation: "A precise symptom tells you which layer to look at and gives you a test to repeat after every change. Restarting first can destroy the evidence."
+
+- id: ch47-q02
+  type: mcq
+  exams: [CKNE]
+  question: "curl fails with `Connection refused`. Which conclusion is right?"
+  choices:
+    - "A firewall on the path is silently dropping packets"
+    - "The target host was reached; check whether anything listens on that address and port"
+    - "DNS is broken"
+    - "The route is missing"
+  answer: B
+  explanation: "Refused means an answer came back (usually a TCP reset from the target). Silent drops cause timeouts, DNS failures fail before any connection, and missing routes give unreachable errors or timeouts."
+
+- id: ch47-q03
+  type: mcq
+  exams: [CKNE]
+  question: "curl fails with `Resolving timed out`, and `dig` says `no servers could be reached`. What should you check next?"
+  choices:
+    - "The DNS record for the name"
+    - "Whether the resolver's address is reachable at all: ping it, check routes and the link"
+    - "The application logs"
+    - "The TLS certificate"
+  answer: B
+  explanation: "A timeout means the resolver did not answer at all, so the record cannot be the problem yet. Treat the DNS server like any other unreachable host."
+
+- id: ch47-q04
+  type: mcq
+  question: "A router's `ip neigh` shows `10.11.2.53 dev eth1 FAILED`. Which layer is the problem most likely at?"
+  choices:
+    - "Layer 7: DNS"
+    - "Layer 2: nothing answers ARP for that address on the eth1 LAN"
+    - "Layer 4: a missing listener"
+    - "Layer 3: a missing default route on the router"
+  answer: B
+  explanation: "FAILED means ARP requests went unanswered. The host is down, unplugged, not attached to the switch, or on a different subnet."
+
+- id: ch47-q05
+  type: mcq
+  exams: [CKNE]
+  question: "A capture on the target shows the ping requests arriving, but the source never gets replies. Where do you look next?"
+  choices:
+    - "The source's default route"
+    - "The return path: the target's routing table and the routers between it and the source"
+    - "The DNS server"
+    - "The target's listener on port 80"
+  answer: B
+  explanation: "The request arrived, so the forward path works. The reply follows the target's own routes, which may be missing or point elsewhere."
+
+- id: ch47-q06
+  type: mcq
+  exams: [CKNE]
+  question: "Ping to a server works, but TCP connections to port 8080 time out. What is the most likely cause?"
+  choices:
+    - "The server's interface is down"
+    - "A filter on the path (firewall rule, NetworkPolicy, security group) drops the TCP packets"
+    - "The DNS record is wrong"
+    - "Nothing listens on port 8080"
+  answer: B
+  explanation: "Working ping proves the path and the host. A timeout (rather than a refusal) on one port points at something dropping that traffic. A missing listener would give connection refused."
+
+- id: ch47-q07
+  type: mcq
+  question: "Why should you change only one thing at a time while troubleshooting?"
+  choices:
+    - "Because Linux only applies one change per minute"
+    - "So you know which change fixed (or broke) what, and can undo it"
+    - "To save typing"
+    - "Because firewall rules must be added in order"
+  answer: B
+  explanation: "Several changes at once hide cause and effect. You may fix the symptom with one change while another introduces a new fault."
+
+- id: ch47-q08
+  type: mcq
+  question: "`curl -w` reports `dns:4.98s connect:4.99s first-byte:5.01s total:5.01s`. Where is the time spent?"
+  choices:
+    - "In the application"
+    - "In name resolution"
+    - "In the TCP handshake"
+    - "In the TLS handshake"
+  answer: B
+  explanation: "time_namelookup is almost five seconds, and every later phase adds only milliseconds. The resolver is slow, often a first nameserver that times out before the second one answers."
+
+- id: ch47-q09
+  type: mcq
+  question: "You fixed a fault, and the error message changed from `Connection timed out` to `Connection refused`. What does that mean?"
+  choices:
+    - "Your fix made things worse"
+    - "Progress: packets now reach the host; the next fault is at the listener"
+    - "The first fault is still there"
+    - "DNS changed"
+  answer: B
+  explanation: "Real outages often have several faults. A new, different symptom means you moved up the stack."
+
+- id: ch47-q10
+  type: mcq
+  question: "Which tool shows each hop on a path with its packet loss and latency, updated continuously?"
+  choices:
+    - "ss"
+    - "mtr"
+    - "dig"
+    - "conntrack"
+  answer: B
+  explanation: "mtr combines traceroute and ping. mtr -n -r -c 10 prints a report after ten rounds."
+
+- id: ch47-q11
+  type: mcq
+  exams: [CKNE]
+  question: "From a router, a curl to the app works; from the user's laptop it fails. What is a likely reason the test from the router is misleading?"
+  choices:
+    - "Routers always bypass firewalls"
+    - "The router's packets take a different path and have a different source address, so they avoid the fault the laptop hits"
+    - "curl works differently on routers"
+    - "The laptop has a different MTU"
+  answer: B
+  explanation: "Source address and path matter: return routes, firewall rules, and NetworkPolicies often depend on them. Test from where the problem is."
+
+- id: ch47-q12
+  type: mcq
+  exams: [CKNE]
+  question: "A Pod cannot reach a Service by name. In which order should you investigate?"
+  choices:
+    - "NetworkPolicies, then DNS, then the listener"
+    - "DNS (does the name resolve?), then the Service and its endpoints, then connectivity to a Pod IP, then policies, then the target's listener"
+    - "Restart CoreDNS, then the Pods, then the nodes"
+    - "The node's MTU first"
+  answer: B
+  explanation: "Follow the request's own path: name, virtual IP, endpoints, network, policy, and finally the application. Each step narrows the fault to one layer."

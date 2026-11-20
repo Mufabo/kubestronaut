@@ -1,0 +1,134 @@
+- id: ch38-q01
+  type: mcq
+  question: "Why is data sent across a network in small packets instead of one continuous stream?"
+  choices:
+    - "Because cables can only carry 1,500 bytes in total"
+    - "So that many conversations can share a link, and a lost piece can be resent on its own"
+    - "Because encryption only works on small pieces"
+    - "Because the receiver can only store one packet at a time"
+  answer: B
+  explanation: "Packets let many conversations take turns on the same link, and if one packet is damaged or lost, only that packet is sent again. Each packet also carries its own addressing, so it can be delivered independently."
+
+- id: ch38-q02
+  type: mcq
+  question: "What is a packet's header?"
+  choices:
+    - "The first line of the HTTP response"
+    - "A small block of information in front of the payload saying where the packet comes from, where it goes, and how to handle it"
+    - "The part of the packet that contains the user's data"
+    - "A checksum at the end of the packet"
+  answer: B
+  explanation: "The header is the envelope: addressing and handling information. The payload is the letter inside. Network devices read headers without needing to look at the payload."
+
+- id: ch38-q03
+  type: mcq
+  question: "In the TCP/IP model, which layer uses port numbers to decide which program on a host receives the data?"
+  choices:
+    - "Link"
+    - "Internet"
+    - "Transport"
+    - "Application"
+  answer: C
+  explanation: "The transport layer (TCP and UDP) carries port numbers. The internet layer (IP) only gets the packet to the right host; the port picks the program on that host."
+
+- id: ch38-q04
+  type: mcq
+  exams: [CKNE]
+  question: "A colleague says a Kubernetes Service is an \"L4 load balancer\". What does that tell you?"
+  choices:
+    - "It can route requests based on the URL path"
+    - "It forwards traffic by IP address and port, without looking at HTTP paths or headers"
+    - "It only works with MAC addresses on one local network"
+    - "It encrypts traffic between Pods"
+  answer: B
+  explanation: "L4 is the transport layer: addresses and ports. Routing by URL path or header needs an L7 (application layer) component, such as a Gateway API HTTPRoute."
+
+- id: ch38-q05
+  type: mcq
+  question: "Which order shows encapsulation correctly, from the innermost part to the outermost, for a web request on Ethernet?"
+  choices:
+    - "Ethernet header, IP header, TCP header, HTTP data"
+    - "HTTP data, TCP header, IP header, Ethernet header"
+    - "IP header, HTTP data, Ethernet header, TCP header"
+    - "TCP header, HTTP data, IP header, Ethernet header"
+  answer: B
+  explanation: "Each layer wraps what it receives from the layer above. The HTTP data is wrapped by TCP, the TCP segment by IP, and the IP packet by Ethernet. On the wire, the Ethernet header comes first because it is the outermost envelope."
+
+- id: ch38-q06
+  type: mcq
+  question: "`ping 10.0.2.20` succeeds, but `curl http://10.0.2.20:8080/` fails. What can you conclude?"
+  choices:
+    - "The cable is broken"
+    - "The two hosts can reach each other at the IP layer; the problem is higher up, for example nothing is listening on port 8080"
+    - "ping is broken"
+    - "The client has no IP address"
+  answer: B
+  explanation: "ping (ICMP) proves IP connectivity only. It does not use ports and never reaches a program. A curl failure with working ping points at the transport or application layer: no listener, a firewall rule for that port, or a broken application."
+
+- id: ch38-q07
+  type: mcq
+  question: "`ip -br link` shows `eth0 DOWN ... <NO-CARRIER,BROADCAST,MULTICAST,UP>`. What does it mean?"
+  choices:
+    - "The interface has been switched off with ip link set eth0 down"
+    - "The interface is switched on, but nothing is detected at the other end of the link"
+    - "The interface has no IP address"
+    - "The interface is working normally"
+  answer: B
+  explanation: "UP in the flags means the interface is administratively on. NO-CARRIER means there is no signal from the other end, such as a loose cable or, with a virtual cable, the other end being down."
+
+- id: ch38-q08
+  type: mcq
+  exams: [CKNE]
+  question: "Which tcpdump command shows only TCP traffic to or from port 8080 on interface eth0, without trying to resolve names?"
+  choices:
+    - "tcpdump -i eth0 port 8080 -resolve=false"
+    - "tcpdump -i eth0 -n tcp port 8080"
+    - "tcpdump -n eth0 8080"
+    - "tcpdump -A -i any"
+  answer: B
+  explanation: "-i picks the interface, -n turns off name resolution, and the filter tcp port 8080 matches TCP packets with 8080 as the source or destination port."
+
+- id: ch38-q09
+  type: mcq
+  exams: [CKNE]
+  question: "What does `tcpdump -w web.pcap` do?"
+  choices:
+    - "Prints every packet in a wider format"
+    - "Writes the raw packets to the file web.pcap instead of printing them; read it later with tcpdump -r"
+    - "Waits until a packet arrives, then exits"
+    - "Shows only web (HTTP) traffic"
+  answer: B
+  explanation: "-w writes a capture file. It prints nothing per packet. Read the file with tcpdump -r web.pcap (optionally with a filter) or open it in Wireshark."
+
+- id: ch38-q10
+  type: mcq
+  question: "In the tcpdump line `IP 10.0.2.10.59826 > 10.0.2.20.8080: Flags [S]`, what is 59826?"
+  choices:
+    - "The packet's sequence number"
+    - "The client's port number for this connection"
+    - "The length of the packet"
+    - "The process ID of curl"
+  answer: B
+  explanation: "tcpdump prints address.port. The client's kernel picks a random high port for each new connection; 8080 is the server's port."
+
+- id: ch38-q11
+  type: mcq
+  question: "tcpdump with `-e` adds a pair of addresses such as `6a:e5:2f:f4:55:b5 > 7a:a5:67:7e:6a:93` to each line. What are they?"
+  choices:
+    - "IPv6 addresses"
+    - "MAC addresses from the Ethernet (link layer) header"
+    - "Port numbers in hexadecimal"
+    - "Encryption keys"
+  answer: B
+  explanation: "-e prints the link-layer header. On Ethernet, that header holds the source and destination MAC addresses of the two interfaces on the link. Chapter 39 covers them."
+
+- id: ch38-q12
+  type: mcq
+  question: "Why can tcpdump see TCP and IP headers that programs like curl never see?"
+  choices:
+    - "tcpdump decrypts the traffic"
+    - "Headers are added and removed by the kernel; tcpdump listens at the interface, below the programs"
+    - "curl hides headers on purpose"
+    - "tcpdump talks to the remote host to ask for them"
+  answer: B
+  explanation: "The kernel's network stack does the encapsulation and decapsulation. Programs hand data to the kernel and receive data from it. tcpdump captures at the interface, where the full frame with every header is visible."

@@ -1,0 +1,154 @@
+- id: ch48-q01
+  type: mcq
+  exams: [CKNE]
+  question: "Which statement is part of the Kubernetes network model?"
+  choices:
+    - "Pods on different nodes reach each other through the node's address, using NAT"
+    - "Every Pod gets its own IP address, and every Pod can reach every other Pod by that address without NAT"
+    - "Pods can only reach Pods in the same namespace unless a NetworkPolicy allows more"
+    - "Each container in a Pod gets its own IP address"
+  answer: B
+  explanation: "The model asks for one IP per Pod (shared by its containers) and Pod-to-Pod reachability across nodes with no address translation. NetworkPolicy can restrict traffic, but by default everything is allowed."
+
+- id: ch48-q02
+  type: mcq
+  exams: [CKNE]
+  question: "Two containers in the same Pod need to talk to each other. How do they do it?"
+  choices:
+    - "Through a Service that selects the Pod"
+    - "Through the Pod's IP address and a NAT rule on the node"
+    - "Through `localhost`, because they share one network namespace"
+    - "They cannot; containers must be in separate Pods to communicate"
+  answer: C
+  explanation: "All containers of a Pod share one network namespace: the same interfaces, addresses, and ports. They talk over `localhost`, and two of them cannot listen on the same port."
+
+- id: ch48-q03
+  type: mcq
+  exams: [CKNE]
+  question: "Which component calls the CNI plugin when a Pod is created on a node?"
+  choices:
+    - "The kube-scheduler"
+    - "kube-proxy"
+    - "The container runtime (for example containerd), when the kubelet asks it to create the Pod sandbox"
+    - "The API server"
+  answer: C
+  explanation: "The kubelet asks the runtime for a Pod sandbox; the runtime creates the network namespace and runs the plugin from `/opt/cni/bin` with the configuration from `/etc/cni/net.d`. The scheduler only picks the node."
+
+- id: ch48-q04
+  type: mcq
+  exams: [CKNE]
+  question: "A new cluster's nodes are all `NotReady`, and `kubectl describe node` says `container runtime network not ready: NetworkReady=false ... cni plugin not initialized`. What is the most likely cause?"
+  choices:
+    - "kube-proxy is not running"
+    - "No CNI configuration has been installed in `/etc/cni/net.d` yet"
+    - "CoreDNS has crashed"
+    - "The nodes have run out of Pod IP addresses"
+  answer: B
+  explanation: "The runtime reports the network ready only once it finds a valid CNI configuration. Until a network plugin is installed, nodes stay NotReady and ordinary Pods stay Pending. CoreDNS is a victim of this, not the cause."
+
+- id: ch48-q05
+  type: mcq
+  exams: [CKNE]
+  question: "How does a CNI plugin receive its configuration and the details of the Pod it should wire?"
+  choices:
+    - "Through command-line flags set by the kubelet"
+    - "By reading the Pod object from the API server"
+    - "The network configuration as JSON on standard input, and the Pod's details (command, network namespace path, interface name) in environment variables"
+    - "Through a gRPC call from kube-proxy"
+  answer: C
+  explanation: "CNI plugins are plain executables. The runtime sets `CNI_COMMAND`, `CNI_CONTAINERID`, `CNI_NETNS`, `CNI_IFNAME`, and `CNI_PATH`, writes the configuration to stdin, and reads the JSON result from stdout."
+
+- id: ch48-q06
+  type: mcq
+  exams: [CKNE]
+  question: "In a `.conflist` file, the plugins list is `ptp` followed by `portmap`. What does that mean?"
+  choices:
+    - "The runtime picks one of the two at random"
+    - "The plugins run in order as a chain: `ptp` creates the interface, then `portmap` adds port mappings, each receiving the previous result"
+    - "`portmap` is the fallback if `ptp` fails"
+    - "`ptp` runs on control-plane nodes and `portmap` on workers"
+  answer: B
+  explanation: "A configuration list is a chain. On ADD the plugins run in order and each gets the previous plugin's result; on DEL they run in reverse order."
+
+- id: ch48-q07
+  type: mcq
+  exams: [CKNE]
+  question: "What does the `host-local` IPAM plugin do?"
+  choices:
+    - "Asks the API server for a free address for every Pod"
+    - "Hands out addresses from a range given in the configuration and records the allocations in files on that node"
+    - "Gets addresses from a DHCP server on the node's network"
+    - "Gives every Pod the node's own address"
+  answer: B
+  explanation: "host-local keeps its allocations under `/var/lib/cni/networks/<network name>/` on the node. It knows nothing about other nodes, which is why each node must get its own, non-overlapping range."
+
+- id: ch48-q08
+  type: mcq
+  exams: [CKNE]
+  question: "Where does a node's `spec.podCIDR` come from in a kubeadm or kind cluster?"
+  choices:
+    - "The CNI plugin writes it when it starts"
+    - "The kube-controller-manager carves it out of the cluster CIDR (`--cluster-cidr`) when the node joins"
+    - "The kubelet picks a random free range"
+    - "It is always 10.244.N.0/24, where N is the node's index"
+  answer: B
+  explanation: "With `--allocate-node-cidrs`, the controller manager's node IPAM controller assigns each new node the next free block (a /24 by default) from the cluster CIDR. Some CNI plugins ignore this field and use their own IPAM, as later chapters show."
+
+- id: ch48-q09
+  type: mcq
+  exams: [CKNE]
+  question: "Pods on one node work, but Pods on different nodes cannot reach each other. The CNI plugin is the plain `ptp` plugin with host-local IPAM. What is missing?"
+  choices:
+    - "A Service for every Pod"
+    - "A route on each node to every other node's Pod CIDR, via that node's address"
+    - "A second CNI configuration file"
+    - "Masquerading of all Pod traffic"
+  answer: B
+  explanation: "`ptp` only connects Pods to their own node. Reaching another node's Pods needs routes (or an overlay). Masquerading all Pod traffic would break the no-NAT rule of the network model."
+
+- id: ch48-q10
+  type: mcq
+  exams: [CKNE]
+  question: "Why do clusters masquerade traffic from Pods to destinations outside the Pod network?"
+  choices:
+    - "To hide Pod IPs from other Pods"
+    - "Because machines outside the cluster have no route back to the Pod CIDR, so replies would be lost"
+    - "Because Services require it"
+    - "To encrypt the traffic"
+  answer: B
+  explanation: "An outside server's default route does not lead to 10.244.0.0/16, so it cannot answer a Pod address. Rewriting the source to the node's address fixes that. Traffic between Pods must stay un-NATed, so the rule excludes the Pod CIDR."
+
+- id: ch48-q11
+  type: task
+  exams: [CKNE]
+  prompt: "Print the Pod CIDR of every node in the cluster, one node per line, as `<node> <podCIDR>`."
+  solution: |
+    ```bash
+    kubectl get nodes -o jsonpath='{range .items[*]}{.metadata.name} {.spec.podCIDR}{"\n"}{end}'
+    ```
+
+    `kubectl get nodes -o custom-columns=NAME:.metadata.name,CIDR:.spec.podCIDR` gives the same with a header.
+
+- id: ch48-q12
+  type: task
+  exams: [CKNE]
+  prompt: "On node `kbook-worker`, find which CNI configuration the runtime uses and which plugin binaries are installed."
+  solution: |
+    ```bash
+    docker exec kbook-worker ls /etc/cni/net.d /opt/cni/bin
+    docker exec kbook-worker sh -c 'cat /etc/cni/net.d/*'
+    ```
+
+    The runtime uses the first file in `/etc/cni/net.d` in lexical order, which is why plugins name theirs `05-cilium.conflist` or `10-calico.conflist`. On a real node, `ssh` in instead of `docker exec`.
+
+- id: ch48-q13
+  type: task
+  exams: [CKNE]
+  prompt: "A Pod `app` in namespace `shop` stays in `ContainerCreating`. Find the message that explains why."
+  solution: |
+    ```bash
+    kubectl -n shop describe pod app | tail -n 20
+    kubectl -n shop get events --field-selector involvedObject.name=app
+    ```
+
+    Look for `FailedCreatePodSandBox`: the text after it is the CNI plugin's own error, for example `failed to find plugin "bridge" in path [/opt/cni/bin]` or an IPAM range that is exhausted.

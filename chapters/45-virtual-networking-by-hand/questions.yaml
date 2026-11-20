@@ -1,0 +1,143 @@
+- id: ch45-q01
+  type: mcq
+  exams: [CKNE]
+  question: "What do the containers of one Kubernetes Pod share?"
+  choices:
+    - "Nothing; each container has its own network namespace"
+    - "One network namespace: one IP address, one set of ports, and localhost between them"
+    - "Only the filesystem"
+    - "The node's network namespace"
+  answer: B
+  explanation: "A Pod is one network namespace, created by the pause container and joined by the Pod's other containers. Only Pods with hostNetwork: true use the node's namespace."
+
+- id: ch45-q02
+  type: mcq
+  exams: [CKNE]
+  question: "What is a veth pair?"
+  choices:
+    - "Two physical network cards bonded together"
+    - "Two virtual interfaces joined back to back, so traffic entering one leaves the other; the ends can be in different namespaces"
+    - "A VLAN tag"
+    - "A pair of routes, one in each direction"
+  answer: B
+  explanation: "A veth pair is a virtual cable. CNI plugins put one end in the Pod as eth0 and keep the other end on the node."
+
+- id: ch45-q03
+  type: mcq
+  exams: [CKNE]
+  question: "A namespace was just created with `ip netns add test`. What does it contain?"
+  choices:
+    - "A copy of the host's interfaces"
+    - "Only a loopback interface, which is down"
+    - "A loopback interface and an eth0 with an address"
+    - "Nothing at all, not even loopback"
+  answer: B
+  explanation: "New network namespaces start with lo only, and it is down. Everything else must be added, which is the CNI plugin's job for Pods."
+
+- id: ch45-q04
+  type: mcq
+  exams: [CKNE]
+  question: "In a bridge-based CNI setup, what is a Pod's default gateway?"
+  choices:
+    - "The node's eth0 address"
+    - "The address of the bridge (such as cni0) on the node"
+    - "The cluster's DNS server"
+    - "The first Pod on the node"
+  answer: B
+  explanation: "The bridge holds the first address of the node's Pod subnet, which is on-link for every Pod on that node. The node then routes the traffic onward."
+
+- id: ch45-q05
+  type: mcq
+  exams: [CKNE]
+  question: "Which steps does a simple bridge CNI plugin perform for a new Pod?"
+  choices:
+    - "Create a VM, install an OS, configure DNS"
+    - "Create a veth pair, move one end into the Pod as eth0, attach the other to the node's bridge, assign an address from IPAM, and add a default route"
+    - "Add the Pod's name to /etc/hosts on every node"
+    - "Open a firewall port for the Pod"
+  answer: B
+  explanation: "That is exactly the lab's Task 1. Plugins without a bridge (Cilium, Calico) skip the bridge and route to each Pod's veth instead."
+
+- id: ch45-q06
+  type: mcq
+  exams: [CKNE]
+  question: "Pods on node1 (10.9.1.0/24) cannot reach Pods on node2 (10.9.2.0/24). The nodes share a LAN. Captures show node2 receives the requests and replies, but the replies go to the default router. What is missing?"
+  choices:
+    - "A route on node2 for 10.9.1.0/24 via node1's address"
+    - "A VXLAN tunnel"
+    - "A DNS record"
+    - "A larger MTU"
+  answer: A
+  explanation: "node2 sends replies according to its own routing table. Without a route for node1's Pod subnet, they follow the default route to a router that knows no Pod subnets. Native routing needs routes on every node, in both directions."
+
+- id: ch45-q07
+  type: mcq
+  exams: [CKNE]
+  question: "When does native routing between nodes stop working, so that an overlay becomes necessary?"
+  choices:
+    - "When the cluster has more than 10 nodes"
+    - "When packets between nodes cross a router that does not know the Pod subnets and cannot be taught them"
+    - "When Pods use IPv4"
+    - "When the nodes are on the same LAN"
+  answer: B
+  explanation: "Native routing needs every device on the path to route Pod addresses. If the underlay belongs to someone else, wrapping Pod packets in node-to-node packets (VXLAN, Geneve) avoids that requirement. BGP (Chapter 59) can teach routers the Pod subnets where that is allowed."
+
+- id: ch45-q08
+  type: mcq
+  exams: [CKNE]
+  question: "In a capture on a node's eth0 you see `IP 192.168.9.11.54828 > 192.168.10.13.4789: VXLAN, flags [I] (0x08), vni 42` followed by `IP 10.9.1.10 > 10.9.3.10: ICMP echo request`. What are you looking at?"
+  choices:
+    - "Two separate packets"
+    - "One VXLAN packet between two nodes, carrying a Pod-to-Pod ICMP packet inside"
+    - "A DNS query"
+    - "A routing loop"
+  answer: B
+  explanation: "The outer packet is UDP to port 4789 between node addresses; tcpdump decodes the encapsulated inner packet on the next line. The VNI identifies the overlay."
+
+- id: ch45-q09
+  type: mcq
+  exams: [CKNE]
+  question: "Why does a VXLAN device on a 1500-byte network have an MTU of 1450?"
+  choices:
+    - "VXLAN compresses packets by 50 bytes"
+    - "Encapsulation adds about 50 bytes of headers (outer Ethernet, IP, UDP, VXLAN), so the inner frame must be 50 bytes smaller to fit"
+    - "It is a random default"
+    - "Because the VNI is 50"
+  answer: B
+  explanation: "14 (outer Ethernet) + 20 (outer IP) + 8 (UDP) + 8 (VXLAN) = 50 bytes of overhead. Pod interfaces must use the smaller MTU, or full-size packets do not fit."
+
+- id: ch45-q10
+  type: mcq
+  exams: [CKNE]
+  question: "Small HTTP requests between Pods on different nodes work, but large responses hang. The cluster uses VXLAN, and a firewall drops all ICMP. What is the most likely cause?"
+  choices:
+    - "DNS is misconfigured"
+    - "Pod interfaces have MTU 1500, so full-size packets do not fit the tunnel, and the ICMP 'fragmentation needed' messages that would fix it are dropped (an MTU black hole)"
+    - "The VNI is wrong"
+    - "The Pods are on the same node"
+  answer: B
+  explanation: "Path MTU discovery relies on ICMP. With ICMP blocked, senders never learn the smaller size. Setting the Pod MTU below the tunnel's MTU avoids the problem."
+
+- id: ch45-q11
+  type: mcq
+  exams: [CKNE]
+  question: "Which UDP port does VXLAN use by default, and which one Geneve?"
+  choices:
+    - "53 and 443"
+    - "4789 and 6081"
+    - "8472 and 179"
+    - "6443 and 10250"
+  answer: B
+  explanation: "VXLAN's standard port is 4789; Geneve's is 6081. (Older Flannel and Cilium setups sometimes use 8472 for VXLAN; 179 is BGP, a TCP port.) Firewalls between nodes must allow the overlay's port."
+
+- id: ch45-q12
+  type: mcq
+  exams: [CKNE]
+  question: "On a node, `ip link` shows `veth3a9f@if7`. What does `@if7` tell you?"
+  choices:
+    - "The interface is the 7th veth on the node"
+    - "The other end of this veth pair is interface number 7 (in another namespace, usually a Pod)"
+    - "The interface uses VLAN 7"
+    - "Seven Pods share it"
+  answer: B
+  explanation: "The number after @if is the peer's interface index. Inside the Pod, the interface with index 7 (usually eth0) is the other end."

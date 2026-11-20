@@ -1,0 +1,133 @@
+- id: ch39-q01
+  type: mcq
+  question: "Which of these is a valid MAC address?"
+  choices:
+    - "10.0.3.2"
+    - "86:07:80:6b:c9:d1"
+    - "86:07:80:6b:c9"
+    - "fe80::1"
+  answer: B
+  explanation: "A MAC address is 48 bits, written as six bytes in hexadecimal separated by colons. 10.0.3.2 is an IPv4 address, the third choice has only five bytes, and fe80::1 is an IPv6 address."
+
+- id: ch39-q02
+  type: mcq
+  question: "A frame is sent to `ff:ff:ff:ff:ff:ff`. Who receives it?"
+  choices:
+    - "Only the switch"
+    - "Only the default router"
+    - "Every host in the same broadcast domain"
+    - "Nobody; it is an invalid address"
+  answer: C
+  explanation: "ff:ff:ff:ff:ff:ff is the Ethernet broadcast address. Switches flood broadcast frames out of every port, so every host on the local network receives a copy."
+
+- id: ch39-q03
+  type: mcq
+  question: "A switch receives a frame whose destination MAC address is not in its MAC address table. What does it do?"
+  choices:
+    - "Drops the frame"
+    - "Sends it back to the sender"
+    - "Floods it out of every port except the one it arrived on"
+    - "Sends an ARP request for it"
+  answer: C
+  explanation: "An unknown destination is flooded. When the destination host answers, the switch learns which port it is on and forwards later frames to that port only. Switches do not use ARP; ARP is how hosts map IP addresses to MAC addresses."
+
+- id: ch39-q04
+  type: mcq
+  question: "How does a switch fill its MAC address table?"
+  choices:
+    - "An administrator types every entry"
+    - "It reads the source MAC address of every frame it receives and records the port it arrived on"
+    - "It asks every host with ARP"
+    - "It reads the destination MAC address of every frame"
+  answer: B
+  explanation: "Switches learn from source addresses: if a frame from MAC X arrives on port 3, MAC X lives behind port 3. Entries expire when a host stops sending."
+
+- id: ch39-q05
+  type: mcq
+  question: "What problem does ARP solve?"
+  choices:
+    - "Translating a host name into an IP address"
+    - "Finding the MAC address that belongs to an IP address on the local network"
+    - "Choosing which router to send a packet to"
+    - "Encrypting frames on a switch"
+  answer: B
+  explanation: "Programs address packets to IP addresses, but Ethernet delivers frames to MAC addresses. ARP broadcasts \"who has this IP?\" and the owner replies with its MAC. Name-to-address translation is DNS (Chapter 43)."
+
+- id: ch39-q06
+  type: mcq
+  question: "Which command shows a Linux host's ARP cache?"
+  choices:
+    - "ip route"
+    - "ip neigh"
+    - "bridge fdb show"
+    - "ss -ltn"
+  answer: B
+  explanation: "ip neigh (the neighbour table) lists IP-to-MAC mappings the host has learned. bridge fdb show is the switch's MAC-to-port table, a different thing."
+
+- id: ch39-q07
+  type: mcq
+  question: "In a capture you see `Request who-has 10.0.3.2 tell 10.0.3.1` sent to `ff:ff:ff:ff:ff:ff`, repeated every second, with no reply. What is the most likely explanation?"
+  choices:
+    - "10.0.3.2 is up but blocks ping"
+    - "No host that owns 10.0.3.2 is reachable on this broadcast domain (it is down, disconnected, or on another network)"
+    - "The switch's MAC table is full"
+    - "The MTU is too small"
+  answer: B
+  explanation: "ARP requests are broadcast to everyone in the broadcast domain. If nobody answers, no host with that address is reachable at layer 2. A firewall that blocks ping would still let ARP through, because ARP happens before any IP packet is sent."
+
+- id: ch39-q08
+  type: mcq
+  exams: [CKNE]
+  question: "Small pings between two Pods work, but large HTTP responses between them hang. Which cause should you check first?"
+  choices:
+    - "The ARP cache is too small"
+    - "An MTU mismatch somewhere on the path"
+    - "The Pods have the same MAC address"
+    - "DNS is misconfigured"
+  answer: B
+  explanation: "When small packets pass and full-size ones disappear, an MTU mismatch is the classic cause. Overlay networks make it common in Kubernetes, because encapsulation adds headers to every packet."
+
+- id: ch39-q09
+  type: mcq
+  question: "`ping -M do -s 1472 10.0.3.2` sends a packet of what total size, and why that number?"
+  choices:
+    - "1472 bytes; -s sets the total size"
+    - "1500 bytes: 1472 bytes of data plus an 8-byte ICMP header plus a 20-byte IP header"
+    - "1518 bytes, a full Ethernet frame"
+    - "1480 bytes: 1472 plus an 8-byte ICMP header"
+  answer: B
+  explanation: "-s sets only the ICMP data size. Adding the ICMP header (8 bytes) and the IPv4 header (20 bytes) gives 1500, exactly the standard Ethernet MTU. -M do forbids fragmentation, so the packet either fits or fails."
+
+- id: ch39-q10
+  type: mcq
+  exams: [CKNE]
+  question: "On a Linux switch (bridge), an interface is up and has a cable connected, but frames arriving on it go nowhere. What is the most likely cause?"
+  choices:
+    - "The interface has no IP address"
+    - "The interface is not attached to the bridge (no master br0)"
+    - "The bridge needs an ARP entry for it"
+    - "The interface's MAC address is wrong"
+  answer: B
+  explanation: "Only interfaces attached to the bridge with `ip link set <if> master br0` become switch ports. Bridge ports do not need IP addresses; they work at layer 2."
+
+- id: ch39-q11
+  type: mcq
+  question: "Which statement about the difference between a frame and a packet is correct?"
+  choices:
+    - "They are two words for exactly the same thing"
+    - "A frame is the link-layer unit (with MAC addresses); it carries a packet, the internet-layer unit (with IP addresses)"
+    - "A packet carries a frame inside it"
+    - "Frames are only used on Wi-Fi"
+  answer: B
+  explanation: "Encapsulation: the IP packet is the payload of the Ethernet frame. Switches look at frames; routers look at packets (Chapter 41)."
+
+- id: ch39-q12
+  type: mcq
+  question: "Why does a packet crossing the internet keep its IP addresses but not its MAC addresses?"
+  choices:
+    - "MAC addresses are encrypted after the first hop"
+    - "MAC addresses only identify interfaces on one local link; each hop puts the packet in a new frame with new MAC addresses"
+    - "Routers do not support Ethernet"
+    - "MAC addresses are removed to save space"
+  answer: B
+  explanation: "A frame only travels one link. When a router passes a packet on, it builds a new frame for the next link, with its own MAC as the source and the next hop's MAC as the destination. The IP addresses inside stay the same end to end."

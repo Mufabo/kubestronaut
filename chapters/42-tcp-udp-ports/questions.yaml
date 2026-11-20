@@ -1,0 +1,135 @@
+- id: ch42-q01
+  type: mcq
+  question: "What does a port number identify?"
+  choices:
+    - "Which host on the network receives a packet"
+    - "Which program (socket) on a host receives the data"
+    - "Which interface the packet leaves through"
+    - "Which router forwards the packet"
+  answer: B
+  explanation: "IP addresses identify hosts; ports identify sockets, and so programs, on a host. Each packet carries a source port and a destination port in its TCP or UDP header."
+
+- id: ch42-q02
+  type: mcq
+  question: "A web server on port 80 serves thousands of clients at once. How does the kernel keep their connections apart?"
+  choices:
+    - "Each client gets a different server port"
+    - "Each connection is identified by its 4-tuple (source address, source port, destination address, destination port), which is unique per connection"
+    - "Only one client can connect at a time"
+    - "By the clients' MAC addresses"
+  answer: B
+  explanation: "All connections share the server's address and port 80, but each client has a different address or ephemeral port, so every 4-tuple is different."
+
+- id: ch42-q03
+  type: mcq
+  question: "Why does DNS normally use UDP rather than TCP?"
+  choices:
+    - "UDP is encrypted"
+    - "A query is one small question and one small answer; setting up a TCP connection would cost more than the query, and the client can simply ask again if the answer is lost"
+    - "TCP cannot carry names"
+    - "UDP guarantees delivery"
+  answer: B
+  explanation: "UDP has no handshake, so a lookup takes one round trip. UDP does not guarantee delivery; the DNS client retries. DNS falls back to TCP for large answers."
+
+- id: ch42-q04
+  type: mcq
+  question: "In tcpdump output, what is the order of the flags in a TCP three-way handshake?"
+  choices:
+    - "[S], [S.], [.]"
+    - "[S], [.], [S.]"
+    - "[P.], [S], [F.]"
+    - "[S], [R.], [.]"
+  answer: A
+  explanation: "The client sends SYN ([S]), the server answers SYN-ACK ([S.]), and the client acknowledges ([.]). After that, data packets ([P.]) can flow."
+
+- id: ch42-q05
+  type: mcq
+  exams: [CKNE]
+  question: "curl prints `Failed to connect ... Could not connect to server` instantly (exit code 7). In a capture you see `[S]` followed by `[R.]`. What does this mean?"
+  choices:
+    - "The packet was lost on the way"
+    - "The host was reached, but nothing listens on that address and port (or a firewall rejected it)"
+    - "DNS failed"
+    - "The server is overloaded"
+  answer: B
+  explanation: "A reset in answer to a SYN means the host received it and refused. Packets lost on the way produce a timeout instead."
+
+- id: ch42-q06
+  type: mcq
+  exams: [CKNE]
+  question: "A client's connection attempts to a server hang for a long time and then fail with \"Connection timed out\". Which of these is a likely cause?"
+  choices:
+    - "Nothing listens on the port"
+    - "A firewall rule on the way silently drops the packets"
+    - "The server's application returned HTTP 500"
+    - "The client's ephemeral port range is too large"
+  answer: B
+  explanation: "A timeout means no answer came back at all: dropped packets, a missing route, or a dead host. A missing listener produces an immediate refusal."
+
+- id: ch42-q07
+  type: mcq
+  exams: [CKNE]
+  question: "`ss -ltn` inside a Pod shows `LISTEN 0 128 127.0.0.1:8080`. The Pod's Service gets \"connection refused\". What is wrong?"
+  choices:
+    - "The Service's selector is wrong"
+    - "The application listens only on the loopback address, so connections to the Pod's IP find no listener"
+    - "Port 8080 is a privileged port"
+    - "The Pod has no IP address"
+  answer: B
+  explanation: "127.0.0.1 is reachable only from inside the Pod's own network namespace. The application must listen on 0.0.0.0 (or the Pod's IP) to accept traffic from the Service."
+
+- id: ch42-q08
+  type: mcq
+  question: "Which command lists listening TCP and UDP sockets with numeric ports and the processes that own them?"
+  choices:
+    - "ss -ltunp"
+    - "ip route show"
+    - "tcpdump -n"
+    - "ss -s"
+  answer: A
+  explanation: "-l listening, -t TCP, -u UDP, -n numeric, -p processes. ss -s prints only summary counters."
+
+- id: ch42-q09
+  type: mcq
+  question: "What is the difference between a DROP rule and a REJECT rule in a firewall?"
+  choices:
+    - "DROP blocks TCP, REJECT blocks UDP"
+    - "DROP discards packets silently, so clients time out; REJECT answers with an error (such as a TCP reset), so clients fail immediately"
+    - "REJECT is temporary, DROP is permanent"
+    - "There is no difference"
+  answer: B
+  explanation: "Both block the traffic. DROP gives no answer, which makes clients wait and retry; REJECT tells them at once that the connection is refused."
+
+- id: ch42-q10
+  type: mcq
+  question: "`ss -tan` shows many sockets in `TIME-WAIT`. What does that mean?"
+  choices:
+    - "The connections are stuck and the application is broken"
+    - "Those connections are closed; the kernel keeps them for about a minute so that late packets are not mistaken for a new connection"
+    - "The server is waiting for clients to connect"
+    - "The firewall is blocking them"
+  answer: B
+  explanation: "TIME-WAIT is a normal state after a TCP connection closes, on the side that closed first. It disappears by itself."
+
+- id: ch42-q11
+  type: mcq
+  question: "Why does `ss -lun` show UDP sockets as `UNCONN` rather than `LISTEN`?"
+  choices:
+    - "The UDP service is broken"
+    - "UDP has no connections, so there is no listening state; the socket is simply bound to a port"
+    - "UDP sockets are always unconnected until a firewall allows them"
+    - "UNCONN means the port is closed"
+  answer: B
+  explanation: "LISTEN is a TCP state for accepting connections. A UDP socket just receives datagrams sent to its port."
+
+- id: ch42-q12
+  type: mcq
+  exams: [CKNE]
+  question: "A Kubernetes Service is described as an L4 load balancer. Based on this chapter, what does it balance?"
+  choices:
+    - "Individual HTTP requests, by URL path"
+    - "Connections (TCP) and flows (UDP), identified by addresses and ports"
+    - "Ethernet frames, by MAC address"
+    - "DNS names"
+  answer: B
+  explanation: "At layer 4, a load balancer sees 5-tuples, not HTTP. Each new connection or flow goes to one backend, and stays there. Request-level (L7) balancing needs a proxy such as a Gateway API implementation."

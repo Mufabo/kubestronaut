@@ -1,0 +1,156 @@
+- id: ch53-q01
+  type: mcq
+  exams: [CKNE]
+  question: "How does a Service know which Pods to send traffic to?"
+  choices:
+    - "It sends traffic to every Pod in its namespace"
+    - "Its label selector; the control plane writes the matching ready Pods into EndpointSlices"
+    - "The Deployment registers its Pods with the Service when they start"
+    - "kube-proxy scans the node for containers listening on the Service's port"
+  answer: B
+  explanation: "The EndpointSlice controller watches Pods that match the Service's selector and records the ready ones. kube-proxy and CNI plugins program forwarding from the EndpointSlices."
+
+- id: ch53-q02
+  type: mcq
+  exams: [CKNE]
+  question: "A Service has `port: 80` and no `targetPort`. The Pods listen on 8080. What happens?"
+  choices:
+    - "Kubernetes detects port 8080 from the container spec"
+    - "`targetPort` defaults to 80, so connections are forwarded to port 80 on the Pods and are refused"
+    - "The API server rejects the Service"
+    - "The Service has no endpoints"
+  answer: B
+  explanation: "`targetPort` defaults to the value of `port`. The endpoints are there, but nothing listens on 80 in the Pods, so clients get an immediate connection refused."
+
+- id: ch53-q03
+  type: mcq
+  exams: [CKNE]
+  question: "What is the advantage of setting `targetPort: http` instead of `targetPort: 8080`?"
+  choices:
+    - "The Service then speaks HTTP instead of TCP"
+    - "It refers to the container port named `http`, so the number can differ between Pods or change without editing the Service"
+    - "It makes the Service reachable from outside the cluster"
+    - "It enables session affinity for HTTP clients"
+  answer: B
+  explanation: "A named targetPort is looked up in each Pod's container ports. The Service stays layer 4; the name is only a label for a port number."
+
+- id: ch53-q04
+  type: mcq
+  exams: [CKNE]
+  question: "Why does `ping` to a working ClusterIP get no reply?"
+  choices:
+    - "ClusterIPs are only reachable over IPv6"
+    - "Nothing owns the ClusterIP: kube-proxy only translates the Service's ports and protocol, so ICMP matches no rule"
+    - "CoreDNS blocks ICMP"
+    - "The Service has session affinity turned off"
+  answer: B
+  explanation: "A ClusterIP is a virtual IP. Only connections to the Service's listed ports and protocols are DNATed to endpoints; anything else goes nowhere."
+
+- id: ch53-q05
+  type: mcq
+  exams: [CKNE]
+  question: "A NodePort Service has nodePort 30017, and its Pods all run on `node1`. A client connects to `node2:30017`. What happens?"
+  choices:
+    - "The connection is refused, because `node2` runs no Pod of the Service"
+    - "`node2` forwards the connection to a Pod on `node1`"
+    - "The client is redirected to `node1` with an HTTP redirect"
+    - "`node2` answers only if session affinity is on"
+  answer: B
+  explanation: "With the default `externalTrafficPolicy: Cluster`, every node accepts the node port and forwards to any endpoint. Chapter 55 shows the `Local` policy, which changes this."
+
+- id: ch53-q06
+  type: mcq
+  exams: [CKNE]
+  question: "In a kind cluster, a new LoadBalancer Service shows `EXTERNAL-IP <pending>` forever. Why?"
+  choices:
+    - "LoadBalancer Services need at least three replicas"
+    - "Nothing in the cluster hands out external addresses: there is no cloud controller, and no pool for an implementation such as Cilium LB-IPAM or MetalLB"
+    - "kube-proxy is in iptables mode"
+    - "The Service has no nodePort"
+  answer: B
+  explanation: "Kubernetes only requests an external address. A cloud controller, MetalLB, cloud-provider-kind, or Cilium LB-IPAM with a CiliumLoadBalancerIPPool has to provide one."
+
+- id: ch53-q07
+  type: mcq
+  exams: [CKNE]
+  question: "Cilium's LB-IPAM has given a Service the address `172.18.17.1`. It works from Pods but not from a machine on the nodes' LAN. What is missing?"
+  choices:
+    - "A second pool"
+    - "Something that makes the LAN deliver packets for that address to a node, such as L2 announcements (ARP) or BGP"
+    - "A NetworkPolicy that allows the traffic"
+    - "Session affinity"
+  answer: B
+  explanation: "LB-IPAM only assigns the address. Inside the cluster, Service rules catch it; outside, a router or host must learn which node owns it, which is what Chapter 59 sets up."
+
+- id: ch53-q08
+  type: mcq
+  exams: [CKNE]
+  question: "What does a DNS lookup of a headless Service's name return?"
+  choices:
+    - "Nothing; headless Services have no DNS name"
+    - "The addresses of the Service's ready Pods"
+    - "A CNAME to the Deployment's name"
+    - "The ClusterIP"
+  answer: B
+  explanation: "With `clusterIP: None` there is no virtual IP and no kube-proxy rule; CoreDNS returns one A record per ready endpoint, and the client chooses."
+
+- id: ch53-q09
+  type: mcq
+  exams: [CKNE]
+  question: "An ExternalName Service `db` points to `db.example.com`. A Pod connects to `db:5432`. What does kube-proxy do with the connection?"
+  choices:
+    - "DNATs it to `db.example.com`'s address"
+    - "Nothing: ExternalName is only a DNS CNAME, and the Pod connects to `db.example.com`'s address on port 5432 directly"
+    - "Proxies it through the node's address"
+    - "Rejects it, because ExternalName Services have no ports"
+  answer: B
+  explanation: "An ExternalName Service has no ClusterIP and no rules. CoreDNS answers with a CNAME, and the connection goes straight to the target."
+
+- id: ch53-q10
+  type: mcq
+  exams: [CKNE]
+  question: "A Service uses `sessionAffinity: ClientIP`. Hundreds of users reach it through one corporate NAT gateway. What happens?"
+  choices:
+    - "Each user gets their own Pod"
+    - "All of them land on the same Pod, because affinity is keyed on the source IP, which they share"
+    - "Affinity is turned off automatically"
+    - "Requests are spread evenly, as without affinity"
+  answer: B
+  explanation: "ClientIP affinity knows nothing about users or cookies; one source address means one Pod. Cookie-based stickiness needs a layer 7 proxy."
+
+- id: ch53-q11
+  type: task
+  exams: [CKNE]
+  prompt: "In namespace `shop`, expose the Deployment `api` (container port 8080) as a Service named `api` on port 80, then show which Pod addresses it forwards to."
+  solution: |
+    ```bash
+    kubectl -n shop expose deployment api --port=80 --target-port=8080
+    kubectl -n shop get endpointslices -l kubernetes.io/service-name=api
+    ```
+
+    `kubectl -n shop describe service api` shows the same addresses in its `Endpoints` line.
+
+- id: ch53-q12
+  type: task
+  exams: [CKNE]
+  prompt: "Create a Service `web-np` of type NodePort for the Pods labelled `app=web` in the current namespace: port 80, targetPort 8080, node port 30080."
+  solution: |
+    ```bash
+    kubectl create service nodeport web-np --tcp=80:8080 --node-port=30080 --dry-run=client -o yaml > web-np.yaml
+    # edit web-np.yaml: set spec.selector to app: web (create service sets app: web-np)
+    kubectl apply -f web-np.yaml
+    ```
+
+    Or write the Service by hand with `type: NodePort`, `selector: {app: web}`, and `ports: [{port: 80, targetPort: 8080, nodePort: 30080}]`.
+
+- id: ch53-q13
+  type: task
+  exams: [CKNE]
+  prompt: "On a node, find the iptables rules kube-proxy wrote for the Service `api` in namespace `shop`, and the Pod addresses they DNAT to."
+  solution: |
+    ```bash
+    iptables -t nat -S KUBE-SERVICES | grep shop/api
+    iptables -t nat -S | grep 'shop/api' | grep DNAT
+    ```
+
+    The comments kube-proxy adds (`shop/api cluster IP`, `shop/api -> 10.244.1.7:8080`) make the rules easy to find without decoding the chain-name hashes.
