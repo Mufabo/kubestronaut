@@ -8,7 +8,7 @@
 This is the full CKA simulator, in the style of killer.sh. Like killer.sh, it is
 meant to be **harder and more hurried than the real exam**. It covers all of the
 CKA and does not repeat the Part III mock: take that one first, then this one in
-the last two weeks before your exam (Chapter 39's CKA plan).
+the last two weeks before your exam (Chapter 74's CKA plan).
 
 ## How it works
 
@@ -44,7 +44,7 @@ The rules mirror the real exam environment:
 - **Files.** Files a question starts from, and answers that are files, are under
   `/tmp/kbook/cka/<question>/`. Write exactly the file the question names.
 - **Documentation.** Allowed: `kubectl explain`, `--help`, `man`, and the
-  documentation Chapter 38 lists for the CKA (kubernetes.io/docs and blog,
+  documentation Chapter 73 lists for the CKA (kubernetes.io/docs and blog,
   helm.sh/docs, gateway-api.sigs.k8s.io). Not allowed: this book's chapters and
   the solutions file, until you have scored.
 - **Weights.** Every question has a task weight. A question counts only when

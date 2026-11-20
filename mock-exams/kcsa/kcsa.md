@@ -4,7 +4,7 @@
 > **Format:** 60 multiple-choice questions, 90 minutes, pass mark 75%
 > **Covers:** the six KCSA domains, weighted as in the curriculum: Overview of Cloud Native Security 14% (8 questions), Kubernetes Cluster Component Security 22% (13), Kubernetes Security Fundamentals 22% (13), Kubernetes Threat Model 16% (10), Platform Security 16% (10), Compliance and Security Frameworks 10% (6)
 > **Lab tier:** none (no cluster needed)
-> **Prerequisites:** the KCSA study plan in Chapter 39
+> **Prerequisites:** the KCSA study plan in Chapter 74
 
 The KCSA is a multiple-choice exam, so this mock exam has no lab. Take it in the
 terminal, timed, the way the real exam runs:

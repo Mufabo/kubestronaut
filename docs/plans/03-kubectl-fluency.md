@@ -16,14 +16,14 @@ Status: **implemented** (chapter, six-part lab, shell setup, jq/yq tests, cheat 
 | Decision | Choice |
 | --- | --- |
 | Lab structure | **All three:** a shared seeded set of Pods, fresh mini-scenarios with their own reset, and guided drills plus a timed final task |
-| Shell and exam setup (aliases, completion, vim) | **Full treatment in this chapter** (Chapter 37 then covers strategy and mock-exam technique, not setup) |
+| Shell and exam setup (aliases, completion, vim) | **Full treatment in this chapter** (Chapter 72 then covers strategy and mock-exam technique, not setup) |
 | `jq` and `yq` | **Covered** in the chapter, alongside built-in `kubectl` output tools |
 | `tmux` | **A short optional box** in the chapter, no separate config file |
 | Windows | **WSL2 only**; no native PowerShell support |
 | Scope of Part A | **Pods only** (no Deployments yet); complexity kept as low as sensible |
 | Part b2 | **Two variants:** `b2` (ConfigMap, Secret, ServiceAccount, Service) and `b2p` (Pod-only drills). Readers choose, or do both |
 | `jq`/`yq` in the timed final | **Excluded.** The optional A7 stretch is the only lab task that uses them |
-| Exam-environment notes | **Stay in this chapter** (Chapter 39 just cross-references them) |
+| Exam-environment notes | **Stay in this chapter** (Chapter 74 just cross-references them) |
 | Tier 2 tool | Vagrant (not needed for this chapter) |
 | Chapter file name | `03-kubectl-fluency.md` (named after the chapter, not `README.md`) |
 
@@ -55,7 +55,7 @@ Word counts are targets for the concept text; the lab is separate.
 | 5 | Creating things | Imperative generators (`run`, `create configmap/secret/namespace/serviceaccount`, `expose`); generators for controller kinds (`deployment`, `job`, `cronjob`) shown **with `--dry-run` output only**, to be applied in later chapters; `--dry-run=client` vs `server`; `-o yaml` editing workflow | 450 |
 | 6 | Changing things | `create` vs `apply` (client-side vs server-side apply, at a high level) vs `replace` (and `--force`) vs `edit` vs `patch` (strategic, merge, JSON); `diff`; `label`, `annotate`, `set image`; a short note on `scale` and `set env/resources` (they need a controller, so they are demonstrated from Chapter 05); `delete` and deletion flags; `wait --for=`; what cannot be changed on a live Pod (recap from Chapter 04) | 700 |
 | 7 | Permissions | `auth can-i` with `--as` and `--list`; what it can and cannot tell you (full RBAC is Chapter 23) | 200 |
-| 8 | The fast terminal | `k` alias; bash and zsh completion for the alias; `$do` and `$now` variables; a minimal `~/.vimrc` (2-space indent, expandtab, and so on); `KUBE_EDITOR`; a **short optional box** with a minimal inline `tmux` setup (about five lines, no separate file); history search; bookmarking documentation pages; the **exam-environment notes** (what the real exam typically preconfigures, which tools exist, allowed documentation; **verify against the current candidate handbook before writing**). Chapter 39 links here rather than repeating it | 700 |
+| 8 | The fast terminal | `k` alias; bash and zsh completion for the alias; `$do` and `$now` variables; a minimal `~/.vimrc` (2-space indent, expandtab, and so on); `KUBE_EDITOR`; a **short optional box** with a minimal inline `tmux` setup (about five lines, no separate file); history search; bookmarking documentation pages; the **exam-environment notes** (what the real exam typically preconfigures, which tools exist, allowed documentation; **verify against the current candidate handbook before writing**). Chapter 74 links here rather than repeating it | 700 |
 | 9 | Command cheat sheet | One-page reference of everything above (also goes to the appendix) | table |
 | 10 | Exam tips and common mistakes | | 250 |
 
@@ -208,7 +208,7 @@ Also update: `docs/coverage-matrix.md`, `docs/lab-authoring.md`,
 | Deployments in Part A? | No: Pods only, keep it simple | A5 now creates a Pod; Job replaced by a run-once Pod in b2; `scale`, `set env/resources`, and `rollout` are text-only until Chapter 05 |
 | Part b2: keep config objects, or go Pod-only? | Both | Two parts, `b2` and `b2p`, each with its own setup, verify, solve, and reset; the chapter text tells readers which to pick |
 | `jq`/`yq` stretch in the timed final? | No, stays out | The final is Pods-only and tool-independent |
-| Exam-environment paragraph? | Stays in Chapter 03 | Section 8 owns it; Chapter 39 cross-references it. It still needs verification against the current candidate handbook |
+| Exam-environment paragraph? | Stays in Chapter 03 | Section 8 owns it; Chapter 74 cross-references it. It still needs verification against the current candidate handbook |
 
 ### Assumption to confirm
 

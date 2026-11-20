@@ -1,4 +1,4 @@
-# Chapter 37: Terminal speed: drills for aliases, vim, tmux, jq and yq, and imperative commands
+# Chapter 72: Terminal speed: drills for aliases, vim, tmux, jq and yq, and imperative commands
 
 > **Exams:** CKAD · CKA
 > **Difficulty:** Intermediate
@@ -226,48 +226,48 @@ progress that is saved between sessions. It is a drill: the checks test outcomes
 any command that gets the outcome passes. The point is to do each one fast.
 
 ```bash
-make lab CH=37       # set up the lab and show task 1
-make check CH=37     # check the current task; if it is right, show the next
-make question CH=37  # show the current task again
-make reset CH=37     # back to the starting state and task 1
-make verify CH=37    # check every task at once
+make lab CH=72       # set up the lab and show task 1
+make check CH=72     # check the current task; if it is right, show the next
+make question CH=72  # show the current task again
+make reset CH=72     # back to the starting state and task 1
+make verify CH=72    # check every task at once
 ```
 
-The lab uses the Namespace `ch37-drill`. The setup starts three Pods: `flaky`, which crashes on
+The lab uses the Namespace `ch72-drill`. The setup starts three Pods: `flaky`, which crashes on
 purpose and restarts, and `steady-1` and `steady-2`, which keep running. It also writes a base
-Deployment file to `/tmp/ch37/base-deploy.yaml`. The four tasks do not depend on each other.
+Deployment file to `/tmp/ch72/base-deploy.yaml`. The four tasks do not depend on each other.
 
 Full solutions are in [`lab/solutions.md`](lab/solutions.md).
 
 ### Task 1: A Deployment, generated and scaled
 
-Create a Deployment named `speed` in Namespace `ch37-drill`, running `nginx:1.27`, with 3
+Create a Deployment named `speed` in Namespace `ch72-drill`, running `nginx:1.27`, with 3
 ready replicas. Generate it with a command rather than a manifest you write yourself.
 
-- Deployment `speed` in `ch37-drill`: image `nginx:1.27`, 3 replicas, 3 ready
+- Deployment `speed` in `ch72-drill`: image `nginx:1.27`, 3 replicas, 3 ready
 
 ### Task 2: A Job from a generated manifest
 
 Generate a Job named `count` that runs `busybox:1.36` with the command `sh -c 'echo 1'`. Save
-the manifest to `/tmp/ch37/count-job.yaml`, apply that file, and wait until the Job completes.
+the manifest to `/tmp/ch72/count-job.yaml`, apply that file, and wait until the Job completes.
 
-- File `/tmp/ch37/count-job.yaml`: kind `Job`, name `count`, image `busybox:1.36`
-- Job `count` in `ch37-drill` has succeeded once
+- File `/tmp/ch72/count-job.yaml`: kind `Job`, name `count`, image `busybox:1.36`
+- Job `count` in `ch72-drill` has succeeded once
 
 ### Task 3: The Pods that have restarted
 
-Write the names of the Pods in `ch37-drill` that have restarted at least once to
-`/tmp/ch37/restarted.txt`, one name per line. Use a filter, not your eyes.
+Write the names of the Pods in `ch72-drill` that have restarted at least once to
+`/tmp/ch72/restarted.txt`, one name per line. Use a filter, not your eyes.
 
-- File `/tmp/ch37/restarted.txt`: the names of the Pods whose container restart count is greater than 0, one per line
+- File `/tmp/ch72/restarted.txt`: the names of the Pods whose container restart count is greater than 0, one per line
 
 ### Task 4: A changed copy of a base file
 
-Copy `/tmp/ch37/base-deploy.yaml` to `/tmp/ch37/scaled.yaml`, and change the copy so that it
+Copy `/tmp/ch72/base-deploy.yaml` to `/tmp/ch72/scaled.yaml`, and change the copy so that it
 has 5 replicas. The base file must stay as it is, and the cluster must not be changed.
 
-- File `/tmp/ch37/scaled.yaml`: a Deployment named `shop`, image `nginx:1.27`, 5 replicas
-- File `/tmp/ch37/base-deploy.yaml`: still 2 replicas
+- File `/tmp/ch72/scaled.yaml`: a Deployment named `shop`, image `nginx:1.27`, 5 replicas
+- File `/tmp/ch72/base-deploy.yaml`: still 2 replicas
 
 ## Exam tips
 
@@ -416,4 +416,4 @@ container has a restart count above zero.
 - The `jq` manual, and the `yq` documentation for in-place edits
 - The `vim` tutor (`vimtutor`), for the motions in this chapter
 - The `tmux` manual page, for the keys in this chapter
-- Chapter 03 for the full kubectl reference and the exam environment; Chapter 38 for navigating the allowed documentation
+- Chapter 03 for the full kubectl reference and the exam environment; Chapter 73 for navigating the allowed documentation

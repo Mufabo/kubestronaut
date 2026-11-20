@@ -294,10 +294,10 @@ them. They are mapped here so their coverage stays visible.
 | Imperative creation and generated manifests (`--dry-run=client -o yaml`) | 03, 04 | 03/a A5; 03/b2p; 03/final Q1, Q5; 04/T1; P1 Q2, Q10 | ch03-q03, q04, q09; ch04-q06, q12 | drafted |
 | `kubectl wait`, `patch`, `set image`, `replace --force` | 03, 04 | 03/b2p P4; 03/final Q4; 04/T2; P1 Q3 | ch03-q11; ch04-q08 | drafted |
 | `jq` and `yq` | 03 | 03/a A7 (optional) | ch03-q15 | drafted |
-| Fast terminal: aliases, completion, `vim` | 03, 37 | 37 drills | ch37-q01, q07, q08 | partly (37 drills the habits; setup is in 03) |
-| Working under time pressure, context per question | 03, 37 | 03/final; 37 drills; P1 (whole exam) | ch37-q10 | partly |
-| Finding answers in the allowed documentation, `explain`, and `--help` | 38 | 38 exploration exercise | ch38-q01–q12 | drafted |
-| Exam logistics: booking, check-in, the exam environment, time strategy, study plans | 39 | 39 planning exercise | ch39-q01–q13 | drafted |
+| Fast terminal: aliases, completion, `vim` | 03, 72 | 72 drills | ch72-q01, q07, q08 | partly (72 drills the habits; setup is in 03) |
+| Working under time pressure, context per question | 03, 72 | 03/final; 72 drills; P1 (whole exam) | ch72-q10 | partly |
+| Finding answers in the allowed documentation, `explain`, and `--help` | 73 | 73 exploration exercise | ch73-q01–q12 | drafted |
+| Exam logistics: booking, check-in, the exam environment, time strategy, study plans | 74 | 74 planning exercise | ch74-q01–q13 | drafted |
 
 ## Curriculum revisions checked
 
@@ -319,7 +319,7 @@ is now part of Kubernetes Fundamentals, and "Networking", "Security",
 
 ### Exam environment (checked when Chapter 03 was written)
 
-From the Linux Foundation's published exam instructions: CKA and CKAD run 15 to 20 tasks in two hours on designated SSH hosts that have `kubectl` with the `k` alias and Bash completion, `yq`, `curl`, `wget`, and `man` pages; `jq` and `tmux` are not listed. The CKA environment was on Kubernetes v1.35 and the CKAD on v1.37 at that time; on 2026-10-23 both ran v1.37, and the instructions and the allowed-resources page (Kubernetes docs and blog, Helm docs, and for the CKA the Gateway API docs) were re-read for Chapters 03 and 38. Chapter 03 teaches `jq` and `tmux` as conveniences only and `yq` as a tool that exists in the exam. Re-read the instructions before every edition.
+From the Linux Foundation's published exam instructions: CKA and CKAD run 15 to 20 tasks in two hours on designated SSH hosts that have `kubectl` with the `k` alias and Bash completion, `yq`, `curl`, `wget`, and `man` pages; `jq` and `tmux` are not listed. The CKA environment was on Kubernetes v1.35 and the CKAD on v1.37 at that time; on 2026-10-23 both ran v1.37, and the instructions and the allowed-resources page (Kubernetes docs and blog, Helm docs, and for the CKA the Gateway API docs) were re-read for Chapters 03 and 73. Chapter 03 teaches `jq` and `tmux` as conveniences only and `yq` as a tool that exists in the exam. Re-read the instructions before every edition.
 
 ## Kubernetes version
 

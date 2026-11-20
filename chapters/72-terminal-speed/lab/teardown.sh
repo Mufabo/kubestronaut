@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# End the lab: remove its Namespace, the answer files in /tmp/ch37, and restore the reader's
+# End the lab: remove its Namespace, the answer files in /tmp/ch72, and restore the reader's
 # kubectl context if they changed it.
 set -euo pipefail
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

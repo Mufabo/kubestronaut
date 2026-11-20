@@ -40,7 +40,7 @@ takes a few minutes. The rules are those of set 1:
 - **Files.** Files a question starts from, and answers that are files, are under
   `/tmp/kbook/cka2/<question>/`. Write exactly the file the question names.
 - **Documentation.** Allowed: `kubectl explain`, `--help`, `man`, and the
-  documentation Chapter 38 lists for the CKA. Not allowed: this book's chapters and
+  documentation Chapter 73 lists for the CKA. Not allowed: this book's chapters and
   the solutions file, until you have scored.
 - **Weights.** A question counts only when everything it asks for is right; then you
   earn its whole weight.

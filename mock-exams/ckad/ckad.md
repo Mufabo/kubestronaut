@@ -7,8 +7,8 @@
 
 This is the full CKAD simulator, in the style of killer.sh. Like killer.sh, it is
 meant to be **harder and more hurried than the real exam**: 20 questions where the
-real exam has 15 to 20. Take it after Parts I and II, Chapters 37 and 38, and the
-`part1` and `part2` mock exams; Chapter 39's CKAD plan puts it in the last two
+real exam has 15 to 20. Take it after Parts I and II, Chapters 72 and 73, and the
+`part1` and `part2` mock exams; Chapter 74's CKAD plan puts it in the last two
 weeks.
 
 ## How it works
@@ -32,7 +32,7 @@ The rules mirror the real exam environment:
 - **Tools.** `docker` (question 1) and `helm` (question 7) are on your path, as in
   Chapters 14 and 16. Podman works for question 1 too.
 - **Documentation.** Allowed: `kubectl explain`, `--help`, and the documentation
-  Chapter 38 lists (kubernetes.io/docs, kubernetes.io/blog, helm.sh/docs). Not
+  Chapter 73 lists (kubernetes.io/docs, kubernetes.io/blog, helm.sh/docs). Not
   allowed: this book's chapters and the solutions file, until you have scored.
 - **Weights.** Every question has a task weight. A question counts only when
   everything it asks for is right; then you earn its whole weight. Your score is

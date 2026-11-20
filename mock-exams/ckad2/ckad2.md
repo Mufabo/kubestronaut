@@ -31,7 +31,7 @@ The rules are those of set 1:
 - **Tools.** `docker` (question 1) and `helm` (question 7) are on your path.
   Podman works for question 1 too.
 - **Documentation.** Allowed: `kubectl explain`, `--help`, and the documentation
-  Chapter 38 lists. Not allowed: this book's chapters and the solutions file,
+  Chapter 73 lists. Not allowed: this book's chapters and the solutions file,
   until you have scored.
 - **Weights.** A question counts only when everything it asks for is right; then
   you earn its whole weight.

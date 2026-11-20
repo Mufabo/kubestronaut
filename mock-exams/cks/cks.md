@@ -8,7 +8,7 @@
 This is the full CKS simulator, in the style of killer.sh. Like killer.sh, it is
 meant to be **harder and more hurried than the real exam**. It draws on Part IV
 (Chapters 29 to 36) and on the RBAC and NetworkPolicy chapters before it. Take it
-in the last two weeks before your exam (Chapter 39's CKS plan), after you have
+in the last two weeks before your exam (Chapter 74's CKS plan), after you have
 worked through every Part IV lab.
 
 ## How it works
@@ -46,7 +46,7 @@ The rules mirror the real exam environment:
 - **Files.** Files a question starts from, and answers that are files, are under
   `/tmp/kbook/cks/<question>/`. Write exactly the file the question names.
 - **Documentation.** Allowed: `kubectl explain`, `--help`, `man`, and the
-  documentation Chapter 38 lists for the CKS (kubernetes.io/docs and blog, and the
+  documentation Chapter 73 lists for the CKS (kubernetes.io/docs and blog, and the
   documentation of the tools the exam uses, such as Falco and AppArmor). Not
   allowed: this book's chapters and the solutions file, until you have scored.
 - **Weights.** Every question has a task weight. A question counts only when

@@ -1,4 +1,4 @@
-# Chapter 39: Exam logistics and study plans per certification
+# Chapter 74: Exam logistics and study plans per certification
 
 > **Exams:** KCNA · KCSA · CKAD · CKA · CKS
 > **Difficulty:** Beginner
@@ -38,7 +38,7 @@ candidate handbook and the exam's *Important Instructions* on
 | Kubernetes version | (none) | (none) | v1.37 | v1.37 | v1.35 |
 | Prerequisite | none | none | none | none | a passed CKA |
 | Simulator included | no | no | 2 killer.sh sessions | 2 killer.sh sessions | 2 killer.sh sessions |
-| Documentation | none | none | allowed list (Chapter 38) | allowed list | allowed list |
+| Documentation | none | none | allowed list (Chapter 73) | allowed list | allowed list |
 
 All five are taken online, at home or at the office, under a remote proctor. Each
 purchase includes **one retake**, and you have **12 months** from the purchase to
@@ -98,7 +98,7 @@ The exam window has two parts: the **content panel** on the left with the tasks,
 and a **remote Linux desktop** on the right. On the desktop you get:
 
 - A **terminal**, where you solve the tasks. Each task names the host or context to use; start every task by switching to it, exactly as this book's exam-style labs ask with their `Use context:` line.
-- **Firefox**, for the allowed documentation (Chapter 38), with a translation extension.
+- **Firefox**, for the allowed documentation (Chapter 73), with a translation extension.
 - **VSCodium**, a graphical editor with its own terminal, as an alternative to `vim` in the terminal. Extensions cannot be installed.
 - A **virtual keyboard**, for special characters that a non-US keyboard layout breaks.
 
@@ -134,7 +134,7 @@ equally hard or equally weighted. Work in **two passes**:
 2. **Second pass:** return to the skipped tasks, the highest weight first.
 3. **Last ten minutes:** stop starting new work. Check that the tasks you solved are really done: the right context, the right Namespace, the Pod `Running`, the file written to the exact path.
 
-The habits that save the most time are the ones from Chapters 03 and 37: switch the
+The habits that save the most time are the ones from Chapters 03 and 72: switch the
 context first, generate YAML with `--dry-run=client -o yaml` instead of typing it,
 use `kubectl explain` instead of the browser for field names, and check each result
 with one `get` before moving on.
@@ -219,8 +219,8 @@ chapters behind the questions you missed.
 
 #### CKS (five to six weeks, after the CKA and KCSA)
 
-Part IV again, this time every lab, on kind and on the Tier 2 VMs; then Chapters 37
-and 38 for the CKS's allowed documentation, which includes the docs of the
+Part IV again, this time every lab, on kind and on the Tier 2 VMs; then Chapters 72
+and 73 for the CKS's allowed documentation, which includes the docs of the
 security tools. In the last two weeks, take the CKS simulator (`make mock EXAM=cks`,
 on the VMs), timed, then the two killer.sh sessions.
 

@@ -4,7 +4,7 @@
 > **Format:** 60 multiple-choice questions, 90 minutes, pass mark 75%
 > **Covers:** the four KCNA domains, weighted as in the curriculum: Kubernetes Fundamentals 44% (26 questions), Container Orchestration 28% (17), Cloud Native Application Delivery 16% (10), Cloud Native Architecture 12% (7)
 > **Lab tier:** none (no cluster needed)
-> **Prerequisites:** the KCNA study plan in Chapter 39, and set 1 (`mock-exams/kcna`)
+> **Prerequisites:** the KCNA study plan in Chapter 74, and set 1 (`mock-exams/kcna`)
 
 A second, independent set of 60 questions, none of them repeated from set 1. Take
 set 1 first; when you retake an exam you remember its answers, so a fresh set is

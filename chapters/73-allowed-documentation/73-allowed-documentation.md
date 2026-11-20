@@ -1,10 +1,10 @@
-# Chapter 38: Navigating the allowed documentation
+# Chapter 73: Navigating the allowed documentation
 
 > **Exams:** CKAD · CKA · CKS
 > **Difficulty:** Beginner
 > **Time:** ~30 min reading, ~45 min exploration exercise
 > **Lab tier:** none (a browser; a cluster helps for the last part of the exercise)
-> **Prerequisites:** Chapter 03 (kubectl fluency), Chapter 37 (terminal speed)
+> **Prerequisites:** Chapter 03 (kubectl fluency), Chapter 72 (terminal speed)
 
 ## Learning objectives
 
@@ -284,5 +284,5 @@ sudo grep -E -- '--(listen-client-urls|trusted-ca-file|cert-file|key-file)' /etc
 
 - The Linux Foundation's *Resources allowed during exam* page and its CKA/CKAD and CKS instructions (re-read them before you book)
 - `kubernetes.io/docs/home/`: the start page, with the four sections
-- Chapter 37: terminal speed, which saves more time than any bookmark
-- Chapter 39 next: exam logistics and a study plan per certification
+- Chapter 72: terminal speed, which saves more time than any bookmark
+- Chapter 74 next: exam logistics and a study plan per certification
