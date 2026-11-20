@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# topo: print the diagram of the current lab's network (written by its setup).
+if [[ -s /etc/netlab/topology.txt ]]; then
+  cat /etc/netlab/topology.txt
+else
+  echo "No lab is set up in this container. On your machine, run: make lab CH=<n>"
+fi

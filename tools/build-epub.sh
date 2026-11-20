@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Build the book as an EPUB: the README as the introduction, Chapters 01 to 39 in
+# Build the book as an EPUB: the README as the introduction, Chapters 01 to 74 in
 # order, then the mock exams' question pages as an appendix (their solutions stay
 # out). Mermaid diagrams become images (tools/epub/filter.lua).
 #   tools/build-epub.sh [output]      default: dist/kubestronaut-book.epub

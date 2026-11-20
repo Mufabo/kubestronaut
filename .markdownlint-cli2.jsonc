@@ -5,6 +5,8 @@
     "MD041": false,
     "MD024": { "siblings_only": true },
     // Tab characters are real: kubectl describe and jsonpath @tsv output are tab-separated.
-    "MD010": false
+    "MD010": false,
+    // Callouts (> **Exam tip:** ...) are often placed back to back.
+    "MD028": false
   }
 }

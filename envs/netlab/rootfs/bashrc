@@ -1,0 +1,8 @@
+# Sourced by every interactive bash in the netlab container (/etc/bash.bashrc).
+# The prompt shows which network namespace the shell is in:
+#   netlab:~#          the container itself
+#   [h1] netlab:~#     a shell inside namespace h1 (after `on h1`)
+__netlab_prompt() { __ns="$(ip netns identify 2>/dev/null)"; }
+PROMPT_COMMAND=__netlab_prompt
+PS1='${__ns:+\[\e[1;36m\][$__ns]\[\e[0m\] }netlab:\w# '
+alias ll='ls -l'

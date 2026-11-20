@@ -3,7 +3,8 @@
 #
 #   source "$(dirname "${BASH_SOURCE[0]}")/../../../tools/lib.sh"
 #
-# Provides: logging, safety checks, waiting, namespace helpers, and the
+# Provides: logging, safety checks, waiting, namespace helpers, the Tier 0
+# netlab helpers and Tier 1 profile helpers (Parts V to X), and the
 # check/check_weighted/finish_checks framework used by every verify.sh.
 
 set -o pipefail
@@ -40,7 +41,11 @@ require_cmd() {
 #      (tools/cluster.sh) creates it, so only clusters this project created,
 #      or that you deliberately marked, are accepted.
 # Override deliberately, at your own risk, with LAB_ALLOW_ANY_CONTEXT=1.
+#   3. PROFILE (Tier 1 on kind-${CLUSTER_NAME} only): the marker's data.profile
+#      must equal ${LAB_PROFILE:-calico}; a marker without one (written before
+#      profiles existed) counts as calico.
 LAB_MARKER_NAME="${LAB_MARKER_NAME:-kbook-lab-marker}"
+LAB_DEFAULT_PROFILE=calico
 require_lab_cluster() {
   require_cmd kubectl
   local ctx expected marker
@@ -68,6 +73,12 @@ require_lab_cluster() {
         die "this cluster is not marked as the Tier 2 lab cluster (ConfigMap kube-system/${LAB_MARKER_NAME} missing or wrong). On the host, restore a cluster snapshot: envs/vagrant/kbook-vm restore cluster"
       fi
       die "this cluster is not marked as a lab cluster (ConfigMap kube-system/${LAB_MARKER_NAME} missing or wrong). If it is your disposable lab cluster, run: make cluster"
+    fi
+    if [[ "${LAB_TIER:-1}" == 1 && "$ctx" == "kind-${CLUSTER_NAME}" ]]; then
+      local have want="${LAB_PROFILE:-$LAB_DEFAULT_PROFILE}"
+      have="$(kubectl -n kube-system get configmap "$LAB_MARKER_NAME" -o jsonpath='{.data.profile}' 2>/dev/null || true)"
+      [[ "$have" == "$want" || ( -z "$have" && "$want" == "$LAB_DEFAULT_PROFILE" ) ]] ||
+        die "this lab needs the cluster profile '${want}', but the cluster runs '${have:-$LAB_DEFAULT_PROFILE}'. Switch (this rebuilds the cluster): make cluster PROFILE=${want}"
     fi
   fi
 }
@@ -207,6 +218,173 @@ lab_course_reset() {
 lab_course_remove() {
   course_dir_ok "$1" || die "refusing to remove '${1}': answer folders must be ${KBOOK_COURSE_ROOT}/<name>"
   rm -rf "$1"
+}
+
+# ---- Tier 0: the netlab container (Part V) ------------------------------------
+# Part V labs run inside one privileged Docker container (tools/netlab.sh,
+# envs/netlab). Lab scripts run on YOUR machine and reach into the container
+# with the helpers below; inside it, /opt/netlab/topo.sh builds the networks.
+#
+#   netlab_fresh                 throw the container away and start a new one
+#   nl <command...>              run a command in the container
+#   nl_ns <ns> <command...>      run a command inside one of its namespaces
+#   nl_script <<'EOS' ... EOS    run a bash script there, with topo.sh loaded
+#   nl_file <path>               print a file from the container (empty if missing)
+
+# netlab_guard   refuse to touch a container this book did not create
+netlab_guard() {
+  local label
+  label="$(docker container inspect -f '{{index .Config.Labels "kubestronaut.io/lab"}}' "$NETLAB_CONTAINER" 2>/dev/null || true)"
+  [[ "$label" == netlab ]] || die "container '${NETLAB_CONTAINER}' exists but was not created by this book (label kubestronaut.io/lab=netlab missing); remove or rename it first"
+}
+
+netlab_fresh() { bash "${BOOK_ROOT}/tools/netlab.sh" recreate; }
+
+# netlab_require   for verify.sh and solve.sh: the lab must be set up already
+netlab_require() {
+  require_cmd docker
+  [[ "$(docker container inspect -f '{{.State.Running}}' "$NETLAB_CONTAINER" 2>/dev/null)" == true ]] ||
+    die "the netlab container is not running. Start the lab first: make lab CH=<n>"
+  netlab_guard
+}
+
+nl()    { docker exec -i "$NETLAB_CONTAINER" "$@"; }
+nl_ns() { local ns=$1; shift; docker exec -i "$NETLAB_CONTAINER" ip netns exec "$ns" "$@"; }
+nl_script() {
+  { printf 'set -euo pipefail\nsource /opt/netlab/topo.sh\n'; cat; } |
+    docker exec -i "$NETLAB_CONTAINER" bash -s
+}
+nl_file() { docker exec -i "$NETLAB_CONTAINER" cat "$1" 2>/dev/null || true; }
+
+# ---- predicates for verify.sh (each returns 0 = true) -------------------------
+# Use them inside the task functions passed to check. They test outcomes
+# (does the packet get there?), never which command the reader typed.
+
+# can_ping <ns> <address>   one ICMP echo, 2 s timeout
+can_ping() { nl_ns "$1" ping -c1 -W2 "$2" >/dev/null 2>&1; }
+
+# http_body <ns> <url> [curl options...]   print the response body (3 s timeout)
+http_body() { local ns=$1 url=$2; shift 2; nl_ns "$ns" curl -s --max-time 3 "$@" "$url" 2>/dev/null; }
+
+# http_says <ns> <url> <text> [curl options...]   the body contains <text>
+http_says() {
+  local ns=$1 url=$2 want=$3; shift 3
+  local body; body="$(http_body "$ns" "$url" "$@")"
+  [[ "$body" == *"$want"* ]]
+}
+
+# answer <path>   the trimmed content of an answer file (empty if missing).
+# Tier 0 answer files live in the netlab container, all others on your machine.
+answer() {
+  if [[ "${LAB_TIER:-1}" == 0 ]]; then nl_file "$1" | tr -d '[:space:]'
+  else tr -d '[:space:]' < "$1" 2>/dev/null; fi
+}
+
+# answer_is <path> <expected>   compares ignoring whitespace and letter case
+answer_is() {
+  local got want
+  got="$(answer "$1" | tr '[:upper:]' '[:lower:]')"
+  want="$(printf '%s' "$2" | tr -d '[:space:]' | tr '[:upper:]' '[:lower:]')"
+  [[ -n "$got" && "$got" == "$want" ]]
+}
+
+# ns_exists <ns>
+ns_exists() { [[ " $(nl ip netns list 2>/dev/null | awk '{print $1}' | xargs) " == *" $1 "* ]]; }
+
+# link_up <ns> <if>   the interface is administratively and operationally up
+link_up() { [[ "$(nl ip -n "$1" -br link show dev "$2" 2>/dev/null)" == *" UP "* ]]; }
+
+# has_addr <ns> <if> <cidr>
+has_addr() { [[ " $(nl ip -n "$1" -o addr show dev "$2" 2>/dev/null | awk '{print $4}' | xargs) " == *" $3 "* ]]; }
+
+# ---- Tier 1: cluster profiles (Parts VI to X) ---------------------------------
+# The kind cluster is built from a profile (envs/kind/profiles/<name>, see
+# tools/cluster.sh). Labs without LAB_PROFILE run on the default profile
+# `calico`, which `make cluster` builds. A CKNE setup.sh starts with `cluster_require "$LAB_PROFILE"` (reuse a healthy
+# cluster of that profile, or build it) or, for labs that change the nodes
+# themselves, `cluster_fresh "$LAB_PROFILE"` (always a brand-new cluster).
+# Both end with the kubectl context on kind-${CLUSTER_NAME} and the lab-cluster
+# guard (require_lab_cluster) passed.
+cluster_require() { bash "${BOOK_ROOT}/tools/cluster.sh" up "$1" && require_lab_cluster; }
+cluster_fresh()   { bash "${BOOK_ROOT}/tools/cluster.sh" fresh "$1" && require_lab_cluster; }
+
+# kind_preload <image>...   pull each image once on this machine (if Docker does
+# not have it yet) and copy it into every node, so the nodes never pull it
+# themselves. Rebuilding a profile then costs no downloads.
+# `kind load docker-image` is not used: with Docker's containerd image store it
+# fails on multi-platform images ("content digest ... not found"), so this saves
+# only the machine's own platform and imports that.
+kind_preload() {
+  local img node arch platform tar tmp pids=()
+  arch="$(docker info --format '{{.Architecture}}' 2>/dev/null)"
+  case "$arch" in x86_64|amd64) platform=linux/amd64 ;; aarch64|arm64) platform=linux/arm64 ;; *) platform="linux/${arch}" ;; esac
+  tmp="$(mktemp -d)"
+  for img in "$@"; do
+    docker image inspect "$img" >/dev/null 2>&1 || docker pull -q --platform "$platform" "$img" >/dev/null ||
+      die "could not pull ${img}"
+    # Save once, then import into all nodes at the same time.
+    tar="${tmp}/image.tar"
+    docker save --platform "$platform" -o "$tar" "$img" 2>/dev/null || { warn "could not save ${img}"; continue; }
+    pids=()
+    for node in $(kind_nodes); do
+      docker exec -i "$node" ctr --namespace=k8s.io images import --platform "$platform" --snapshotter=overlayfs - <"$tar" >/dev/null 2>&1 &
+      pids+=("$!")
+    done
+    for node in "${pids[@]}"; do wait "$node" || warn "could not copy ${img} into a node; it will pull it instead"; done
+    rm -f "$tar"
+  done
+  rmdir "$tmp"
+}
+
+# kind_nodes   the node container names, one per line (kbook-control-plane, ...)
+kind_nodes() { kind get nodes --name "$CLUSTER_NAME" 2>/dev/null | sort; }
+
+# node_exec <node> <command...>   run a command on a kind node (a Docker container);
+# <node> is the Kubernetes node name, e.g. kbook-worker
+node_exec() {
+  local node=$1; shift
+  [[ "$node" == "${CLUSTER_NAME}-"* ]] || die "refusing to touch '${node}': not a node of cluster ${CLUSTER_NAME}"
+  docker exec -i "$node" "$@"
+}
+
+# probe_pod <ns> <name> [node]   start a netshoot Pod (sleeps forever) for
+# connectivity checks, optionally pinned to a node, and wait until it runs
+probe_pod() {
+  local ns=$1 name=$2 node=${3:-}
+  kubectl -n "$ns" apply -f - >/dev/null <<YAML
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ${name}
+  labels: {app: ${name}, kubestronaut.io/role: probe}
+spec:
+  ${node:+nodeName: ${node}}
+  terminationGracePeriodSeconds: 0
+  containers:
+    - name: probe
+      image: ${NETSHOOT_IMAGE}
+      command: ["sleep", "infinity"]
+YAML
+}
+
+# pod_ip <ns> <pod>
+pod_ip() { kubectl -n "$1" get pod "$2" -o jsonpath='{.status.podIP}' 2>/dev/null; }
+
+# pod_can_reach <ns> <pod> <url>   an HTTP request from the Pod succeeds (3 s)
+pod_can_reach() { kubectl -n "$1" exec "$2" -- curl -s -o /dev/null --max-time 3 "$3" >/dev/null 2>&1; }
+
+# pod_http_says <ns> <pod> <url> <text>   the response body contains <text>
+pod_http_says() {
+  local body
+  body="$(kubectl -n "$1" exec "$2" -- curl -s --max-time 3 "$3" 2>/dev/null)"
+  [[ -n "$4" && "$body" == *"$4"* ]]
+}
+
+# pod_resolves <ns> <pod> <name>   a DNS lookup from the Pod returns an address
+pod_resolves() {
+  local out
+  out="$(kubectl -n "$1" exec "$2" -- dig +short +time=2 +tries=1 "$3" 2>/dev/null)"
+  [[ "$out" =~ [0-9]+\.[0-9]+\.[0-9]+\.[0-9]+ ]]
 }
 
 # ---- check framework (used by verify.sh) ------------------------------------

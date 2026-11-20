@@ -61,6 +61,12 @@ if [[ ! -d "${dir}/lab" && -f "${dir}/quiz.yaml" ]]; then
 fi
 if [[ ! -f "$script" ]]; then
   if [[ "$action" == "teardown" ]]; then
+    # Tier 0 labs live entirely in the netlab container: removing it is the
+    # teardown. Other labs without a teardown script have nothing to remove.
+    tier="$(bash -c 'source "$1" 2>/dev/null; printf "%s" "${LAB_TIER:-1}"' _ "${dir}/lab/lab.env")"
+    if [[ "$tier" == 0 ]]; then
+      exec bash "${here}/netlab.sh" down
+    fi
     echo "==> this lab has no teardown script; nothing to do"
     exit 0
   fi

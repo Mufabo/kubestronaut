@@ -31,7 +31,7 @@ START, END = "<!-- QUESTIONS:START -->", "<!-- QUESTIONS:END -->"
 LETTERS = "ABCDE"
 
 
-ALLOWED_EXAMS = {"KCNA", "KCSA", "CKAD", "CKA", "CKS"}
+ALLOWED_EXAMS = {"KCNA", "KCSA", "CKAD", "CKA", "CKS", "CKNE"}
 COMMON = {"id", "type", "exams"}
 FIELDS = {
     "mcq": COMMON | {"question", "choices", "answer", "explanation"},

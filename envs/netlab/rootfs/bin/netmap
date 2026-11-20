@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# netmap: one line per interface in every network namespace, so you can see
+# the whole lab network at a glance.
+printf '%-10s %-14s %-8s %s\n' NAMESPACE INTERFACE STATE ADDRESSES
+for ns in $(ip netns list | awk '{print $1}' | sort); do
+  ip -n "$ns" -br addr show | while read -r ifc state addrs; do
+    # Skip loopback and the kernel's fallback tunnel devices (tunl0@NONE,
+    # sit0@NONE, ...), which some kernels add to every namespace.
+    [[ "$ifc" == lo || "$ifc" == *@NONE ]] && continue
+    printf '%-10s %-14s %-8s %s\n' "$ns" "${ifc%@*}" "$state" "$addrs"
+  done
+done

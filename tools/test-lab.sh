@@ -12,10 +12,19 @@
 #      the checks one to one; and for step-by-step labs, make check accepts
 #      every task in order
 #   5. reset returns the lab to a failing starting state, task by task
-#   6. teardown works, and leaves the cluster for the next lab (Tier 1 only)
+#   6. teardown works, and leaves the cluster for the next lab (Tiers 0 and 1)
 # and, across the whole run, that the lab never touches unrelated cluster state
 # (sentinel namespace, ConfigMap, and ClusterRole created before the run must
-# survive with the same UIDs).
+# survive with the same UIDs). Exempt: Tier 0 labs (no cluster), and labs that
+# rebuild the cluster on every setup (LAB_RESETS_CLUSTER=1), since the rebuild
+# removes the sentinel too.
+#
+# A Tier 1 lab runs on the cluster profile in its LAB_PROFILE (default calico);
+# if the cluster runs another one, it is rebuilt first (tools/cluster.sh), so
+# labs and mocks can be tested in any order.
+#
+# Tier 0 labs (Part V) run in the netlab container; their read-only check
+# compares a snapshot of its configured network state instead of namespaces.
 set -uo pipefail
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=/dev/null
@@ -34,11 +43,14 @@ labdir="$(bash "${here}/lab-path.sh" "$ch")" || exit 1
 # A Tier 2 part may start from its own snapshot (LAB_SNAPSHOT_<part>, for example
 # Chapter 18's Part ha); such a lab is tested one part at a time, since only the
 # host can switch snapshots.
-read -r tier snap t2ctx t2name partsnaps < <(bash -c 'source "$1" 2>/dev/null
-  v="LAB_SNAPSHOT_${2}"; n="$(compgen -v LAB_SNAPSHOT_ | grep -vc "^LAB_SNAPSHOT_NS" || true)"
-  printf "%s %s %s %s %s\n" "${LAB_TIER:-1}" "${!v:-${LAB_SNAPSHOT:--}}" "${LAB_CONTEXT:--}" "${LAB_CLUSTER_NAME:--}" "$n"' _ "${labdir}/lab/lab.env" "$only")
+read -r tier snap t2ctx t2name partsnaps profile resets_cluster < <(bash -c 'source "$1" 2>/dev/null
+  v="LAB_SNAPSHOT_${2}"; n="$(compgen -v LAB_SNAPSHOT_ | grep -vc "^LAB_SNAPSHOT_\(NS\|CLUSTER\|NODES\)" || true)"
+  printf "%s %s %s %s %s %s %s\n" "${LAB_TIER:-1}" "${!v:-${LAB_SNAPSHOT:--}}" "${LAB_CONTEXT:--}" "${LAB_CLUSTER_NAME:--}" "$n" \
+    "${LAB_PROFILE:-$3}" "${LAB_RESETS_CLUSTER:-0}"' _ "${labdir}/lab/lab.env" "$only" "$LAB_DEFAULT_PROFILE")
 guard_cluster=1
-if [[ "$tier" == 2 ]]; then
+if [[ "$tier" == 0 ]]; then
+  guard_cluster=0
+elif [[ "$tier" == 2 ]]; then
   if ((partsnaps > 0)) && [[ -z "$only" ]]; then
     echo "LAB TEST FAILED (chapter ${ch}): its parts start from different snapshots; test one part: make test CH=${ch} PART=<part>" >&2
     exit 2
@@ -50,7 +62,12 @@ if [[ "$tier" == 2 ]]; then
     LAB_TIER=2 LAB_CONTEXT="$t2ctx" LAB_CLUSTER_NAME="$t2name" require_lab_cluster
   fi
 else
-  require_lab_cluster
+  have="$(kubectl --context "kind-${CLUSTER_NAME}" -n kube-system get configmap "$LAB_MARKER_NAME" -o jsonpath='{.data.profile}' 2>/dev/null || true)"
+  if [[ "${have:-$LAB_DEFAULT_PROFILE}" != "$profile" ]]; then
+    bash "${here}/cluster.sh" up "$profile" || fail "could not build the cluster profile '${profile}'"
+  fi
+  LAB_PROFILE="$profile" require_lab_cluster
+  [[ "$resets_cluster" == 1 ]] && guard_cluster=0
 fi
 
 # ---- sentinel: unrelated cluster state that must survive ---------------------
@@ -78,23 +95,52 @@ if ((guard_cluster)); then
 fi
 
 # ---- helpers ------------------------------------------------------------------
+# snapshot_tier0   everything a verify run must not change, normalized. Neighbour
+# (ARP) caches, conntrack entries, and counters are left out on purpose:
+# sending a test packet legitimately changes them.
+snapshot_tier0() {
+  nl_script <<'EOS'
+for ns in $(ip netns list | awk '{print $1}' | sort); do
+  echo "## ns ${ns}"
+  # "tentative" (IPv6 duplicate address detection in progress) clears by itself.
+  ip -n "$ns" -o addr show | awk '{$1=""; print}' | sed -e 's/valid_lft.*//' -e 's/ tentative//'
+  # Configured state only (name, admin up/down, MTU, bridge): operational
+  # state such as UNKNOWN -> UP settles by itself after a change.
+  ip -n "$ns" -o link show | awk '{
+    name = $2; sub(/:$/, "", name); admin = ($3 ~ /[<,]UP[,>]/) ? "up" : "down"; mtu = ""; master = ""
+    for (i = 4; i < NF; i++) { if ($i == "mtu") mtu = $(i + 1); if ($i == "master") master = $(i + 1) }
+    print name, admin, mtu, master }'
+  ip -n "$ns" route show table all | grep -v '^local\|^broadcast\|^multicast\|fe80::' || true
+  ip netns exec "$ns" sysctl -n net.ipv4.ip_forward
+  ip netns exec "$ns" iptables-save 2>/dev/null | grep -v '^#' | sed 's/\[[0-9]*:[0-9]*\]//' || true
+  ip netns exec "$ns" nft list ruleset 2>/dev/null | sed 's/counter packets [0-9]* bytes [0-9]*/counter/' || true
+done
+echo "## files"
+find /root/answers /etc/netns -type f -exec md5sum {} + 2>/dev/null | sort
+echo "## daemons"
+ls /run/netlab 2>/dev/null | sort
+EOS
+}
+
+# snapshot   Tier 0: the netlab state above. Otherwise: the lab's namespaces, the
+# extra types it names, and optionally the nodes (tools/snapshot-state.sh).
 snapshot() {
-  # shellcheck disable=SC2086  # the namespace list is intentionally word-split
-  [[ -n "$namespaces" ]] && bash "${here}/snapshot-state.sh" $namespaces
+  if [[ "$tier" == 0 ]]; then snapshot_tier0
+  else bash "${here}/snapshot-state.sh" "$ch" "$part"; fi
 }
 
 # run_verify <pass|fail> <message-if-expectation-violated>
 # Runs verify, proves it changed nothing, then checks the expected outcome.
 run_verify() {
   local expect=$1 msg=$2 before after rc=0
-  if [[ -n "$namespaces" ]]; then
-    before="$(snapshot)" || fail "could not snapshot namespace(s) '${namespaces}'"
+  if [[ "$snap_on" == 1 ]]; then
+    before="$(snapshot)" || fail "could not snapshot the lab state"
   fi
   # When verify must pass, every question of an exam-style lab must pass too.
   if [[ "$expect" == pass ]]; then KBOOK_REQUIRE_ALL=1 run "$ch" verify "$part" || rc=$?
   else run "$ch" verify "$part" || rc=$?; fi
-  if [[ -n "$namespaces" ]]; then
-    after="$(snapshot)" || fail "could not snapshot namespace(s) '${namespaces}'"
+  if [[ "$snap_on" == 1 ]]; then
+    after="$(snapshot)" || fail "could not snapshot the lab state"
     if [[ "$before" != "$after" ]]; then
       diff <(printf '%s\n' "$before") <(printf '%s\n' "$after") >&2 || true
       fail "verify.sh modified cluster state; verify must be read-only"
@@ -162,9 +208,14 @@ fi
 
 for part in "${list[@]}"; do
   echo "=== ${ch}${part:+ part ${part}} ==="
-  namespaces="$(bash "${here}/lab-namespaces.sh" snapshot "$ch" "$part")" || exit 1
-  if [[ -z "$namespaces" ]]; then
-    echo "note: this lab declares no namespace (LAB_NS / LAB_SNAPSHOT_NS); the verify read-only check is skipped" >&2
+  snap_on=1
+  if [[ "$tier" != 0 ]]; then
+    namespaces="$(bash "${here}/lab-namespaces.sh" snapshot "$ch" "$part")" || exit 1
+    extra="$(bash -c 'source "$1"; printf "%s%s" "${LAB_SNAPSHOT_CLUSTER:-}" "${LAB_SNAPSHOT_NODES:-}"' _ "${labdir}/lab/lab.env")"
+    if [[ -z "$namespaces" && -z "$extra" ]]; then
+      snap_on=0
+      echo "note: this lab declares no namespace (LAB_NS / LAB_SNAPSHOT_NS); the verify read-only check is skipped" >&2
+    fi
   fi
   echo "### setup";                      run "$ch" setup "$part" || fail "setup failed"
   echo "### setup again (idempotency)";  run "$ch" setup "$part" || fail "second setup failed"

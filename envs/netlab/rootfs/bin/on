@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# on <namespace> [command...]
+# Run a command inside a network namespace, or open a shell there.
+# Shorthand for `ip netns exec <namespace> <command>`; the book teaches both.
+#   on h1                  a shell "on" host h1 (exit to leave)
+#   on h1 ping -c1 10.0.0.2
+set -e
+if [[ $# -lt 1 ]]; then
+  echo "usage: on <namespace> [command...]   (namespaces: $(ip netns list | awk '{print $1}' | sort | xargs))" >&2
+  exit 2
+fi
+ns=$1; shift
+if ! ip netns list | awk '{print $1}' | grep -qx -- "$ns"; then
+  echo "on: no network namespace named '${ns}'. Existing: $(ip netns list | awk '{print $1}' | sort | xargs)" >&2
+  exit 2
+fi
+if [[ $# -eq 0 ]]; then
+  exec ip netns exec "$ns" bash
+fi
+exec ip netns exec "$ns" "$@"

@@ -17,10 +17,11 @@ for it in items:
     if kind == "ConfigMap" and name == "kube-root-ca.crt":
         continue  # injected into every namespace by the control plane
     # Annotations the CNI plugin writes when a Pod's sandbox is created (for
-    # example cni.projectcalico.org/podIP) are volatile, like status: they appear
+    # example cni.projectcalico.org/podIP, or the network-status that Multus
+    # writes) are volatile, like status: they appear
     # between two reads of an idle Pod, so they are not part of the snapshot.
     annotations = {k: v for k, v in (md.get("annotations") or {}).items()
-                   if not k.startswith("cni.projectcalico.org/")}
+                   if not k.startswith(("cni.projectcalico.org/", "k8s.v1.cni.cncf.io/network-status"))}
     entry = {
         "uid": md.get("uid"),
         "generation": md.get("generation"),

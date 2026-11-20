@@ -48,11 +48,9 @@ jobs:
       - uses: helm/kind-action@v1
         with:
           version: ${{ env.KIND_VERSION }}
-          node_image: ${{ env.KIND_NODE_IMAGE }}
-          cluster_name: ${{ env.CLUSTER_NAME }}
-          config: envs/kind/cluster.yaml
-      - name: Check the cluster version and mark it as a lab cluster
-        run: bash tools/cluster.sh
+          install_only: true
+      - name: Build the default (calico) cluster profile and mark it as a lab cluster
+        run: make cluster
       - name: Install the pinned Helm
         run: |
           set -a; source versions.env; set +a
@@ -86,5 +84,32 @@ jobs:
           istioctl version --remote=false
       - name: Unit-test shared helpers
         run: make test-lib
-      - run: make test-tier1
-      - run: make test-mocks
+      - run: make test-tier1 PROFILES=calico
+      - run: make test-mocks PROFILES=calico
+
+  # Parts V to X (CKNE): the Tier 0 netlab labs, then the Tier 1 labs on the
+  # other cluster profiles (each profile is built when its first lab needs it).
+  network-labs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Read pinned versions
+        run: cat versions.env | grep -v '^#' | grep . >> "$GITHUB_ENV"
+      - name: Build the netlab image and run every Tier 0 lab
+        run: make netlab && make test-tier0
+      - uses: helm/kind-action@v1
+        with:
+          version: ${{ env.KIND_VERSION }}
+          install_only: true
+      - name: Install the pinned Helm
+        run: |
+          set -a; source versions.env; set +a
+          curl -fsSLo helm.tar.gz "https://get.helm.sh/helm-${HELM_VERSION}-linux-amd64.tar.gz"
+          curl -fsSLo helm.tar.gz.sha256sum "https://get.helm.sh/helm-${HELM_VERSION}-linux-amd64.tar.gz.sha256sum"
+          echo "$(cut -d' ' -f1 helm.tar.gz.sha256sum)  helm.tar.gz" | sha256sum -c -
+          tar -xzf helm.tar.gz linux-amd64/helm
+          sudo mv linux-amd64/helm /usr/local/bin/helm
+          helm version --short
+      - name: Raise the inotify limits kind needs when clusters are rebuilt
+        run: sudo sysctl fs.inotify.max_user_instances=512 fs.inotify.max_user_watches=524288
+      - run: make test-tier1 PROFILES="nocni cilium"
