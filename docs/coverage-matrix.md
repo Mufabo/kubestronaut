@@ -1,6 +1,6 @@
 # Coverage matrix
 
-Purpose: prove that every curriculum item for all five exams is covered by a
+Purpose: prove that every curriculum item for all six exams is covered by a
 chapter, a lab task, and questions. This file is the source of truth for "does
 the book cover everything?".
 
@@ -245,6 +245,83 @@ and Maintenance Q9–Q12 (15%), Environment, Configuration and Security Q13–Q1
 | Compliance and Security Frameworks | Supply Chain Compliance | 29, 34 | 34/T1–T3, T6; 34 walkthrough (SBOM) | ch29-q11; ch34-q03–q05, q08, q15 | drafted (SBOMs and signing hands-on; provenance and compliance frameworks as concepts) |
 | Compliance and Security Frameworks | Automation and Tooling | 30, 34 | 30/T1 | ch29-q10; ch30-q02 | drafted |
 
+## CKNE
+
+Copied word for word from `CKNE_Curriculum.pdf` in `cncf/curriculum`
+(checked 2026-11-17). Chapter numbers are this book's (Parts V to X; the CKNE
+course they came from numbered them 36 lower). Columns differ from the other
+exams: **Groundwork elsewhere** lists Part V chapters and the Parts I to IV
+chapters that teach the competency at CKA/CKAD/CKS depth.
+
+**Status values for this section:** `planned` (only on the roadmap),
+`foundation` (Part V or Parts I to IV lay the groundwork, but the primary
+chapter is not written yet), `drafted` (the primary chapter and its lab exist
+and pass `make test`), `done` (also reviewed, with at least one question in a
+full simulator).
+
+**Rules:** every competency needs at least one lab task in its primary chapter
+and at least one question in `mock-exams/ckne` or `mock-exams/ckne2`. Lab
+tasks are written as `CH/Task N`.
+
+### Official facts
+
+| Fact | Value | Source |
+| --- | --- | --- |
+| Duration | 2 hours | LF CKNE FAQ |
+| Pass mark | 67% | LF CKNE FAQ |
+| Retake | one, when eligible | LF CKNE FAQ |
+| Validity | 2 years | LF CKNE FAQ |
+| Allowed docs | `kubernetes.io/docs`, `kubernetes.io/blog`, `docs.cilium.io`, `istio.io/latest/docs`, links in each task's Quick Reference box | LF "Resources Allowed" |
+| Practice simulator | 17 questions per session | LF CKNE FAQ |
+| Number of exam tasks, Kubernetes/Cilium/Istio versions, price | not published; third-party guides say 15 to 20 tasks, v1.37, US$445 | unconfirmed |
+
+### D1: Core Infrastructure and CNI (15%)
+
+| Competency | Primary chapter | Lab tasks | Groundwork elsewhere | Status |
+| --- | --- | --- | --- | --- |
+| Installing and Configuring CNI Plugins | 49 | | 21, 24 (CNI for the CKA); 45/Task 1–4 (a bridge CNI by hand), ch45-q05; 48/Task 2 (a `ptp` configuration by hand), ch48-q03…q07, ch48-q12, ch48-q13 | foundation |
+| Managing IPAM and Pod CIDR Allocation | 50 | | 40/Task 1–3 (subnet math, prefixes), ch40-q09; 48/Task 1–2 (node `podCIDR`, `host-local`), ch48-q07, ch48-q08, ch48-q11 | foundation |
+| Using Linux Tools (iptables, ip, tcpdump) for Packet-level Issues | 52 | | 38/Task 3–4, 39/Task 2–4, 46/Task 1–4, 47/Task 1–5; ch38-q08, ch38-q09, ch46-q01…q04 | foundation |
+| Troubleshooting Pod Connectivity (DNS, pod-to-pod) | 52 | | 43/Task 1–4, 45/Task 2–4, 47/Task 1–5; ch43-q06, ch45-q06, ch45-q10, ch47-q03; 48/Task 3–5, ch48-q09, ch48-q10 | foundation |
+| Configuring Multi-interface Pods | 51 | | 45/Task 1 (veth pairs, extra interfaces) | planned |
+
+### D2: Service Networking and DNS (25%)
+
+| Competency | Primary chapter | Lab tasks | Groundwork elsewhere | Status |
+| --- | --- | --- | --- | --- |
+| Configuring L4 Services | 53 | 53/Task 1–6; ch53-q01…q13 | 11 (Services for the CKAD and CKA); 42/Task 1–4; ch38-q04, ch42-q12 | drafted |
+| Understanding kube-proxy and CNI Alternatives | 54 | | 21 (kube-proxy modes, CKA); 46/Task 2–4 (a DNAT load balancer); ch46-q06, ch46-q07, ch46-q12; 53 walkthrough (kube-proxy rules), ch53-q13 | foundation |
+| Customizing coreDNS for Services | 56 | | 11, 21 (cluster DNS, the CoreDNS ConfigMap); 43/Task 2–3 (records, search domains) | foundation |
+| Troubleshooting Service Network Traffic | 58 | | 42/Task 3–4, 47/Task 4–5; ch42-q05…q07, ch47-q12 | foundation |
+| Configuring Pod Endpoint Availability | 55 | | 10 (probes), 11 (EndpointSlices) | planned |
+| Managing Traffic with the Gateway API (Gateway, HTTPRoutes) | 57 | | 12 (Gateway API for the CKA and CKAD); 44/Task 1 (virtual hosts by Host header); ch44-q02 | foundation |
+
+### D3: Advanced Traffic Management (20%)
+
+| Competency | Primary chapter | Lab tasks | Groundwork elsewhere | Status |
+| --- | --- | --- | --- | --- |
+| Optimizing LLM Traffic | 63 | | none | planned |
+| Implementing Routing to Expose Networks | 59 | | 41/Task 1–2, 41/Task 4 (routes, DNAT); 53/Task 6 (LB-IPAM addresses), ch53-q07 | foundation |
+| Configuring Egress Gateways for Cluster Exit Traffic | 60 | | 41/Task 3 (masquerade); ch41-q10 | foundation |
+| Implementing Cross Cluster Service Discovery and Load Balancing | 62 | | none | planned |
+
+### D4: Network Security and Policy (25%)
+
+| Competency | Primary chapter | Lab tasks | Groundwork elsewhere | Status |
+| --- | --- | --- | --- | --- |
+| Securing Traffic with Network Policies | 64 | | 21, 36 (NetworkPolicy, default deny); 46/Task 4 (a FORWARD filter); ch43-q10, ch47-q06 | foundation |
+| Implementing Node and Pod Level Encryption | 66 | | 36 (Istio mTLS between Pods); 44/Task 2–4 (TLS, mTLS) | foundation |
+| Managing TLS Certificates for Gateway API | 67 | | 44/Task 2–3 (a CA, SANs); ch44-q05, ch44-q06, ch44-q11 | foundation |
+| Implementing Pod-level Authentication and Authorization | 68 | | 36 (Istio PeerAuthentication); 44/Task 4 (client certificates); ch44-q09 | foundation |
+
+### D5: Observability (15%)
+
+| Competency | Primary chapter | Lab tasks | Groundwork elsewhere | Status |
+| --- | --- | --- | --- | --- |
+| Analyzing Network Health Using Metrics | 69 | | none | planned |
+| Troubleshooting End-to-End Network Performance with Tracing | 70 | | 41 (traceroute, mtr in the walkthrough) | planned |
+| Auditing Traffic with Logs | 71 | | 38/Task 3–4 (captures as a record of traffic) | planned |
+
 ## Gaps found and how they were closed
 
 Mapping the verbatim bullets (2026-10-09) showed three CKAD bullets the chapter
@@ -312,6 +389,7 @@ book claims to teach.
 | CKAD | `CKAD_Curriculum_v1.37.pdf` (5 domains: 20/20/15/25/20); a v1.35 file also exists | 2026-10-09 | cncf/curriculum, master |
 | CKS | `CKS_Curriculum v1.34.pdf` (6 domains: 15/15/10/20/20/20) | 2026-10-09 | cncf/curriculum, master |
 | KCSA | `KCSA Curriculum.pdf` (6 domains: 14/22/22/16/16/10) | 2026-10-09 | cncf/curriculum, master |
+| CKNE | `CKNE_Curriculum.pdf` (5 domains: 15/25/20/25/15, 22 competencies) | 2026-11-17 | cncf/curriculum, master |
 
 Note that KCNA's grouping changed from older study material: "Containerization"
 is now part of Kubernetes Fundamentals, and "Networking", "Security",

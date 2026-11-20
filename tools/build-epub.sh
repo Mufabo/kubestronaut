@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Build the book as an EPUB: the README as the introduction, Chapters 01 to 74 in
-# order, then the mock exams' question pages as an appendix (their solutions stay
-# out). Mermaid diagrams become images (tools/epub/filter.lua).
+# order, the networking glossary, then the mock exams' question pages as an
+# appendix (their solutions stay out). Mermaid diagrams become images (tools/epub/filter.lua).
 #   tools/build-epub.sh [output]      default: dist/kubestronaut-book.epub
 # Needs pandoc (PANDOC_VERSION) and, for the diagrams, mermaid-cli: set MMDC, or
 # have npx, which fetches MERMAID_CLI_VERSION.
@@ -30,6 +30,7 @@ rm -rf "${root}/build" && mkdir -p "$MERMAID_OUT" "$(dirname "$out")"
 
 inputs=(README.md)
 for f in chapters/[0-9][0-9]-*/[0-9][0-9]-*.md; do inputs+=("$f"); done
+inputs+=(appendices/glossary.md)
 inputs+=(mock-exams/README.md)
 for d in mock-exams/*/; do
   name="$(basename "$d")"

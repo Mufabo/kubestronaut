@@ -1,19 +1,21 @@
 # Mock exams
 
-Timed, scored exam simulators. The full CKS simulator and the KCSA practice exam
-follow once Part IV is complete; see `ROADMAP.md`.
+Timed, scored exam simulators, one at the end of each Part and one or two per
+certification. The CKNE Part simulators (`part6` to `part10`) and the full CKNE
+simulators (`ckne`, `ckne2`) follow with their chapters; see `ROADMAP.md`.
 
 ## Multiple-choice practice exams
 
-The KCNA has no lab; its practice exam runs in the terminal (`tools/quiz.py`),
-timed and scored like the real one, with the questions in a new order each
-attempt.
+The KCNA and KCSA have no lab; their practice exams run in the terminal
+(`tools/quiz.py`), timed and scored like the real ones, with the questions in a
+new order each attempt. The Part V quiz works the same way.
 
 | Exam | Covers | Questions | Time | Pass mark |
 | --- | --- | --- | --- | --- |
 | [`kcna`](kcna/kcna.md) | The four KCNA domains, weighted as in the curriculum | 60 | 90 min | 75% |
 | [`kcna2`](kcna2/kcna2.md) | Set 2: 60 more questions, none repeated from `kcna` | 60 | 90 min | 75% |
 | [`kcsa`](kcsa/kcsa.md) | The six KCSA domains, weighted as in the curriculum | 60 | 90 min | 75% |
+| [`part5`](part5/part5.md) | Part V (Chapters 38 to 47), networking from zero, before the CKNE Parts | 40 | 60 min | 75% |
 
 ```bash
 make quiz EXAM=kcna          # start or resume; answer with a letter, flag, review, submit

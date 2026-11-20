@@ -133,7 +133,7 @@
 - id: ch74-q12
   type: mcq
   exams: [KCSA, CKA, CKS]
-  question: "You will take all five exams. Which order makes the most of the renewal rules and respects the prerequisites?"
+  question: "You will take the KCNA, KCSA, CKAD, CKA, and CKS. Which order makes the most of the renewal rules and respects the prerequisites?"
   choices:
     - "CKS, CKA, CKAD, KCSA, KCNA"
     - "CKA, CKS, KCNA, KCSA, CKAD"
@@ -148,3 +148,27 @@
   prompt: "You pass the KCNA on 2026-11-10 and the CKA on 2027-03-15. When does each expire, if you do nothing else?"
   solution: |
     Both are valid for two years from the exam you pass. The CKA expires on 2029-03-15. Passing the CKA renews the KCNA under the CARE program, so the KCNA is current for two years from that pass as well, until 2029-03-15, instead of 2028-11-10. Check the Linux Foundation's CARE page for the exact date it shows, because the rules can change.
+
+- id: ch74-q14
+  type: mcq
+  exams: [CKNE]
+  question: "Which statement about the CKNE is confirmed by the Linux Foundation's own pages, not only by third-party guides?"
+  choices:
+    - "It has exactly 17 tasks"
+    - "It runs on Kubernetes v1.37"
+    - "It lasts two hours and the pass mark is 67%"
+    - "It costs $445 and requires a passed CKA"
+  answer: C
+  explanation: "The CKNE FAQ states two hours, a 67% pass mark, one retake when eligible, and two years of validity. The number of tasks, the Kubernetes version, and the price are not published (17 is the size of a practice simulator session), and there is no prerequisite exam, although CKA-level skills are assumed."
+
+- id: ch74-q15
+  type: mcq
+  exams: [CKNE, CKA]
+  question: "You have passed the CKA and want to add the CKNE. Which part of this book can you most safely skim?"
+  choices:
+    - "Part V, if you already know subnets, routing, NAT, TCP, DNS, and TLS well, and its quiz confirms it"
+    - "Part VII, because Chapter 11 already covered Services"
+    - "Part IX, because the CKS covers network policies"
+    - "Part VI, because the CKA covers CNI plugins"
+  answer: A
+  explanation: "Part V teaches networking from zero, so a reader who already knows it can skim it and use the Part V quiz as the check. Parts VI to X go much deeper than the CKA, CKAD, and CKS chapters on the same topics: Services, CNI, and network policy are each a large share of the CKNE."

@@ -105,3 +105,26 @@ Namespace and answer file in full, and make the weights add up to 100. See
 ## Definition of done
 
 See `ROADMAP.md`, section 4.
+
+## Parts V to X (CKNE)
+
+Copy `chapters/38-how-networks-work/` (Tier 0) or `chapters/53-l4-services/`
+(Tier 1, a cluster profile) as the starting point. Differences from the
+structure above:
+
+- Header: the Exams line is `> **Exams:** CKNE · <domain and competencies>`,
+  with the domain and competencies verbatim, for example
+  `> **Exams:** CKNE · D2 Service Networking and DNS (Configuring L4 Services)`;
+  Part V chapters say `Foundations (Part V)` and which competencies they
+  support. The Lab tier line names the tier and, for Tier 1, the profile:
+  ``> **Lab tier:** 1 (kind, profile `cilium`)``.
+- `## Concepts` ends with a packet walk (see `style-guide.md`).
+- A `## Common mistakes` section goes between `## Exam tips` and the questions.
+- Questions: Part V questions carry no `exams` tag (they are foundations);
+  questions that test a CKNE competency carry `exams: [CKNE]`. Part V
+  questions are multiple choice; from Part VI on, at least 3 are performance
+  tasks.
+- Definition of done adds: every networking term used is defined earlier in
+  the book or in this chapter, and is in the glossary; the packet walk is
+  checked against a real capture; the chapter is read by someone with no
+  networking background.

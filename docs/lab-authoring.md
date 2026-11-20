@@ -246,3 +246,171 @@ Rules on top of the Tier 1 ones:
    Chapter 18 is the reference for a `prereqs` lab; its checks read the cluster
    through `/etc/kubernetes/admin.conf` with `sudo`, so they do not depend on
    the kubeconfig the reader sets up.
+
+## Parts V to X: the netlab (Tier 0) and cluster profiles
+
+### Cluster profiles (Tier 1)
+
+The kind cluster is built from a profile in `envs/kind/profiles/<name>/`: a
+`cluster.yaml` and an optional `install.sh` (CNI and other components; it runs
+with the context on the new cluster, can use `lib.sh`, and should copy its
+images in with `kind_preload` so a rebuild costs no downloads).
+`tools/cluster.sh up <profile>` reuses a cluster that runs the profile and
+rebuilds it otherwise; the marker ConfigMap records `profile` (`installing:<p>`
+until `install.sh` finishes).
+
+- A lab names its profile with `LAB_PROFILE` in `lab.env`. Without one it runs
+  on `calico`, the default that `make cluster` builds; every lab of Parts I to
+  IV and every existing mock does. `require_lab_cluster` refuses a cluster on
+  another profile.
+- A CKNE `setup.sh` starts with `cluster_require "$LAB_PROFILE"` (build or
+  reuse). A lab that changes the nodes themselves uses `cluster_fresh` and sets
+  `LAB_RESETS_CLUSTER=1`; the sentinel check is skipped for it, since the
+  rebuild removes the sentinel too, and its teardown deletes the cluster.
+- Cluster-scoped types a verify must not change go in `LAB_SNAPSHOT_CLUSTER`
+  (for example `ciliumloadbalancerippools.cilium.io`); with
+  `LAB_SNAPSHOT_NODES=1` the read-only check also covers each node's
+  `/etc/cni/net.d` and routes.
+- Connectivity checks run from a pinned netshoot Pod (`probe_pod`,
+  `pod_can_reach`, `pod_http_says`, `pod_resolves`) with explicit timeouts,
+  never an open-ended `ping`. Answer folders are `/tmp/kbook/chNN`
+  (`lab_course_reset`). Containers a lab starts on the kind network are named
+  with the chapter prefix (`ch53-outside`) and removed by setup and teardown.
+- `make test` switches the cluster to the lab's profile first, so labs can be
+  tested in any order. CI runs the `calico` labs in one job and the netlab and
+  other profiles in another (`make test-tier1 PROFILES="nocni cilium"`); a new
+  profile must be added to that job.
+
+### How a Tier 0 lab works
+
+```mermaid
+flowchart LR
+  subgraph Host["your machine"]
+    M["make lab / check / verify"] --> S["chapters/NN/lab/*.sh<br/>(source tools/lib.sh)"]
+  end
+  subgraph C["netlab container (--network none)"]
+    T["/opt/netlab/topo.sh"] --> N1["namespace h1"]
+    T --> N2["namespace h2"]
+    T --> SW["namespace sw1 (bridge br0)"]
+  end
+  S -- "docker exec (nl, nl_ns, nl_script)" --> C
+```
+
+*Text description: make runs the lab scripts on the reader's machine; they reach into the netlab container with docker exec, where topo.sh builds namespaces that play hosts, switches, and routers.*
+
+- The scripts in `lab/` run **on the reader's machine** and talk to the
+  container through `nl`, `nl_ns`, and `nl_script` (`tools/lib.sh`).
+- `nl_script` sends a bash script into the container with `set -euo pipefail`
+  and `/opt/netlab/topo.sh` already loaded, so setup scripts read like a
+  network diagram: `host h1`, `switch sw1`, `plug h1 eth0 sw1`, `addr ...`.
+- The reader works **inside** the container (`make shell`), where `on h1`
+  opens a shell in namespace `h1`, `netmap` lists every interface, and `topo`
+  prints the lab's diagram.
+- `/opt/netlab` is mounted read-only from `envs/netlab/rootfs`, so changing a
+  helper needs no image rebuild. Changing the `Dockerfile` does: bump
+  `NETLAB_IMAGE` in `versions.env`.
+
+### Files
+
+`lab.env`:
+
+```bash
+LAB_TIER=0
+LAB_ANSWERS=/root/answers/38     # answer folder inside the container, if the lab uses one
+```
+
+`setup.sh` (Tier 0 skeleton):
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=/dev/null
+source "${here}/../../../tools/lib.sh"
+# shellcheck source=/dev/null
+source "${here}/lab.env"
+
+netlab_fresh            # a brand-new container: the only way to be sure of the start
+nl_script <<'EOS'
+host h1 h2
+wire h1 eth0 h2 eth0
+addr h1 eth0 10.0.2.1/24
+addr h2 eth0 10.0.2.2/24
+answers 38
+topology <<'EOT'
+  h1 (10.0.2.1) ----eth0---- h2 (10.0.2.2)
+EOT
+EOS
+info "Lab ready. Open a shell in the lab with: make shell"
+```
+
+- **Setup always starts from a fresh container** (`netlab_fresh`). It takes a
+  second or two and makes setup idempotent by construction. The cost: it closes
+  any `make shell` session the reader had open. Say so in the chapter's lab
+  intro.
+- `reset.sh` is `exec bash "$(dirname "$0")/setup.sh"`.
+- Tier 0 labs need no `teardown.sh`: `make teardown` removes the container.
+
+`verify.sh`:
+
+```bash
+#!/usr/bin/env bash
+set -uo pipefail
+here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=/dev/null
+source "${here}/../../../tools/lib.sh"
+# shellcheck source=/dev/null
+source "${here}/lab.env"
+netlab_require
+
+t1() { link_up h1 eth0 && can_ping h1 10.0.2.2; }
+t2() { answer_is "${LAB_ANSWERS}/h2-ip" 10.0.2.2; }
+
+check 1 "h1 can ping h2" "Is h1's eth0 up? Try: ip -n h1 link" t1
+check 2 "h2's address is in ${LAB_ANSWERS}/h2-ip" "Look at h2's interfaces with: on h2 ip address" t2
+finish_checks
+```
+
+### Rules that are easy to break
+
+- **verify is read-only.** It may send test packets (ping, curl, dig) but must
+  not change addresses, routes, rules, files, or processes. `make test` proves
+  it by snapshotting the container before and after.
+- **Check outcomes, not commands.** "h1 can reach the web server" rather than
+  "a route exists with these exact words". Where the outcome alone could be
+  reached by an unintended shortcut, add the constraint to the task text
+  ("do not change any address") and check that too.
+- **Every task must fail on the untouched lab** (`make test` checks each one on
+  its own). An answer-file task fails when the file is missing.
+- **Answer files** live under `/root/answers/<chapter>/` inside the container.
+  Compare with `answer_is`, which ignores whitespace and letter case. Name the
+  exact path in the task.
+- **Timeouts everywhere.** `ping -c1 -W2`, `curl --max-time 3`, `dig +time=2 +tries=1`.
+  A check must never hang.
+- **No `sleep` in host scripts;** use `wait_for`. Inside the container,
+  `wait_port` waits for a daemon to listen.
+- **Never end a pipeline in `grep -q`** under `pipefail` (it can exit before the
+  writer finishes and turn success into failure). Capture output and test it
+  with `[[ ... == *pattern* ]]` instead.
+- **Scripted captures use `tcpdump --immediate-mode`.** Without it, packets
+  wait in a kernel buffer, and a capture stopped soon after the traffic
+  (`kill -INT`) can end up empty even though tcpdump "received" them.
+- **Daemons** (web servers, dnsmasq, listeners) start with `daemon` or `web`
+  from `topo.sh`. They write a PID file to `/run/netlab`, which the snapshot
+  lists, so a verify that starts or stops a daemon is caught.
+- **Addresses:** each chapter uses its own range so captures and solutions
+  never mix up chapters. The ranges come from the CKNE course's own numbering,
+  which was 36 lower: Chapter N uses `10.0.(N-36).0/24` style addresses
+  (Chapter 38 uses `10.0.2.0/24`, Chapter 53 the pool `172.18.17.0/29`) where
+  it can (Chapter 40's subnetting lab is the exception). Keep the rule for new
+  chapters, so captures never need renumbering.
+- In scripts piped into the container, give `nc`, `curl`, and `dig`
+  `</dev/null`, or they swallow the rest of the script from stdin.
+- `ping -M do`: quote it as `-M "do"` in host scripts (shellcheck SC1010).
+- An iptables DNAT rule with `--to-destination ip:port` needs `-p tcp` in that rule.
+
+`make test-tier0` runs the CI loop for every Part V chapter; Tier 0 labs get a
+snapshot of the container's configured network state (addresses, link state,
+MTU, bridges, routes, forwarding, iptables, nft without counters, answer
+files, daemon PID files) for the read-only check. Neighbour caches,
+conntrack, and counters are left out on purpose.

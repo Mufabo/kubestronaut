@@ -79,6 +79,8 @@ kubectl get nodes
 
 `make cluster` creates a kind cluster named `kbook` (one control plane node and two workers), using the Kubernetes version pinned in `versions.env`. It also adds a small marker to the cluster. Every lab script checks, before it changes anything, that your current context is **exactly** `kind-kbook` **and** that the cluster carries that marker. That is what stops a lab from ever deleting a namespace on a cluster you care about. If you move to a different cluster on purpose, the safety override exists (`LAB_ALLOW_ANY_CONTEXT=1`), but you are on your own then.
 
+The cluster is built from a **profile**, `calico` by default: Calico as the Pod network, so that NetworkPolicies are enforced, plus metrics-server. Every lab in Parts I to IV uses it. The CKNE chapters of Parts VI to X need other profiles and rebuild the cluster when they start; `make cluster` always brings back `calico`, and `make cluster-status` shows which profile is running.
+
 You should see three nodes, all `Ready`:
 
 ```text
@@ -97,7 +99,8 @@ Example output (ages and versions will differ):
 | `Cannot connect to the Docker daemon` | Docker is not running, or your user is not in the `docker` group | Start Docker; log out and back in after `usermod` |
 | `kind create cluster` hangs or fails pulling the node image | No network, or a proxy | Check connectivity; `docker pull kindest/node:v1.37.0` by hand shows the real error |
 | Nodes stay `NotReady` | Not enough memory for Docker | Give Docker 4 GB or more; delete the cluster and retry |
-| `make cluster` says the cluster runs another version | You changed `versions.env` | `make cluster-recreate` |
+| `make cluster` rebuilds the cluster ("runs Kubernetes ..., but versions.env pins ...") | You changed `versions.env` | Nothing: it rebuilds on the pinned version by itself |
+| A lab says it needs the profile `calico` | A CKNE lab (Parts VI to X) rebuilt the cluster on another profile | `make cluster` |
 | Context `kind-kbook` missing | Cluster deleted, or kubeconfig replaced | `make cluster` |
 | WSL2: `docker: command not found` | Docker Desktop's WSL integration is off for your distribution | Turn it on in Docker Desktop settings |
 

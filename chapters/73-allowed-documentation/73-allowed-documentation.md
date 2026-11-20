@@ -1,6 +1,6 @@
 # Chapter 73: Navigating the allowed documentation
 
-> **Exams:** CKAD · CKA · CKS
+> **Exams:** CKAD · CKA · CKS · CKNE
 > **Difficulty:** Beginner
 > **Time:** ~30 min reading, ~45 min exploration exercise
 > **Lab tier:** none (a browser; a cluster helps for the last part of the exercise)
@@ -18,14 +18,14 @@ After this chapter you can:
 
 ## Concepts
 
-The CKAD, CKA, and CKS are open-book in a narrow sense: a browser inside the exam
+The CKAD, CKA, CKS, and CKNE are open-book in a narrow sense: a browser inside the exam
 environment may open a short list of documentation sites, and nothing else. That
 is a real advantage, but only for someone who already knows where things are.
 Two hours for 15 to 20 tasks leaves no time to learn the site during the exam.
 This chapter is about building that map in advance.
 
 The KCNA and KCSA are different: multiple-choice exams with no documentation at
-all. This chapter is for the three performance-based exams.
+all. This chapter is for the four performance-based exams.
 
 ### What each exam allows
 
@@ -38,6 +38,7 @@ written (October 2026), it said:
 | CKAD | `kubernetes.io/docs`, `kubernetes.io/blog`, `helm.sh/docs` |
 | CKA | the same, plus the Gateway API documentation at `gateway-api.sigs.k8s.io` |
 | CKS | `kubernetes.io/docs`, `kubernetes.io/blog`, and the documentation of the security tools the exam uses: Falco, bom, etcd, the NGINX Ingress controller, Cilium, and Istio |
+| CKNE | `kubernetes.io/docs`, `kubernetes.io/blog`, `docs.cilium.io`, and `istio.io/latest/docs` (checked November 2026) |
 
 Three rules come with the list:
 
@@ -90,6 +91,22 @@ and note where on the page the manifest or command you need sits:
 | `crictl` | `/docs/tasks/debug/debug-cluster/crictl/` |
 | Helm commands | `helm.sh/docs/`, for example `helm.sh/docs/helm/helm_install/` |
 | HTTPRoute fields (CKA) | `gateway-api.sigs.k8s.io/reference/api-types/httproute/` |
+
+### The CKNE: the Cilium and Istio docs
+
+For the CKNE, the Kubernetes pages above that matter most are the
+Services-and-networking ones: Services
+(`/docs/concepts/services-networking/service/`), EndpointSlices, DNS for
+Services and Pods (`/docs/concepts/services-networking/dns-pod-service/`),
+customizing DNS (`/docs/tasks/administer-cluster/dns-custom-nameservers/`),
+NetworkPolicy, and the Gateway API. The two other sites are organized
+differently:
+
+- **`docs.cilium.io`** is versioned: the address carries the version (`/en/stable/`, or a release number such as `/en/v1.20/`). Use the version the exam's clusters run, which `cilium version` shows. Its **Network** section holds IPAM, LB IPAM, BGP, egress gateways, ClusterMesh, and transparent encryption; **Security** holds the Cilium network policy language; **Observability** holds Hubble.
+- **`istio.io/latest/docs`** has **Tasks** (traffic management, security, observability, step by step) and a **Reference** section whose *Configuration* pages describe every field of `VirtualService`, `DestinationRule`, `PeerAuthentication`, `RequestAuthentication`, and `AuthorizationPolicy`.
+
+Parts VI to X name the exact page for each topic in their Exam tips, so you
+build the map chapter by chapter.
 
 ### Searching well
 
@@ -151,7 +168,7 @@ at the end of the chapter.
 
 ## Common misconceptions
 
-- "The exams are closed-book." The CKAD, CKA, and CKS allow a specific list of documentation sites; the KCNA and KCSA allow nothing.
+- "The exams are closed-book." The CKAD, CKA, CKS, and CKNE allow a specific list of documentation sites; the KCNA and KCSA allow nothing.
 - "Any Kubernetes-related site is allowed." Only the listed sites are; a search result that leads elsewhere must not be opened.
 - "The docs are the fastest way to check a field." `kubectl explain` answers in the terminal, for the cluster's own version.
 - "A manifest copied from the docs is ready to use." It needs the task's names, Namespace, and only the fields the task asks for.
@@ -235,6 +252,13 @@ at the end of the chapter.
 
 **12. (Task)** `CKA` Without the browser, show the flags that `etcdctl snapshot save` needs to reach a kubeadm cluster's etcd, and where on the control plane node their values come from.
 
+**13.** `CKNE` During the CKNE, a task asks for a Cilium feature you have not configured before. Which source may you use?
+
+- **A.** `docs.cilium.io`, at the version the cluster runs
+- **B.** The Cilium project's GitHub issues and discussions
+- **C.** Any blog post that a search on `docs.cilium.io` suggests
+- **D.** Nothing: the CKNE allows only `kubernetes.io`
+
 <details>
 <summary>Answers</summary>
 
@@ -276,13 +300,15 @@ sudo grep -E -- '--(listen-client-urls|trusted-ca-file|cert-file|key-file)' /etc
 
 `--endpoints`, `--cacert`, `--cert`, and `--key`; their values are the etcd manifest's client URL, trusted CA, certificate, and key (Chapter 20). The docs page *Operating etcd clusters for Kubernetes* shows the same procedure.
 
+**13. A.** The CKNE's allowed list adds `docs.cilium.io` and `istio.io/latest/docs` to the Kubernetes docs and blog. GitHub and third-party pages are not on it, even when a search suggests them. The Cilium docs are versioned, so open the version the exam's cluster runs.
+
 </details>
 
 <!-- QUESTIONS:END -->
 
 ## Further reading
 
-- The Linux Foundation's *Resources allowed during exam* page and its CKA/CKAD and CKS instructions (re-read them before you book)
+- The Linux Foundation's *Resources allowed during exam* page and its CKA/CKAD, CKS, and CKNE instructions (re-read them before you book)
 - `kubernetes.io/docs/home/`: the start page, with the four sections
 - Chapter 72: terminal speed, which saves more time than any bookmark
 - Chapter 74 next: exam logistics and a study plan per certification

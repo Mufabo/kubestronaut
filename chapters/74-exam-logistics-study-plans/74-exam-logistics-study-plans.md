@@ -1,6 +1,6 @@
 # Chapter 74: Exam logistics and study plans per certification
 
-> **Exams:** KCNA · KCSA · CKAD · CKA · CKS
+> **Exams:** KCNA · KCSA · CKAD · CKA · CKS · CKNE
 > **Difficulty:** Beginner
 > **Time:** ~40 min reading, ~30 min planning exercise
 > **Lab tier:** none (no cluster needed)
@@ -10,7 +10,7 @@
 
 After this chapter you can:
 
-- Compare the five Kubernetes certifications by format, length, pass mark, price, and Kubernetes version
+- Compare the six Kubestronaut certifications by format, length, pass mark, price, and Kubernetes version
 - Choose an order for the exams that respects the CKS prerequisite and makes the most of the renewal rules
 - Prepare your computer, room, and ID so that the check-in does not cost you the exam
 - Work in the remote desktop of a performance-based exam: terminal, browser, copy and paste, and the timer
@@ -20,27 +20,32 @@ After this chapter you can:
 ## Concepts
 
 Every fact in this chapter comes from the Linux Foundation's published exam pages
-and candidate handbook, read in October 2026. Prices, versions, and rules change.
+and candidate handbook, read in October 2026 (for the CKNE, its FAQ and
+curriculum, read in November 2026). Prices, versions, and rules change.
 Before you book, and again in the week before the exam, read the current pages:
 the certification page of your exam on `training.linuxfoundation.org`, and the
 candidate handbook and the exam's *Important Instructions* on
 `docs.linuxfoundation.org`.
 
-### The five exams at a glance
+### The six exams at a glance
 
-| | KCNA | KCSA | CKAD | CKA | CKS |
-| --- | --- | --- | --- | --- | --- |
-| Format | Multiple choice | Multiple choice | Performance-based | Performance-based | Performance-based |
-| Length | 90 min | 90 min | 2 h | 2 h | 2 h |
-| Items | 60 questions | 60 questions | 15–20 tasks | 15–20 tasks | 15–20 tasks |
-| Pass mark | 75% | 75% | 66% | 66% | 67% |
-| Price (exam only) | $250 | $250 | $445 | $445 | $445 |
-| Kubernetes version | (none) | (none) | v1.37 | v1.37 | v1.35 |
-| Prerequisite | none | none | none | none | a passed CKA |
-| Simulator included | no | no | 2 killer.sh sessions | 2 killer.sh sessions | 2 killer.sh sessions |
-| Documentation | none | none | allowed list (Chapter 73) | allowed list | allowed list |
+| | KCNA | KCSA | CKAD | CKA | CKS | CKNE |
+| --- | --- | --- | --- | --- | --- | --- |
+| Format | Multiple choice | Multiple choice | Performance-based | Performance-based | Performance-based | Performance-based |
+| Length | 90 min | 90 min | 2 h | 2 h | 2 h | 2 h |
+| Items | 60 questions | 60 questions | 15–20 tasks | 15–20 tasks | 15–20 tasks | not published (15–20 reported) |
+| Pass mark | 75% | 75% | 66% | 66% | 67% | 67% |
+| Price (exam only) | $250 | $250 | $445 | $445 | $445 | not published ($445 reported) |
+| Kubernetes version | (none) | (none) | v1.37 | v1.37 | v1.35 | not published (v1.37 reported) |
+| Prerequisite | none | none | none | none | a passed CKA | none (CKA-level skills assumed) |
+| Simulator included | no | no | 2 killer.sh sessions | 2 killer.sh sessions | 2 killer.sh sessions | a practice simulator (17 questions per session) |
+| Documentation | none | none | allowed list (Chapter 73) | allowed list | allowed list | allowed list, with the Cilium and Istio docs |
 
-All five are taken online, at home or at the office, under a remote proctor. Each
+The CKNE is the newest exam, and its pages publish less than the others: the
+"reported" values come from third-party guides, not from the Linux Foundation,
+so check them on the certification page before you book.
+
+All six are taken online, at home or at the office, under a remote proctor. Each
 purchase includes **one retake**, and you have **12 months** from the purchase to
 schedule and take the exam; the retake must also fall within those 12 months.
 Results arrive by email within 24 hours. Every certification is valid for **two
@@ -53,10 +58,13 @@ the CKA and CKAD use; the differences that matter for the CKS are noted in Part 
 
 ### Kubestronaut, and the order of the exams
 
-The CNCF calls someone who has passed all five exams a **Kubestronaut**. The title
+The CNCF calls someone who has passed all the exams of the program a
+**Kubestronaut**. The program started with five; in 2026 the CKNE became the
+sixth. The title
 comes with a jacket, a private community channel, and discount coupons for further
 exams. Check the program page for how the title is kept when a certification
-expires.
+expires, and for how the change to six exams applies to people who already hold
+the title.
 
 Two rules shape the order in which you take the exams:
 
@@ -72,11 +80,14 @@ for free. A schedule that works well with this book:
 | 2 | CKAD | The application half of Kubernetes, hands-on; renews the KCNA |
 | 3 | CKA | Builds on the CKAD skills and adds the cluster (Part III); renews the KCNA again |
 | 4 | KCSA | The security concepts of Part IV, before the hands-on security exam |
-| 5 | CKS | Last, because it needs the CKA; renews the KCSA and extends the CKA |
+| 5 | CKS | Needs the CKA; renews the KCSA and extends the CKA |
+| 6 | CKNE | After the CKA, whose cluster skills it assumes; Parts V to X. It can also come before the KCSA and CKS: the CKS's network policies and mTLS (Chapter 36) are a subset of Part IX |
 
 CKAD and CKA in the other order works too; their content overlaps by about half,
 so book them close together. The certification that expires first in this plan is
-the CKAD; renew it before its two years are up if you want to keep all five current.
+the CKAD; renew it before its two years are up if you want to keep all six current. No
+renewal rule that involves the CKNE had been published when this chapter was
+written; check the CARE page.
 
 ### Before exam day
 
@@ -189,7 +200,7 @@ the vocabulary stick.
 | 2 | 07, 08, 09 | Labs; mock exam `part1`, timed |
 | 3 | 10, 11, 12 | Labs |
 | 4 | 13, 14, 15, 16 | Labs; mock exam `part2`, timed |
-| 5 | 37, 38; review | Terminal drills; redo every lab you needed the solution for; the CKAD simulator (`make mock EXAM=ckad`), timed; killer.sh session 1 |
+| 5 | 72, 73; review | Terminal drills; redo every lab you needed the solution for; the CKAD simulator (`make mock EXAM=ckad`), timed; killer.sh session 1 |
 | 6 | Review | Redo the missed questions of the CKAD simulator; then set 2 (`make mock EXAM=ckad2`), timed, as the fresh measure; killer.sh session 2 |
 
 #### CKA (six to eight weeks; four to five after the CKAD)
@@ -202,7 +213,7 @@ the vocabulary stick.
 | 4 | 19, 20, 21, 22 | Labs |
 | 5 | 23, 24, 25 | Labs |
 | 6 | 26, 27 | Labs; mock exam `part3`, timed |
-| 7 | 37, 38; review | Redo every lab you needed the solution for; the CKA simulator (`make mock EXAM=cka`, on the VMs), timed; killer.sh session 1 |
+| 7 | 72, 73; review | Redo every lab you needed the solution for; the CKA simulator (`make mock EXAM=cka`, on the VMs), timed; killer.sh session 1 |
 | 8 | Review | Redo the missed questions of the CKA simulator; then set 2 (`make mock EXAM=cka2`, on the VMs), timed, as the fresh measure; killer.sh session 2 |
 
 After the CKAD, weeks 1 and 2 shrink to a review of the CKA-only topics, and the
@@ -224,6 +235,23 @@ and 73 for the CKS's allowed documentation, which includes the docs of the
 security tools. In the last two weeks, take the CKS simulator (`make mock EXAM=cks`,
 on the VMs), timed, then the two killer.sh sessions.
 
+#### CKNE (ten to fourteen weeks, after the CKA)
+
+| Weeks | Chapters | Practice |
+| --- | --- | --- |
+| 1–3 | 37 to 47 (Part V) | All netlab labs; the Part V quiz (`make quiz EXAM=part5`). If you already know networking, read quickly, do the labs, and move on when the quiz passes |
+| 4–5 | 48 to 52 (Part VI) | Labs; mock exam `part6`, timed |
+| 6–7 | 53 to 58 (Part VII) | Labs; revisit Chapters 11, 12, and 21; mock exam `part7`, timed |
+| 8–9 | 59 to 63 (Part VIII) | Labs; mock exam `part8`, timed |
+| 10–11 | 64 to 68 (Part IX) | Labs; revisit Chapter 36; mock exam `part9`, timed |
+| 12 | 69 to 71 (Part X) | Labs; mock exam `part10`, timed |
+| 13–14 | 72, 73; review | Bookmark the Cilium and Istio pages from Chapter 73; the CKNE simulator (`make mock EXAM=ckne`), timed; the Linux Foundation's practice simulator; then set 2 (`make mock EXAM=ckne2`) as the fresh measure |
+
+Parts VI to X are still being written: only Chapters 48 and 53 exist so far, and
+the Part simulators and full simulators follow with them (see `ROADMAP.md`).
+Service Networking and DNS, and Network Security and Policy, are a quarter of
+the exam each: Parts VII and IX deserve a second pass.
+
 ### Exam day
 
 - **Before:** restart the computer, close everything, unplug second monitors, clear the desk, keep the ID at hand, and launch the exam early.
@@ -240,7 +268,7 @@ check the facts you need for it.
 3. Run PSI's online system check on the computer and network you intend to use. Note anything it reports.
 4. Compare the name on your Linux Foundation account with the name on your ID, letter for letter.
 5. Put the two killer.sh sessions into your calendar: about two weeks before, and in the last week before the exam.
-6. If you plan all five exams, write down their order and the date each certification would expire, and mark which later exam renews which earlier one.
+6. If you plan all six exams, write down their order and the date each certification would expire, and mark which later exam renews which earlier one.
 
 ## Exam tips
 
@@ -345,7 +373,7 @@ check the facts you need for it.
 - **C.** Learning Kubernetes from the start
 - **D.** Seeing the real exam's questions
 
-**12.** `KCSA` `CKA` `CKS` You will take all five exams. Which order makes the most of the renewal rules and respects the prerequisites?
+**12.** `KCSA` `CKA` `CKS` You will take the KCNA, KCSA, CKAD, CKA, and CKS. Which order makes the most of the renewal rules and respects the prerequisites?
 
 - **A.** CKS, CKA, CKAD, KCSA, KCNA
 - **B.** CKA, CKS, KCNA, KCSA, CKAD
@@ -353,6 +381,20 @@ check the facts you need for it.
 - **D.** KCSA, CKS, KCNA, CKA, CKAD
 
 **13. (Task)** `KCNA` `KCSA` `CKAD` `CKA` `CKS` You pass the KCNA on 2026-11-10 and the CKA on 2027-03-15. When does each expire, if you do nothing else?
+
+**14.** `CKNE` Which statement about the CKNE is confirmed by the Linux Foundation's own pages, not only by third-party guides?
+
+- **A.** It has exactly 17 tasks
+- **B.** It runs on Kubernetes v1.37
+- **C.** It lasts two hours and the pass mark is 67%
+- **D.** It costs $445 and requires a passed CKA
+
+**15.** `CKNE` `CKA` You have passed the CKA and want to add the CKNE. Which part of this book can you most safely skim?
+
+- **A.** Part V, if you already know subnets, routing, NAT, TCP, DNS, and TLS well, and its quiz confirms it
+- **B.** Part VII, because Chapter 11 already covered Services
+- **C.** Part IX, because the CKS covers network policies
+- **D.** Part VI, because the CKA covers CNI plugins
 
 <details>
 <summary>Answers</summary>
@@ -384,6 +426,10 @@ check the facts you need for it.
 **13.**
 
 Both are valid for two years from the exam you pass. The CKA expires on 2029-03-15. Passing the CKA renews the KCNA under the CARE program, so the KCNA is current for two years from that pass as well, until 2029-03-15, instead of 2028-11-10. Check the Linux Foundation's CARE page for the exact date it shows, because the rules can change.
+
+**14. C.** The CKNE FAQ states two hours, a 67% pass mark, one retake when eligible, and two years of validity. The number of tasks, the Kubernetes version, and the price are not published (17 is the size of a practice simulator session), and there is no prerequisite exam, although CKA-level skills are assumed.
+
+**15. A.** Part V teaches networking from zero, so a reader who already knows it can skim it and use the Part V quiz as the check. Parts VI to X go much deeper than the CKA, CKAD, and CKS chapters on the same topics: Services, CNI, and network policy are each a large share of the CKNE.
 
 </details>
 

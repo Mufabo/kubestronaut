@@ -141,3 +141,15 @@
     ```
 
     `--endpoints`, `--cacert`, `--cert`, and `--key`; their values are the etcd manifest's client URL, trusted CA, certificate, and key (Chapter 20). The docs page *Operating etcd clusters for Kubernetes* shows the same procedure.
+
+- id: ch73-q13
+  type: mcq
+  exams: [CKNE]
+  question: "During the CKNE, a task asks for a Cilium feature you have not configured before. Which source may you use?"
+  choices:
+    - "`docs.cilium.io`, at the version the cluster runs"
+    - "The Cilium project's GitHub issues and discussions"
+    - "Any blog post that a search on `docs.cilium.io` suggests"
+    - "Nothing: the CKNE allows only `kubernetes.io`"
+  answer: A
+  explanation: "The CKNE's allowed list adds `docs.cilium.io` and `istio.io/latest/docs` to the Kubernetes docs and blog. GitHub and third-party pages are not on it, even when a search suggests them. The Cilium docs are versioned, so open the version the exam's cluster runs."

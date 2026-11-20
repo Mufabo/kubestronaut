@@ -1,8 +1,10 @@
 # Kubestronaut: a hands-on textbook
 
-A hands-on textbook covering the material for all five Kubestronaut
-certifications (KCNA, KCSA, CKAD, CKA, CKS). See [ROADMAP.md](ROADMAP.md) for the
-plan and status.
+A hands-on textbook covering the material for all six Kubestronaut
+certifications: KCNA, KCSA, CKAD, CKA, CKS, and the CKNE (Certified Kubernetes
+Network Engineer). Parts I to IV cover the first five; Parts V to X cover the
+CKNE, starting from zero networking knowledge; Part XI prepares you for the
+exams. See [ROADMAP.md](ROADMAP.md) for the plan and status.
 
 ## Quick start (Tier 1 labs)
 
@@ -36,5 +38,21 @@ make mock EXAM=part1          # the clock starts when it is ready
 make mock-score EXAM=part1
 make mock-teardown EXAM=part1
 ```
+
+## Part V: the netlab (Tier 0)
+
+Part V ("Networking from zero") runs its labs in one Docker container in which
+you build small networks; it needs only Docker.
+
+```bash
+make netlab           # build the image (once) and start the container
+make lab CH=38        # start a Part V lab; the loop is the same as above
+make shell            # a shell inside the lab, where you do the tasks
+```
+
+From Part VI on, the labs use the kind cluster again, built from a **profile**
+(`calico` by default, `nocni` or `cilium` for the CKNE chapters). A lab rebuilds
+the cluster when it needs another profile; `make cluster-status` shows the
+current one and `make cluster` goes back to the default.
 
 Run `make help` for everything else. Author-facing docs are in `docs/`.
