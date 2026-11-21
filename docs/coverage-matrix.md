@@ -281,8 +281,8 @@ tasks are written as `CH/Task N`.
 | --- | --- | --- | --- | --- |
 | Installing and Configuring CNI Plugins | 49 | 49/Task 1–4; ch49-q01…q12 | 21, 24 (CNI for the CKA); 45/Task 1–4 (a bridge CNI by hand), ch45-q05; 48/Task 2 (a `ptp` configuration by hand), ch48-q03…q07, ch48-q12, ch48-q13 | drafted |
 | Managing IPAM and Pod CIDR Allocation | 50 | 50/Task 1–4; ch50-q01…q13 | 40/Task 1–3 (subnet math, prefixes), ch40-q09; 48/Task 1–2 (node `podCIDR`, `host-local`), ch48-q07, ch48-q08, ch48-q11; 49/Task 1 (Cilium's Kubernetes host-scope IPAM), ch49-q03 | drafted |
-| Using Linux Tools (iptables, ip, tcpdump) for Packet-level Issues | 52 | | 38/Task 3–4, 39/Task 2–4, 46/Task 1–4, 47/Task 1–5; ch38-q08, ch38-q09, ch46-q01…q04 | foundation |
-| Troubleshooting Pod Connectivity (DNS, pod-to-pod) | 52 | | 43/Task 1–4, 45/Task 2–4, 47/Task 1–5; ch43-q06, ch45-q06, ch45-q10, ch47-q03; 48/Task 3–5, ch48-q09, ch48-q10 | foundation |
+| Using Linux Tools (iptables, ip, tcpdump) for Packet-level Issues | 52 | 52/Task 1, 3; ch52-q04…q07, ch52-q10, ch52-q11 | 38/Task 3–4, 39/Task 2–4, 46/Task 1–4, 47/Task 1–5; ch38-q08, ch38-q09, ch46-q01…q04 | drafted |
+| Troubleshooting Pod Connectivity (DNS, pod-to-pod) | 52 | 52/Task 2–4; ch52-q01…q03, ch52-q08, ch52-q09, ch52-q12 | 43/Task 1–4, 45/Task 2–4, 47/Task 1–5; ch43-q06, ch45-q06, ch45-q10, ch47-q03; 48/Task 3–5, ch48-q09, ch48-q10 | drafted |
 | Configuring Multi-interface Pods | 51 | 51/Task 1–4; ch51-q01…q12 | 45/Task 1 (veth pairs, extra interfaces) | drafted |
 
 ### D2: Service Networking and DNS (25%)

@@ -35,6 +35,7 @@ chapter that introduces it. Part VI onward adds Kubernetes networking terms as i
 - **Chain** (iptables): an ordered list of rules, either built in (one per hook) or custom. (46)
 - **Chain of trust**: the sequence of certificates from a server's certificate up to a CA the client trusts. (44)
 - **CIDR notation**: an address or subnet with its prefix length, such as `10.0.4.0/24`. (40)
+- **`cilium-dbg`**: the command-line tool inside each Cilium agent Pod; asks that node's agent about its status, endpoints, and drops. (52)
 - **CiliumLoadBalancerIPPool**: the Cilium object that lists the address blocks LB-IPAM hands out to LoadBalancer Services. (53)
 - **CiliumNode**: Cilium's per-node object, holding the address blocks the operator allocated to the node. (50)
 - **CiliumPodIPPool**: a multi-pool IPAM pool (`cilium.io/v2alpha1`): a list of CIDRs and a block size. (50)
@@ -52,6 +53,7 @@ chapter that introduces it. Part VI onward adds Kubernetes networking terms as i
 - **Connection timed out**: no answer came back: packets lost or dropped on the way. (42)
 - **conntrack** (connection tracking): netfilter's table of connections; remembers NAT translations and gives packets a state. (41, 46)
 - **Container**: a process running in its own set of namespaces, with resource limits; shares the host's kernel. (45)
+- **crictl**: the container runtime's command-line client on a node: lists containers and shows their details, such as their PID. (52)
 - **CSR** (certificate signing request): a public key plus requested names, sent to a CA to be signed. (44)
 
 ## D
@@ -62,6 +64,7 @@ chapter that introduces it. Part VI onward adds Kubernetes networking terms as i
 - **Delegate** (CNI): a plugin that a meta-plugin such as Multus calls on a Pod's behalf. (51)
 - **DNAT** (destination NAT): rewriting the destination address (and port) of packets; port forwarding, Service virtual IPs. (41, 46)
 - **DNS** (Domain Name System): translates names into addresses (and more). (43)
+- **`dnsPolicy`**: the Pod field that decides what the kubelet writes into the Pod's `/etc/resolv.conf`; `ClusterFirst` by default, while `Default` means the node's resolver. (52)
 - **Domain**: a part of the DNS name tree, such as `lab.internal`. (43)
 - **Dotted-decimal**: writing an IPv4 address as four decimal octets separated by dots. (40)
 - **DROP / REJECT**: firewall targets: discard silently (client times out) / answer with an error (client fails at once). (42, 46)
@@ -73,7 +76,9 @@ chapter that introduces it. Part VI onward adds Kubernetes networking terms as i
 - **Egress gateway**: a chosen exit point where outgoing traffic is SNATed to a known address. (05; Chapter 60)
 - **Encapsulation**: each layer wrapping the data of the layer above in its own header. (38)
 - **Encapsulation overhead**: the bytes an overlay adds to every packet; 50 for VXLAN over IPv4, 20 for IP-in-IP. (49)
+- **Endpoint** (Cilium): a Pod (or other workload) that a Cilium agent manages on its node, with an ID and a security identity. (52)
 - **Endpoints / EndpointSlice**: the objects that list the ready Pod addresses and ports behind a Service; EndpointSlices are the current form. (53)
+- **Ephemeral container**: an extra container that `kubectl debug` adds to a running Pod, in its namespaces, for debugging; it stays until the Pod is deleted. (52)
 - **Ephemeral port**: a random port the kernel picks for the client end of a connection. (42)
 - **Established**: a TCP connection whose handshake has completed (`ESTAB` in `ss`); also a conntrack state. (42, 46)
 - **Ethernet**: the link-layer protocol of almost every wired network and every Kubernetes node. (39)
@@ -110,6 +115,7 @@ chapter that introduces it. Part VI onward adds Kubernetes networking terms as i
 ## I
 
 - **ICMP** (Internet Control Message Protocol): helper protocol for tests (ping) and error messages (unreachable, time exceeded). (38, 41)
+- **`iflink`**: in `/sys/class/net/<if>/iflink`, the index of the other end of a veth pair; shown as `@ifN` by `ip link`. (52)
 - **Interface** (network interface): a host's connection point to a network, such as `eth0`. (37)
 - **Internet layer**: the TCP/IP layer that gets packets between hosts across networks (IP). (38)
 - **IP address**: the address that identifies a host on an IP network. (37, 40)
@@ -175,6 +181,7 @@ chapter that introduces it. Part VI onward adds Kubernetes networking terms as i
 - **nftables**: the successor of iptables, with the `nft` command. (46)
 - **Node CIDR mask size**: the prefix length of the range the controller manager gives each node from the cluster CIDR (`--node-cidr-mask-size`, `/24` by default for IPv4). (50)
 - **NodePort Service**: a Service that also opens the same port (30000 to 32767) on every node's address. (53)
+- **nsenter**: runs a command inside the namespaces of another process, for example a container's network namespace (`-n`). (52)
 - **NXDOMAIN**: DNS status meaning the name does not exist. (43)
 
 ## O
@@ -208,6 +215,7 @@ chapter that introduces it. Part VI onward adds Kubernetes networking terms as i
 
 - **Recursive resolver**: a DNS server that finds answers for clients by asking other servers, and caches them. (43)
 - **Resource record**: one DNS entry: name, type, TTL, data. (43)
+- **Retransmission**: TCP sending an unanswered segment again, such as a SYN with the same sequence number after one second. (52)
 - **Reverse lookup**: finding the name of an address, through a PTR record. (43)
 - **Root** (DNS): the top of the name tree, the final dot of a fully qualified name. (43)
 - **Router**: a device that forwards packets between networks by IP address. (39, 41)

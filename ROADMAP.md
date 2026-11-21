@@ -219,7 +219,7 @@ The CKNE assumes networking knowledge that the rest of the book does not teach. 
 | 49 | Installing and configuring CNI plugins: Cilium (Helm and `cilium` CLI), Calico, Flannel, `/etc/cni/net.d`, routing vs overlay modes, MTU (drafted) | N | 1 `nocni`, 2 |
 | 50 | IPAM and pod CIDR allocation: `--cluster-cidr`, node `podCIDR`, Cilium cluster-pool and multi-pool IPAM, Calico IP pools, running out of IPs (drafted) | N | 1 `nocni` |
 | 51 | Multi-interface pods: Multus, `NetworkAttachmentDefinition`, macvlan/ipvlan/bridge secondary networks (drafted) | N | 1 `cilium` |
-| 52 | Troubleshooting pod connectivity: pod-to-pod, cross-node, pod DNS; `kubectl debug`, ephemeral containers, `nsenter`, `tcpdump` on nodes, `cilium-dbg` | N | 1 `cilium`, 2 |
+| 52 | Troubleshooting pod connectivity: pod-to-pod, cross-node, pod DNS; `kubectl debug`, ephemeral containers, `nsenter`, `tcpdump` on nodes, `cilium-dbg` (drafted) | N | 1 `cilium`, 2 |
 | P6 | Part VI simulator (`mock-exams/part6`) | N | 1 |
 
 ### Part VII: Service Networking and DNS (25%)
@@ -345,12 +345,12 @@ Estimates assume one author working part-time; adjust for your pace and any co-a
 
 ### Phase 4b: the CKNE Parts V to X (~6 months)
 
-*Status (2026-11-20): merged from the separate CKNE course. Part V (Chapters 37 to 47), its quiz (`mock-exams/part5`, 40 questions), and the glossary are drafted and pass `make test-tier0`; Chapters 48 to 50 (`nocni`), 51 and 53 (`cilium`) are drafted. Not yet read by anyone at the target level.*
+*Status (2026-11-20): merged from the separate CKNE course. Part V (Chapters 37 to 47), its quiz (`mock-exams/part5`, 40 questions), and the glossary are drafted and pass `make test-tier0`; Chapters 48 to 50 (`nocni`) and 51 to 53 (`cilium`) are drafted. Not yet read by anyone at the target level.*
 
 - [x] Tier 0 netlab and the `calico`, `nocni`, and `cilium` profiles (`tools/cluster.sh`)
 - [x] Part V and its quiz; the glossary for every Part V term
-- [x] Chapter 49 (2026-11-20), Chapter 50 and 51 (2026-11-21)
-- [ ] Chapter 52 and 54 to 58; Part VI and VII simulators (`part6`, `part7`)
+- [x] Chapter 49 (2026-11-20), Chapters 50 to 52 (2026-11-21)
+- [ ] The Part VI simulator (`part6`) and 54 to 58; Part VI and VII simulators (`part6`, `part7`)
 - [ ] `cilium-kpr`, `bgp`, `istio`, and `multi` profiles stable in CI; Chapters 59 to 68; `part8`, `part9`
 - [ ] Chapters 69 to 71; `part10`; full simulators `ckne` and `ckne2`
 - [ ] Part V read by a beginner with no networking background
@@ -395,4 +395,4 @@ Estimates assume one author working part-time; adjust for your pace and any co-a
 4. ~~Finish Part IV~~ Done 2026-11-13 (29, 30, and 33 drafted 2026-10-24; 32 on 2026-11-09; 35 on 2026-11-13). Close the "Minimize base image footprint" gap in 34 (or 16).
 5. Backlog (2026-11-14): build the Tier 3 devcontainer, so readers without the hardware for Tier 2 have a path. Deferred until outside readers ask for it.
 6. Find the first outside reader, starting with the pilot chapter (04).
-7. CKNE (merged 2026-11-20): Chapters 49 and 50 drafted 2026-11-20/21; Chapter 51 drafted 2026-11-21; next Chapter 52, then 54 to 58 (the `cilium-kpr` profile first); find a beginner reader for Part V.
+7. CKNE (merged 2026-11-20): Chapters 49 and 50 drafted 2026-11-20/21; Chapters 51 and 52 drafted 2026-11-21; next the Part VI simulator `part6`, then 54 to 58 (the `cilium-kpr` profile first); find a beginner reader for Part V.

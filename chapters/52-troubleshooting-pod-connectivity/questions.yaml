@@ -1,0 +1,150 @@
+- id: ch52-q01
+  type: mcq
+  exams: [CKNE]
+  question: "From a client Pod, `curl http://<pod-ip>:8080` fails immediately with exit code 7. What does that tell you?"
+  choices:
+    - "Packets are dropped between the nodes"
+    - "The packet reached the target's network stack, and nothing listens on that address and port"
+    - "DNS failed"
+    - "The client Pod has no network"
+  answer: B
+  explanation: "Exit code 7 is 'connection refused': the target answered with a TCP reset. A drop would make curl wait until its timeout (exit code 28)."
+
+- id: ch52-q02
+  type: mcq
+  exams: [CKNE]
+  question: "Pods on the same node reach each other, but Pods on different nodes do not. Where should you look first?"
+  choices:
+    - "The Pods' application code"
+    - "Between the nodes: the overlay or routes, firewalls on the nodes, and the network that connects them"
+    - "CoreDNS"
+    - "The Service's selector"
+  answer: B
+  explanation: "Same-node traffic proves the Pods and the plugin's local part work. What differs for cross-node traffic is the path between the nodes."
+
+- id: ch52-q03
+  type: mcq
+  exams: [CKNE]
+  question: "A Pod's image has no shell and no networking tools. How do you run `ss -lnt` in its network namespace and see its processes?"
+  choices:
+    - "`kubectl exec <pod> -- ss -lnt`"
+    - "`kubectl debug -it <pod> --image=nicolaka/netshoot:v0.14 --target=<container> -- ss -lntp`"
+    - "`kubectl logs <pod>`"
+    - "`kubectl port-forward <pod> 8080`"
+  answer: B
+  explanation: "`kubectl debug` adds an ephemeral container with the tools; `--target` shares the container's process namespace, so `ss -p` shows the application's sockets."
+
+- id: ch52-q04
+  type: mcq
+  exams: [CKNE]
+  question: "Inside a Pod, `ip -br link` shows `eth0@if17`. What is 17?"
+  choices:
+    - "The Pod's IP address suffix"
+    - "The interface index of the other end of the Pod's veth pair, on the node"
+    - "The number of packets dropped"
+    - "The node's ID in the cluster"
+  answer: B
+  explanation: "On the node, the interface with index 17 (`ip -o link`) is the Pod's peer; with Cilium its name starts with `lxc`. Capturing on it shows only that Pod's traffic."
+
+- id: ch52-q05
+  type: mcq
+  exams: [CKNE]
+  question: "On a node, which commands run `ip addr` inside a container's network namespace?"
+  choices:
+    - "`crictl ps`, `crictl inspect` to find its PID, then `nsenter -t <pid> -n ip addr`"
+    - "`kubectl exec` on the node"
+    - "`docker run --net=host ip addr`"
+    - "`ip netns exec cni0 ip addr`"
+  answer: A
+  explanation: "`nsenter -n` enters the network namespace of a process, so the node's own tools run there. This works even when the container image has no tools."
+
+- id: ch52-q06
+  type: mcq
+  exams: [CKNE]
+  question: "A capture on the sending node shows the same SYN, with the same sequence number, sent twice one second apart. What does that mean?"
+  choices:
+    - "The connection was established twice"
+    - "No SYN-ACK came back, so TCP retransmitted the SYN"
+    - "The MTU is too large"
+    - "The Pod has two interfaces"
+  answer: B
+  explanation: "TCP resends an unanswered SYN after one second, then after longer intervals. Next, capture on the receiving node to see whether the SYN arrives."
+
+- id: ch52-q07
+  type: mcq
+  exams: [CKNE]
+  question: "VXLAN packets from kbook-worker arrive on kbook-worker2's `eth0`, but the target Pod never sees them and `cilium-dbg monitor --type drop` shows nothing. What is a likely cause?"
+  choices:
+    - "A NetworkPolicy denies the traffic"
+    - "A firewall rule on kbook-worker2 drops the packets before Cilium's programs see them, such as an INPUT rule dropping UDP 8472"
+    - "The Pod's DNS policy is wrong"
+    - "kube-proxy is not running"
+  answer: B
+  explanation: "Cilium reports drops in its own eBPF programs, including policy drops. An iptables rule that drops the outer VXLAN packet acts before Cilium, so only a capture and the node's firewall rules reveal it."
+
+- id: ch52-q08
+  type: mcq
+  exams: [CKNE]
+  question: "A Pod resolves internet names but not `web.shop.svc.cluster.local`. Its `/etc/resolv.conf` has no `cluster.local` search domains. What is the most likely cause?"
+  choices:
+    - "CoreDNS is down"
+    - "The Pod has `dnsPolicy: Default`, so it uses the node's resolver"
+    - "The Service has no endpoints"
+    - "The Pod uses IPv6"
+  answer: B
+  explanation: "With `dnsPolicy: Default` the kubelet copies the node's resolver configuration. The default policy is `ClusterFirst`, which points at the cluster DNS Service."
+
+- id: ch52-q09
+  type: mcq
+  exams: [CKNE]
+  question: "An application works with `kubectl exec <pod> -- curl localhost:8080` but other Pods get 'connection refused'. What should you check?"
+  choices:
+    - "Whether it listens on `127.0.0.1` only, with `ss -lnt` inside the Pod"
+    - "The node's routing table"
+    - "The CNI MTU"
+    - "CoreDNS's Corefile"
+  answer: A
+  explanation: "A socket bound to the loopback is reachable only from inside the Pod. `ss -lnt` shows `127.0.0.1:8080` instead of `*:8080` or `0.0.0.0:8080`."
+
+- id: ch52-q10
+  type: task
+  exams: [CKNE]
+  prompt: "Capture the traffic of Pod `api` in namespace `shop` on its node, on the node-side end of its veth pair."
+  solution: |
+    ```bash
+    kubectl -n shop get pod api -o wide                  # the node
+    kubectl -n shop exec api -- cat /sys/class/net/eth0/iflink   # e.g. 17 (or use kubectl debug if the image has no cat)
+    ssh <node>
+    ip -o link | awk -F': ' '$1 == 17 {print $2}'        # e.g. lxc63f33b3cb89d@if16
+    sudo tcpdump -n -i lxc63f33b3cb89d
+    ```
+
+    The name before `@` is the interface to capture on.
+
+- id: ch52-q11
+  type: task
+  exams: [CKNE]
+  prompt: "Pods on node `node2` cannot be reached from Pods on other nodes, while Pods on `node2` reach each other. The cluster uses Cilium in VXLAN mode. Find and fix the cause on the node."
+  solution: |
+    ```bash
+    ssh node1 sudo tcpdump -n -i eth0 -c 5 udp port 8472      # packets leave node1
+    ssh node2 sudo tcpdump -n -i eth0 -c 5 udp port 8472      # they arrive on node2 ...
+    ssh node2 sudo iptables -L INPUT -n --line-numbers         # ... and a rule drops them
+    ssh node2 sudo iptables -D INPUT <number>
+    ```
+
+    Then test from a Pod on another node to a Pod on `node2` by IP. A cloud firewall or security group between the nodes causes the same symptom, but the packets would not arrive on `node2` at all.
+
+- id: ch52-q12
+  type: task
+  exams: [CKNE]
+  prompt: "Pod `client` in namespace `app` cannot resolve any Service name. Find out whether the problem is the Pod or CoreDNS, and fix it if it is the Pod."
+  solution: |
+    ```bash
+    kubectl -n app exec client -- cat /etc/resolv.conf
+    kubectl -n app get pod client -o jsonpath='{.spec.dnsPolicy}{"\n"}'
+    kubectl -n kube-system get pods -l k8s-app=kube-dns
+    kubectl -n kube-system get endpointslices -l kubernetes.io/service-name=kube-dns
+    ```
+
+    If `resolv.conf` does not point at the cluster DNS Service (or the policy is `Default` or `None` without the right `dnsConfig`), recreate the Pod with `dnsPolicy: ClusterFirst`: `kubectl get pod client -o yaml > c.yaml`, edit, `kubectl replace --force -f c.yaml`. If it does, and CoreDNS has no ready Pods or endpoints, the problem is CoreDNS.
