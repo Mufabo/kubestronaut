@@ -1,0 +1,150 @@
+- id: ch49-q01
+  type: mcq
+  exams: [CKNE]
+  question: "What does a CNI plugin's agent DaemonSet do when it starts on a new node?"
+  choices:
+    - "It replaces the node's container runtime with its own"
+    - "It copies the plugin binary to `/opt/cni/bin`, writes a configuration to `/etc/cni/net.d`, and keeps the node's routes and rules in shape"
+    - "It edits the kubelet's flags so that the kubelet calls the agent instead of a CNI binary"
+    - "It assigns the node its `podCIDR` in the Node object"
+  answer: B
+  explanation: "The runtime still reads `/etc/cni/net.d` and runs a binary from `/opt/cni/bin`; the agent installs both and then does the node-level work (routes, eBPF or iptables rules). The node's `podCIDR` is assigned by the controller manager, not by the agent."
+
+- id: ch49-q02
+  type: mcq
+  exams: [CKNE]
+  question: "A node's `/etc/cni/net.d` contains `05-cilium.conflist` and `00-flannel.conflist`. Which configuration does the container runtime use?"
+  choices:
+    - "Both, merged into one list"
+    - "`05-cilium.conflist`, because it is newer"
+    - "`00-flannel.conflist`, because it comes first in name order"
+    - "Neither: two files are an error, so no Pod can start"
+  answer: C
+  explanation: "The runtime sorts the file names and uses the first `.conf`, `.conflist`, or `.json` file. A leftover file with a lower number wins, which is why stale configurations break nodes after a plugin change."
+
+- id: ch49-q03
+  type: mcq
+  exams: [CKNE]
+  question: "You install Cilium with Helm and only `--version`. Pods get addresses like `10.0.1.23`, but the nodes' `podCIDR`s are in `10.244.0.0/16`. Why?"
+  choices:
+    - "The kubelet ignored the CNI plugin and used Docker's network"
+    - "Cilium's default IPAM mode is cluster-pool, which hands out ranges from its own pool and ignores the nodes' `podCIDR`"
+    - "The Service CIDR overlaps the Pod CIDR"
+    - "Cilium always uses `10.0.0.0/8`; the `podCIDR` cannot be used with Cilium"
+  answer: B
+  explanation: "The chart's default `ipam.mode` is `cluster-pool` (pool `10.0.0.0/8`). With `ipam.mode=kubernetes`, Cilium uses each node's `podCIDR` instead."
+
+- id: ch49-q04
+  type: mcq
+  exams: [CKNE]
+  question: "You ran `helm upgrade` to switch Cilium to native routing. `cilium config view` shows `routing-mode native`, but the nodes still route Pod CIDRs through `cilium_host` and capture shows UDP 8472. What is missing?"
+  choices:
+    - "A restart of the cilium DaemonSet, because the agents read their configuration when they start"
+    - "A reboot of every node"
+    - "Deleting the `cilium-config` ConfigMap so that it is regenerated"
+    - "Nothing: native routing always keeps the VXLAN tunnel as well"
+  answer: A
+  explanation: "`helm upgrade` changes the ConfigMap, but the agents only read it at start. `kubectl -n kube-system rollout restart daemonset/cilium` applies it, one node at a time."
+
+- id: ch49-q05
+  type: mcq
+  exams: [CKNE]
+  question: "The nodes' network has an MTU of 1500 and Cilium uses a VXLAN tunnel over IPv4. What is the largest Pod MTU that avoids fragmentation or drops?"
+  choices:
+    - "1500"
+    - "1480"
+    - "1450"
+    - "1400"
+  answer: C
+  explanation: "VXLAN adds 50 bytes: an outer IPv4 header (20), UDP (8), VXLAN (8), and the inner Ethernet header (14). 1500 - 50 = 1450, the value Cilium puts on the Pod's route in tunnel mode."
+
+- id: ch49-q06
+  type: mcq
+  exams: [CKNE]
+  question: "Which requirement does native routing have that tunnel mode does not?"
+  choices:
+    - "The nodes must run the same Linux distribution"
+    - "The network between the nodes must know where every Pod CIDR is: a shared layer 2 network with direct routes, BGP, or cloud route tables"
+    - "Every Pod needs a public IP address"
+    - "kube-proxy must be removed"
+  answer: B
+  explanation: "In native routing the packets carry Pod addresses between the nodes, so the underlay must route them. In tunnel mode the underlay sees only node addresses."
+
+- id: ch49-q07
+  type: mcq
+  exams: [CKNE]
+  question: "What does `autoDirectNodeRoutes=true` make Cilium do?"
+  choices:
+    - "Announce the Pod CIDRs to the upstream routers with BGP"
+    - "Write a route on each node to every other node's Pod CIDR via that node's address, for nodes on the same layer 2 network"
+    - "Route all Pod traffic through the control plane node"
+    - "Turn on the VXLAN tunnel as a fallback"
+  answer: B
+  explanation: "It writes the same kind of routes as Chapter 48's `ip route add 10.244.2.0/24 via 172.18.0.2`. It cannot help nodes in other subnets; for those you need BGP (Chapter 59) or cloud routes."
+
+- id: ch49-q08
+  type: mcq
+  exams: [CKNE]
+  question: "After a CNI change, ping and small HTTP requests between Pods on different nodes work, but large downloads hang. What is the most likely cause?"
+  choices:
+    - "A NetworkPolicy that blocks large packets"
+    - "An MTU that is too large for the path, so the big packets are dropped"
+    - "DNS is slow"
+    - "The Pods' CPU limits are too low"
+  answer: B
+  explanation: "Small packets fit, large ones do not. If the ICMP messages that path MTU discovery depends on are lost, nobody tells the sender. Check the Pod's route MTU against the overlay's overhead."
+
+- id: ch49-q09
+  type: mcq
+  exams: [CKNE]
+  question: "Which of these plugins does not enforce Kubernetes NetworkPolicy by itself?"
+  choices:
+    - "Cilium"
+    - "Calico"
+    - "Flannel"
+    - "All three enforce it"
+  answer: C
+  explanation: "Flannel only connects Pods (VXLAN by default). Clusters that use it and need policies add another plugin for policy enforcement."
+
+- id: ch49-q10
+  type: task
+  exams: [CKNE]
+  prompt: "Install Cilium 1.20.5 with Helm in namespace `kube-system`, with Kubernetes host-scope IPAM and native routing for the Pod range `10.244.0.0/16` on nodes that share one layer 2 network. Then confirm the agents are healthy."
+  solution: |
+    ```bash
+    helm install cilium cilium --repo https://helm.cilium.io --version 1.20.5 \
+      --namespace kube-system --set ipam.mode=kubernetes \
+      --set routingMode=native --set ipv4NativeRoutingCIDR=10.244.0.0/16 --set autoDirectNodeRoutes=true
+    cilium status --wait
+    kubectl get nodes
+    ```
+
+    On a fresh install no restart is needed: the agents start with this configuration. Check a node's routes (`ip route | grep 10.244`) for routes via the other nodes' addresses.
+
+- id: ch49-q11
+  type: task
+  exams: [CKNE]
+  prompt: "Pods on node `node2` stay in `ContainerCreating` after the cluster moved from Flannel to Cilium; Pods on the other nodes are fine. Find and fix the cause on the node."
+  solution: |
+    ```bash
+    ssh node2
+    ls /etc/cni/net.d
+    ```
+
+    A leftover Flannel file with a lower number than Cilium's (for example `00-flannel.conflist` next to `05-cilium.conflist`) is used first. Move it away, for example `sudo mv /etc/cni/net.d/00-flannel.conflist /root/`, and delete the stuck Pods so they are created again. `kubectl describe pod` on a stuck Pod shows the sandbox error from the old plugin.
+
+- id: ch49-q12
+  type: task
+  exams: [CKNE]
+  prompt: "Cilium is installed with Helm (release `cilium` in `kube-system`). Set the Pods' MTU to 1400 without changing any other setting, and prove that a Pod uses it."
+  solution: |
+    ```bash
+    helm upgrade cilium cilium --repo https://helm.cilium.io --version 1.20.5 \
+      --namespace kube-system --reuse-values --set MTU=1400
+    kubectl -n kube-system rollout restart daemonset/cilium
+    kubectl -n kube-system rollout status daemonset/cilium
+    kubectl exec <pod> -- cat /sys/class/net/eth0/mtu
+    kubectl exec <pod> -- ip route
+    ```
+
+    `--reuse-values` keeps the other settings; without it they return to the chart's defaults. The Pod shows MTU 1400 on `eth0` and on its default route.

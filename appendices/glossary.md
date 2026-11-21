@@ -12,6 +12,7 @@ chapter that introduces it. Part VI onward adds Kubernetes networking terms as i
 ## A
 
 - **ACK**: TCP flag that acknowledges received data. Shown as `.` in tcpdump. (42)
+- **Agent** (CNI): the plugin's long-running Pod on every node, usually from a DaemonSet; it installs the binary and configuration and maintains the node's routes and rules. (49)
 - **ALPN** (Application-Layer Protocol Negotiation): TLS extension in which client and server agree on HTTP/2 or HTTP/1.1. (44)
 - **Application layer**: the top layer of the TCP/IP model; what programs say to each other (HTTP, DNS, TLS). (38)
 - **ARP** (Address Resolution Protocol): finds the MAC address that belongs to an IP address on the local network, by broadcast. (39)
@@ -36,6 +37,7 @@ chapter that introduces it. Part VI onward adds Kubernetes networking terms as i
 - **CiliumLoadBalancerIPPool**: the Cilium object that lists the address blocks LB-IPAM hands out to LoadBalancer Services. (53)
 - **ClientHello**: the first TLS handshake message; carries SNI and ALPN in the clear. (44)
 - **Cluster CIDR**: the address range for all Pods of a cluster (`--cluster-cidr`, kind's `podSubnet`), from which each node's `podCIDR` is carved. (48)
+- **Cluster-pool IPAM**: Cilium's default IPAM mode; its operator hands each node a range from Cilium's own pool (`10.0.0.0/8` by default), ignoring the node's `podCIDR`. (49)
 - **ClusterIP**: a Service's virtual IP from the service CIDR, reachable only inside the cluster; also the default Service type. (53)
 - **CNAME**: DNS record that makes one name an alias for another. (43)
 - **CNI** (Container Network Interface): the specification, and the plugins, that connect a Pod's network namespace to the network. (45)
@@ -63,8 +65,10 @@ chapter that introduces it. Part VI onward adds Kubernetes networking terms as i
 
 ## E
 
+- **eBPF**: small programs loaded into the Linux kernel and attached to interfaces or other hooks; Cilium's data plane. (49)
 - **Egress gateway**: a chosen exit point where outgoing traffic is SNATed to a known address. (05; Chapter 60)
 - **Encapsulation**: each layer wrapping the data of the layer above in its own header. (38)
+- **Encapsulation overhead**: the bytes an overlay adds to every packet; 50 for VXLAN over IPv4, 20 for IP-in-IP. (49)
 - **Endpoints / EndpointSlice**: the objects that list the ready Pod addresses and ports behind a Service; EndpointSlices are the current form. (53)
 - **Ephemeral port**: a random port the kernel picks for the client end of a connection. (42)
 - **Established**: a TCP connection whose handshake has completed (`ESTAB` in `ss`); also a conntrack state. (42, 46)
@@ -105,6 +109,7 @@ chapter that introduces it. Part VI onward adds Kubernetes networking terms as i
 - **Interface** (network interface): a host's connection point to a network, such as `eth0`. (37)
 - **Internet layer**: the TCP/IP layer that gets packets between hosts across networks (IP). (38)
 - **IP address**: the address that identifies a host on an IP network. (37, 40)
+- **IP-in-IP**: an overlay that wraps an IP packet directly in a second IP header; Calico's classic tunnel. (49)
 - **IPAM** (IP Address Management): handing out addresses from a range; in Kubernetes, giving each node a Pod subnet and each Pod an address. (40, 45)
 - **IPAM plugin**: a CNI plugin that only chooses addresses (for example `host-local`), called by the main plugin through its `ipam` section. (48)
 - **iptables**: the classic tool for netfilter rules; today usually iptables-nft, which stores them as nftables tables. (41, 46)
@@ -116,6 +121,7 @@ chapter that introduces it. Part VI onward adds Kubernetes networking terms as i
 - **kind** (Kubernetes in Docker): a tool that runs each Kubernetes node as a Docker container; the book's Tier 1 lab cluster. (48)
 - **kube-proxy**: the node agent that turns Services and EndpointSlices into forwarding rules (iptables, IPVS, or nftables) on every node. (53)
 - **`kubectl debug node/<node>`**: starts a Pod in a node's network namespace with an image of your choice (for example netshoot), for node-level troubleshooting. (48)
+- **Kubernetes host-scope IPAM**: Cilium's `ipam.mode=kubernetes`; Pod addresses come from each node's `podCIDR`. (49)
 - **Kubernetes network model**: every Pod has its own IP; every Pod reaches every other Pod by that IP without NAT; node agents reach the Pods on their node. (48)
 
 ## L
@@ -137,6 +143,7 @@ chapter that introduces it. Part VI onward adds Kubernetes networking terms as i
 - **MAC address**: a 48-bit link-layer address, written as six hex bytes. (39)
 - **Masquerade**: SNAT to whatever address the outgoing interface has. (41)
 - **Method** (HTTP): what a request asks for: GET, POST, PUT, DELETE, ... (44)
+- **MSS** (maximum segment size): the largest payload one TCP segment carries, announced in the handshake; the MTU minus 40 bytes for IPv4. (49)
 - **MTU** (maximum transmission unit): the largest packet an interface sends or accepts in one frame; 1500 on standard Ethernet. (39)
 - **mTLS** (mutual TLS): TLS in which the client also presents a certificate. (44)
 
@@ -160,6 +167,7 @@ chapter that introduces it. Part VI onward adds Kubernetes networking terms as i
 
 - **Octet**: eight bits; one of the four numbers of an IPv4 address. (40)
 - **On-link**: directly reachable on an interface, without a router. (40, 41)
+- **Operator** (Cilium): the cluster-wide controller next to the agents; it handles work not tied to one node, such as IPAM ranges and cleanup. (49)
 - **OSI model**: an older seven-layer model whose numbering (L2, L3, L4, L7) is still used. (38)
 - **Overlay network**: a network carried inside another by encapsulation, such as Pod traffic in VXLAN between nodes. (38, 45)
 
@@ -227,6 +235,7 @@ chapter that introduces it. Part VI onward adds Kubernetes networking terms as i
 - **Top-level domain** (TLD): a label directly under the DNS root, such as `com` or `internal`. (43)
 - **Transport layer**: the TCP/IP layer that picks the program on a host by port (TCP, UDP). (38)
 - **TTL** (time to live): in IP, a hop counter that each router lowers by one; in DNS, how long an answer may be cached. (41, 43)
+- **Tunnel mode**: a CNI routing mode in which Pod packets between nodes are wrapped in an overlay (VXLAN or Geneve), so the underlay sees only node addresses. (49)
 
 ## U
 
