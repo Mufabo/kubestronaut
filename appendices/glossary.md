@@ -59,6 +59,7 @@ chapter that introduces it. Part VI onward adds Kubernetes networking terms as i
 - **Datagram**: a single UDP message. (38, 42)
 - **Decapsulation**: removing the headers of each layer on receipt. (38)
 - **Default gateway / default route**: the route used when nothing more specific matches (`default` = `0.0.0.0/0`) and the router it points to. (41)
+- **Delegate** (CNI): a plugin that a meta-plugin such as Multus calls on a Pod's behalf. (51)
 - **DNAT** (destination NAT): rewriting the destination address (and port) of packets; port forwarding, Service virtual IPs. (41, 46)
 - **DNS** (Domain Name System): translates names into addresses (and more). (43)
 - **Domain**: a part of the DNS name tree, such as `lab.internal`. (43)
@@ -118,6 +119,7 @@ chapter that introduces it. Part VI onward adds Kubernetes networking terms as i
 - **IPAM plugin**: a CNI plugin that only chooses addresses (for example `host-local`), called by the main plugin through its `ipam` section. (48)
 - **iptables**: the classic tool for netfilter rules; today usually iptables-nft, which stores them as nftables tables. (41, 46)
 - **IPv4 / IPv6**: 32-bit / 128-bit Internet Protocol addresses. (40)
+- **ipvlan**: a CNI plugin and Linux interface type: a virtual interface on top of a node interface, sharing its MAC address. (51)
 
 ## K
 
@@ -145,12 +147,15 @@ chapter that introduces it. Part VI onward adds Kubernetes networking terms as i
 ## M
 
 - **MAC address**: a 48-bit link-layer address, written as six hex bytes. (39)
+- **macvlan**: a CNI plugin and Linux interface type: a virtual interface on top of a node interface, with its own MAC address on that network. (51)
 - **Masquerade**: SNAT to whatever address the outgoing interface has. (41)
+- **Meta-plugin**: a CNI plugin that does no networking itself and calls other plugins instead. (51)
 - **Method** (HTTP): what a request asks for: GET, POST, PUT, DELETE, ... (44)
 - **MSS** (maximum segment size): the largest payload one TCP segment carries, announced in the handshake; the MTU minus 40 bytes for IPv4. (49)
 - **MTU** (maximum transmission unit): the largest packet an interface sends or accepts in one frame; 1500 on standard Ethernet. (39)
 - **mTLS** (mutual TLS): TLS in which the client also presents a certificate. (44)
 - **Multi-pool IPAM**: Cilium's `ipam.mode=multi-pool`; several pools, chosen per namespace or Pod with the annotation `ipam.cilium.io/ip-pool`, handed out to nodes in blocks on demand. (50)
+- **Multus**: a CNI meta-plugin that gives Pods secondary interfaces: it calls the cluster network, then one delegate per requested network. (51)
 
 ## N
 
@@ -163,6 +168,9 @@ chapter that introduces it. Part VI onward adds Kubernetes networking terms as i
 - **Network**: devices that can send data to each other. (38)
 - **Network address**: the first address of a subnet (all host bits 0); names the subnet. (40)
 - **Network part**: the prefix bits of an IP address; identifies the network. (40)
+- **Network selection annotation**: `k8s.v1.cni.cncf.io/networks` on a Pod; names the NetworkAttachmentDefinitions to attach, optionally with addresses and interface names. (51)
+- **Network status annotation**: `k8s.v1.cni.cncf.io/network-status`, written by Multus; lists every interface a Pod got. (51)
+- **NetworkAttachmentDefinition** (NAD): a namespaced object whose `spec.config` is a CNI configuration for a secondary network. (51)
 - **`NetworkReady=false`**: the node condition message the runtime reports while it has no working CNI configuration; the node stays `NotReady`. (48)
 - **nftables**: the successor of iptables, with the `nft` command. (46)
 - **Node CIDR mask size**: the prefix length of the range the controller manager gives each node from the cluster CIDR (`--node-cidr-mask-size`, `/24` by default for IPv4). (50)
@@ -212,6 +220,7 @@ chapter that introduces it. Part VI onward adds Kubernetes networking terms as i
 - **SAN** (Subject Alternative Name): the host names (and addresses) a certificate is valid for. (44)
 - **Sandbox** (Pod sandbox): the environment, including the network namespace, that the runtime creates for a Pod before starting its containers. (48)
 - **Search list**: domains the resolver appends to names that are not fully qualified (`search` in `resolv.conf`). (43)
+- **Secondary interface / secondary network**: a Pod interface besides `eth0`, on a network outside the cluster network; Kubernetes features do not apply to it. (51)
 - **Segment**: the unit of data at the TCP layer. (38)
 - **Sequence numbers**: TCP's numbering of every byte, used for ordering and retransmission. (42)
 - **SERVFAIL**: DNS status meaning the server could not get an answer. (43)
@@ -222,6 +231,7 @@ chapter that introduces it. Part VI onward adds Kubernetes networking terms as i
 - **SNI** (Server Name Indication): the host name a TLS client sends unencrypted in its ClientHello. (44)
 - **Socket**: the kernel's handle for one end of network communication, identified by address and port. (42)
 - **SRV**: DNS record that names the host and port of a service. (43)
+- **Static IPAM**: the `static` IPAM plugin; with the `ips` capability, each Pod names its own address. (51)
 - **Status code** (HTTP): the three-digit result of a request: 2xx success, 3xx redirect, 4xx client error, 5xx server error. (44)
 - **Stub resolver**: the resolver library inside programs; sends questions to a recursive resolver. (43)
 - **Subnet**: a range of addresses that share a network part, written as `10.0.4.0/24`. (40)
@@ -237,6 +247,7 @@ chapter that introduces it. Part VI onward adds Kubernetes networking terms as i
 - **`targetPort`**: the port on the Pods that a Service forwards to; defaults to the Service's `port`. (53)
 - **TCP** (Transmission Control Protocol): reliable, ordered byte streams over connections. (42)
 - **TCP/IP model**: the internet's four layers: link, internet, transport, application. (38)
+- **Thick plugin** (Multus): Multus as a node daemon plus the small `multus-shim` binary the runtime calls. (51)
 - **TLS** (Transport Layer Security): encryption, integrity, and authentication on top of TCP. (44)
 - **Top-level domain** (TLD): a label directly under the DNS root, such as `com` or `internal`. (43)
 - **Transport layer**: the TCP/IP layer that picks the program on a host by port (TCP, UDP). (38)
@@ -261,6 +272,7 @@ chapter that introduces it. Part VI onward adds Kubernetes networking terms as i
 ## W
 
 - **Well-known port**: a port below 1024 with an agreed use, such as 22 (SSH), 53 (DNS), 80 (HTTP), 443 (HTTPS). (42)
+- **Whereabouts**: a cluster-wide IPAM plugin that keeps its leases in the Kubernetes API. (51)
 
 ## Z
 

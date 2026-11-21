@@ -1,0 +1,13 @@
+# Starting point for Chapter 51, Task 3. Add what the task asks for.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: app
+  namespace: ch51-multus
+spec:
+  nodeSelector: {kubernetes.io/hostname: kbook-worker2}
+  terminationGracePeriodSeconds: 0
+  containers:
+    - name: app
+      image: nicolaka/netshoot:v0.14
+      command: ["sleep", "infinity"]
