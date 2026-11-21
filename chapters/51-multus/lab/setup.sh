@@ -19,6 +19,10 @@ info "installing Multus ${MULTUS_VERSION} (thick plugin)"
 curl -fsSL "https://raw.githubusercontent.com/k8snetworkplumbingwg/multus-cni/${MULTUS_VERSION}/deployments/multus-daemonset-thick.yml" |
   sed "s|ghcr.io/k8snetworkplumbingwg/multus-cni:snapshot-thick|ghcr.io/k8snetworkplumbingwg/multus-cni:${MULTUS_VERSION}-thick|" |
   kubectl apply -f - >/dev/null
+# The manifest limits the daemon to 50Mi and 100m CPU; under load (many Pods
+# retrying at once) it is OOM-killed, and containerd stalls with it.
+kubectl -n kube-system set resources daemonset/kube-multus-ds -c kube-multus \
+  --requests=cpu=100m,memory=100Mi --limits=cpu=1,memory=512Mi >/dev/null
 kubectl -n kube-system rollout status daemonset/kube-multus-ds --timeout=300s >/dev/null
 
 # Cilium's agents rename other plugins' configurations when they start.

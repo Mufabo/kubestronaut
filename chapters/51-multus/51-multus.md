@@ -596,6 +596,13 @@ than `net1`.
   first address; use static IPAM, per-node ranges, or whereabouts.
 - **The NAD in another namespace.** A short name refers to the Pod's own
   namespace; write `other-namespace/name` otherwise.
+- **Keeping the manifest's resource limits under load.** The Multus thick
+  plugin's DaemonSet asks for at most 50Mi of memory and 100m CPU. When many
+  Pods start (or keep failing) at once, the daemon is OOM-killed, every
+  sandbox on that node waits for it, and the node can turn `NotReady`. Check
+  `kubectl -n kube-system get pods -l app=multus` for restarts and
+  `OOMKilled`, and raise the limits (`kubectl set resources`). This lab's
+  setup raises them.
 - **Expecting Kubernetes features on `net1`.** Services, DNS, and NetworkPolicy
   apply only to the cluster network.
 

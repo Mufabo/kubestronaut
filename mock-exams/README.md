@@ -1,8 +1,8 @@
 # Mock exams
 
 Timed, scored exam simulators, one at the end of each Part and one or two per
-certification. The CKNE Part simulators (`part6` to `part10`) and the full CKNE
-simulators (`ckne`, `ckne2`) follow with their chapters; see `ROADMAP.md`.
+certification. The CKNE Part simulators `part7` to `part10` and the full CKNE simulators
+(`ckne`, `ckne2`) follow with their chapters; see `ROADMAP.md`.
 
 ## Multiple-choice practice exams
 
@@ -39,6 +39,7 @@ it asks for is right.
 | [`cka`](cka/cka.md) | The full CKA: every domain, weighted as in the curriculum, on the Tier 2 VMs | 18 | 120 min | 66% |
 | [`cka2`](cka2/cka2.md) | CKA set 2: 18 more questions, none repeated from `cka`, on the Tier 2 VMs | 18 | 120 min | 66% |
 | [`cks`](cks/cks.md) | The full CKS: every domain, weighted as in the curriculum, on the Tier 2 VMs | 15 | 120 min | 67% |
+| [`part6`](part6/part6.md) | Part VI (Chapters 48 to 52), CKNE Core Infrastructure and CNI; builds its own cluster | 8 | 60 min | 67% |
 
 ```bash
 make cluster                       # once
