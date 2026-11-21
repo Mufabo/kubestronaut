@@ -350,7 +350,8 @@ Estimates assume one author working part-time; adjust for your pace and any co-a
 - [x] Tier 0 netlab and the `calico`, `nocni`, and `cilium` profiles (`tools/cluster.sh`)
 - [x] Part V and its quiz; the glossary for every Part V term
 - [x] Chapter 49 (2026-11-20), Chapters 50 to 52 (2026-11-21)
-- [x] The Part VI simulator (`part6`, 2026-11-21) and 54 to 58; Part VI and VII simulators (`part6`, `part7`)
+- [x] The Part VI simulator (`part6`, 2026-11-21)
+- [ ] Chapters 54 to 58 and the Part VII simulator (`part7`)
 - [ ] `cilium-kpr`, `bgp`, `istio`, and `multi` profiles stable in CI; Chapters 59 to 68; `part8`, `part9`
 - [ ] Chapters 69 to 71; `part10`; full simulators `ckne` and `ckne2`
 - [ ] Part V read by a beginner with no networking background
@@ -392,7 +393,7 @@ Estimates assume one author working part-time; adjust for your pace and any co-a
 1. ~~Decide the Kubernetes version~~ Decided 2026-10-15 to stay on v1.35; on 2026-10-23 the Linux Foundation moved the CKA and the CKAD to v1.37, and the book moved its pin to v1.37.0 (previous version v1.36.5), re-running every lab and re-capturing the output that depends on the version. Check again before the beta.
 2. ~~Finish Part III on the VMs~~ Done 2026-10-15: Chapters 18, 19, 20, and 27.
 3. ~~Write the Part III mock exam~~ Done 2026-10-15 (`mock-exams/part3`).
-4. ~~Finish Part IV~~ Done 2026-11-13 (29, 30, and 33 drafted 2026-10-24; 32 on 2026-11-09; 35 on 2026-11-13). Close the "Minimize base image footprint" gap in 34 (or 16).
+4. ~~Finish Part IV~~ Done 2026-11-13 (29, 30, and 33 drafted 2026-10-24; 32 on 2026-11-09; 35 on 2026-11-13). The "Minimize base image footprint" gap was closed in 34 on 2026-11-14.
 5. Backlog (2026-11-14): build the Tier 3 devcontainer, so readers without the hardware for Tier 2 have a path. Deferred until outside readers ask for it.
 6. Find the first outside reader, starting with the pilot chapter (04).
 7. CKNE (merged 2026-11-20): Chapters 49 and 50 drafted 2026-11-20/21; Chapters 51 and 52 drafted 2026-11-21; Part VI and its simulator `part6` done 2026-11-21; next Chapters 54 to 58 (the `cilium-kpr` profile first); find a beginner reader for Part V.
