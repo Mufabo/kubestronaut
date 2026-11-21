@@ -278,7 +278,7 @@ until `install.sh` finishes).
   with the chapter prefix (`ch53-outside`) and removed by setup and teardown.
 - `make test` switches the cluster to the lab's profile first, so labs can be
   tested in any order. CI runs the `calico` labs in one job and the netlab and
-  other profiles in another (`make test-tier1 PROFILES="nocni cilium"`); a new
+  other profiles in another (`make test-tier1 PROFILES="nocni cilium cilium-kpr"`); a new
   profile must be added to that job.
 
 ### How a Tier 0 lab works

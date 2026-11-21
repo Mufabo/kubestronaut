@@ -94,7 +94,7 @@ Each lab runs in its own namespace (Tier 1) or snapshot (Tier 2) so that chapter
 | `calico` | Calico (NetworkPolicy), metrics-server; the default | Parts I to IV, their mocks |
 | `nocni` | no CNI; nodes stay `NotReady` until the reader installs one | Ch. 48 to 50 |
 | `cilium` | Cilium with kube-proxy, Hubble on | default for Parts VI and VII |
-| `cilium-kpr` (planned) | Cilium kube-proxy replacement, Hubble, egress gateway, WireGuard, Gateway API, LB-IPAM | Ch. 54, 57, 59 to 60, 65 to 66, 69, 71 |
+| `cilium-kpr` | Cilium kube-proxy replacement, Hubble, egress gateway, Gateway API, LB-IPAM with L2 announcements; WireGuard available, off | Ch. 54, 57, 59 to 60, 65 to 66, 69, 71 |
 | `istio` (planned) | `cilium` + Istio (sidecar and ambient) + Gateway API + cert-manager + Prometheus/Jaeger | Ch. 61, 63, 67 to 68, 70 |
 | `multi` (planned) | two clusters with non-overlapping Pod CIDRs and Cilium ClusterMesh | Ch. 62 |
 | `bgp` (planned) | `cilium-kpr` + an FRR router container acting as the upstream | Ch. 59 |
@@ -352,7 +352,8 @@ Estimates assume one author working part-time; adjust for your pace and any co-a
 - [x] Chapter 49 (2026-11-20), Chapters 50 to 52 (2026-11-21)
 - [x] The Part VI simulator (`part6`, 2026-11-21)
 - [ ] Chapters 54 to 58 and the Part VII simulator (`part7`)
-- [ ] `cilium-kpr`, `bgp`, `istio`, and `multi` profiles stable in CI; Chapters 59 to 68; `part8`, `part9`
+- [x] The `cilium-kpr` profile (2026-11-21; in CI's network job, which builds it once a chapter uses it)
+- [ ] `bgp`, `istio`, and `multi` profiles stable in CI; Chapters 59 to 68; `part8`, `part9`
 - [ ] Chapters 69 to 71; `part10`; full simulators `ckne` and `ckne2`
 - [ ] Part V read by a beginner with no networking background
 - **Exit criterion:** every CKNE competency in the coverage matrix is mapped and tested in CI, the heavy profiles run in 8 GB, and a beta reader finishes a full CKNE simulator within 120 minutes above the pass mark after studying the book.
@@ -396,4 +397,4 @@ Estimates assume one author working part-time; adjust for your pace and any co-a
 4. ~~Finish Part IV~~ Done 2026-11-13 (29, 30, and 33 drafted 2026-10-24; 32 on 2026-11-09; 35 on 2026-11-13). The "Minimize base image footprint" gap was closed in 34 on 2026-11-14.
 5. Backlog (2026-11-14): build the Tier 3 devcontainer, so readers without the hardware for Tier 2 have a path. Deferred until outside readers ask for it.
 6. Find the first outside reader, starting with the pilot chapter (04).
-7. CKNE (merged 2026-11-20): Chapters 49 and 50 drafted 2026-11-20/21; Chapters 51 and 52 drafted 2026-11-21; Part VI and its simulator `part6` done 2026-11-21; next Chapters 54 to 58 (the `cilium-kpr` profile first); find a beginner reader for Part V.
+7. CKNE (merged 2026-11-20): Chapters 49 and 50 drafted 2026-11-20/21; Chapters 51 and 52 drafted 2026-11-21; Part VI and its simulator `part6` done 2026-11-21; the `cilium-kpr` profile done 2026-11-21; next Chapters 54 to 58; find a beginner reader for Part V.

@@ -112,5 +112,5 @@ jobs:
           helm version --short
       - name: Raise the inotify limits kind needs when clusters are rebuilt
         run: sudo sysctl fs.inotify.max_user_instances=512 fs.inotify.max_user_watches=524288
-      - run: make test-tier1 PROFILES="nocni cilium"
-      - run: make test-mocks PROFILES="nocni cilium"
+      - run: make test-tier1 PROFILES="nocni cilium cilium-kpr"
+      - run: make test-mocks PROFILES="nocni cilium cilium-kpr"
