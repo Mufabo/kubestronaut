@@ -22,6 +22,7 @@ chapter that introduces it. Part VI onward adds Kubernetes networking terms as i
 ## B
 
 - **Base chain** (nftables): a chain attached to a netfilter hook. (46)
+- **Block** (IPAM): a fixed-size piece of a pool that one node owns, such as a Calico `/26` or a Cilium multi-pool `/28`; nodes claim more blocks as they need them. (50)
 - **Bridge** (Linux): a software switch in the kernel; interfaces attached to it become its ports. (39)
 - **Broadcast address**: an address that reaches every host on a network: `ff:ff:ff:ff:ff:ff` in Ethernet, all host bits 1 in an IPv4 subnet. (39, 40)
 - **Broadcast domain**: all hosts that receive each other's broadcasts; one LAN, one layer 2 network. (39)
@@ -35,6 +36,8 @@ chapter that introduces it. Part VI onward adds Kubernetes networking terms as i
 - **Chain of trust**: the sequence of certificates from a server's certificate up to a CA the client trusts. (44)
 - **CIDR notation**: an address or subnet with its prefix length, such as `10.0.4.0/24`. (40)
 - **CiliumLoadBalancerIPPool**: the Cilium object that lists the address blocks LB-IPAM hands out to LoadBalancer Services. (53)
+- **CiliumNode**: Cilium's per-node object, holding the address blocks the operator allocated to the node. (50)
+- **CiliumPodIPPool**: a multi-pool IPAM pool (`cilium.io/v2alpha1`): a list of CIDRs and a block size. (50)
 - **ClientHello**: the first TLS handshake message; carries SNI and ALPN in the clear. (44)
 - **Cluster CIDR**: the address range for all Pods of a cluster (`--cluster-cidr`, kind's `podSubnet`), from which each node's `podCIDR` is carved. (48)
 - **Cluster-pool IPAM**: Cilium's default IPAM mode; its operator hands each node a range from Cilium's own pool (`10.0.0.0/8` by default), ignoring the node's `podCIDR`. (49)
@@ -109,6 +112,7 @@ chapter that introduces it. Part VI onward adds Kubernetes networking terms as i
 - **Interface** (network interface): a host's connection point to a network, such as `eth0`. (37)
 - **Internet layer**: the TCP/IP layer that gets packets between hosts across networks (IP). (38)
 - **IP address**: the address that identifies a host on an IP network. (37, 40)
+- **IP pool** (Calico): an `IPPool` resource, a range Calico cuts into per-node blocks; `192.168.0.0/16` by default. (50)
 - **IP-in-IP**: an overlay that wraps an IP packet directly in a second IP header; Calico's classic tunnel. (49)
 - **IPAM** (IP Address Management): handing out addresses from a range; in Kubernetes, giving each node a Pod subnet and each Pod an address. (40, 45)
 - **IPAM plugin**: a CNI plugin that only chooses addresses (for example `host-local`), called by the main plugin through its `ipam` section. (48)
@@ -146,6 +150,7 @@ chapter that introduces it. Part VI onward adds Kubernetes networking terms as i
 - **MSS** (maximum segment size): the largest payload one TCP segment carries, announced in the handshake; the MTU minus 40 bytes for IPv4. (49)
 - **MTU** (maximum transmission unit): the largest packet an interface sends or accepts in one frame; 1500 on standard Ethernet. (39)
 - **mTLS** (mutual TLS): TLS in which the client also presents a certificate. (44)
+- **Multi-pool IPAM**: Cilium's `ipam.mode=multi-pool`; several pools, chosen per namespace or Pod with the annotation `ipam.cilium.io/ip-pool`, handed out to nodes in blocks on demand. (50)
 
 ## N
 
@@ -160,6 +165,7 @@ chapter that introduces it. Part VI onward adds Kubernetes networking terms as i
 - **Network part**: the prefix bits of an IP address; identifies the network. (40)
 - **`NetworkReady=false`**: the node condition message the runtime reports while it has no working CNI configuration; the node stays `NotReady`. (48)
 - **nftables**: the successor of iptables, with the `nft` command. (46)
+- **Node CIDR mask size**: the prefix length of the range the controller manager gives each node from the cluster CIDR (`--node-cidr-mask-size`, `/24` by default for IPv4). (50)
 - **NodePort Service**: a Service that also opens the same port (30000 to 32767) on every node's address. (53)
 - **NXDOMAIN**: DNS status meaning the name does not exist. (43)
 

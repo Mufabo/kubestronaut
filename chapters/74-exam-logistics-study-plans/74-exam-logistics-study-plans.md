@@ -247,7 +247,7 @@ on the VMs), timed, then the two killer.sh sessions.
 | 12 | 69 to 71 (Part X) | Labs; mock exam `part10`, timed |
 | 13–14 | 72, 73; review | Bookmark the Cilium and Istio pages from Chapter 73; the CKNE simulator (`make mock EXAM=ckne`), timed; the Linux Foundation's practice simulator; then set 2 (`make mock EXAM=ckne2`) as the fresh measure |
 
-Parts VI to X are still being written: only Chapters 48, 49, and 53 exist so far, and
+Parts VI to X are still being written: only Chapters 48 to 50 and 53 exist so far, and
 the Part simulators and full simulators follow with them (see `ROADMAP.md`).
 Service Networking and DNS, and Network Security and Policy, are a quarter of
 the exam each: Parts VII and IX deserve a second pass.

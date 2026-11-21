@@ -1,0 +1,169 @@
+- id: ch50-q01
+  type: mcq
+  exams: [CKNE]
+  question: "The controller manager runs with `--cluster-cidr=10.244.0.0/16` and `--node-cidr-mask-size=24`. What does it do with them?"
+  choices:
+    - "It gives every Pod an address from `10.244.0.0/16`"
+    - "It writes one `/24` from `10.244.0.0/16` into each Node's `spec.podCIDR`"
+    - "It configures kube-proxy's Service range"
+    - "It creates a CNI configuration on each node"
+  answer: B
+  explanation: "Kubernetes only offers each node a range. The CNI plugin decides whether to use it; Kubernetes never assigns a Pod address itself."
+
+- id: ch50-q02
+  type: mcq
+  exams: [CKNE]
+  question: "With a cluster CIDR of `/16` and a node mask of `/24`, how many nodes can get a Pod range?"
+  choices:
+    - "16"
+    - "110"
+    - "256"
+    - "65,536"
+  answer: C
+  explanation: "There are 2^(24-16) = 256 blocks of `/24` in a `/16`. Each block has 256 addresses, enough for the kubelet's default of 110 Pods."
+
+- id: ch50-q03
+  type: mcq
+  exams: [CKNE]
+  question: "Why do many clusters use a `/24` per node, even though the kubelet runs at most 110 Pods by default?"
+  choices:
+    - "The CNI specification requires it"
+    - "It leaves room for more Pods than the default, and a `/24` is easy to read; the cost is fewer node blocks per cluster CIDR"
+    - "Smaller blocks are not routable"
+    - "kube-proxy only supports `/24` ranges"
+  answer: B
+  explanation: "A `/25` (128 addresses) would also fit 110 Pods and double the number of possible nodes. The node mask is a trade-off between Pods per node and nodes per cluster."
+
+- id: ch50-q04
+  type: mcq
+  exams: [CKNE]
+  question: "Cilium runs in cluster-pool mode. `kubectl get node w1 -o jsonpath='{.spec.podCIDR}'` shows `10.244.1.0/24`, but Pods on `w1` have `10.0.2.x` addresses. What is true?"
+  choices:
+    - "The cluster is broken: Pods must use the node's podCIDR"
+    - "Cilium's operator allocated its own block (recorded in the CiliumNode object) and ignores the Node's podCIDR; this is normal in cluster-pool mode"
+    - "kube-proxy translated the addresses"
+    - "The Pods were created before the CNI was installed"
+  answer: B
+  explanation: "In cluster-pool mode Cilium owns IPAM. `kubectl get ciliumnode w1 -o yaml` shows the block it uses, under `spec.ipam.podCIDRs`."
+
+- id: ch50-q05
+  type: mcq
+  exams: [CKNE]
+  question: "In Cilium multi-pool IPAM, how does a Pod end up with an address from the pool `blue`?"
+  choices:
+    - "Its Deployment has the label `pool: blue`"
+    - "Its namespace or the Pod itself has the annotation `ipam.cilium.io/ip-pool: blue`"
+    - "The node has the label `cilium.io/pool=blue`"
+    - "The Pod lists `blue` in `spec.dnsConfig`"
+  answer: B
+  explanation: "The annotation can be on the Pod or on its namespace; without one, the Pod uses the pool named `default`."
+
+- id: ch50-q06
+  type: mcq
+  exams: [CKNE]
+  question: "A Deployment's Pods are scheduled to a Ready node but stay in `ContainerCreating`. Their events show `FailedCreatePodSandBox ... all CIDR ranges are exhausted`. What is the cause?"
+  choices:
+    - "The image cannot be pulled"
+    - "The IPAM pool or range the Pods use has no free address"
+    - "The Service has no endpoints"
+    - "The node's kubelet is out of memory"
+  answer: B
+  explanation: "The plugin could not give the sandbox an address, so the Pod never starts. Grow the pool (multi-pool, Calico) or add capacity (host-scope modes)."
+
+- id: ch50-q07
+  type: mcq
+  exams: [CKNE]
+  question: "How many Pods fit in one `/28` block of a Cilium `CiliumPodIPPool` with default settings?"
+  choices:
+    - "16"
+    - "15"
+    - "14"
+    - "8"
+  answer: C
+  explanation: "`allowFirstIP` and `allowLastIP` are `false` by default, so the first and last of the 16 addresses are not handed out."
+
+- id: ch50-q08
+  type: mcq
+  exams: [CKNE]
+  question: "Which fix for address exhaustion keeps running Pods untouched?"
+  choices:
+    - "Replace the pool's CIDR with a larger one"
+    - "Add a second CIDR to the pool (multi-pool or Calico)"
+    - "Change the cluster CIDR in the controller manager"
+    - "Restart all nodes"
+  answer: B
+  explanation: "Adding a range gives nodes new blocks to claim. Replacing or removing a range that Pods use takes their addresses out from under them; changing the cluster CIDR does not affect existing node ranges."
+
+- id: ch50-q09
+  type: mcq
+  exams: [CKNE]
+  question: "Which ranges must not overlap in a cluster?"
+  choices:
+    - "Only the Pod range and the Service range"
+    - "The Pod range, the Service range, and the network the nodes sit on (and other clusters' Pod ranges, if clusters connect)"
+    - "None: Kubernetes translates overlapping ranges"
+    - "Only the node network and the Service range"
+  answer: B
+  explanation: "Overlaps make routing ambiguous: a packet to an address in two ranges can only follow one route. Multi-cluster routing (Chapter 62) also needs distinct Pod ranges."
+
+- id: ch50-q10
+  type: mcq
+  exams: [CKNE]
+  question: "Calico assigns addresses from IP pools in blocks. What happens when a node's blocks are full and the pool has no free block left?"
+  choices:
+    - "The node joins another cluster"
+    - "Calico borrows single addresses from other nodes' blocks"
+    - "Calico switches the node to host-local IPAM"
+    - "The kubelet deletes old Pods"
+  answer: B
+  explanation: "Calico claims blocks (`/26` by default) per node as needed, and, when no block is free, borrows addresses from other blocks. Only when the pool has no address at all do Pods fail."
+
+- id: ch50-q11
+  type: task
+  exams: [CKNE]
+  prompt: "On a kubeadm cluster, find the cluster CIDR, the node mask size, and the range assigned to node `node1`."
+  solution: |
+    ```bash
+    ssh controlplane
+    sudo grep -E 'cluster-cidr|node-cidr-mask-size' /etc/kubernetes/manifests/kube-controller-manager.yaml
+    kubectl get node node1 -o jsonpath='{.spec.podCIDR}{"\n"}'
+    ```
+
+    Without a `--node-cidr-mask-size` flag the default is `/24` for IPv4. Then check which IPAM the CNI plugin uses before assuming Pods get addresses from that range.
+
+- id: ch50-q12
+  type: task
+  exams: [CKNE]
+  prompt: "Cilium runs in multi-pool mode. Give all Pods in namespace `analytics` addresses from `10.50.0.0/16`, in `/27` blocks."
+  solution: |
+    ```bash
+    kubectl apply -f - <<'EOF'
+    apiVersion: cilium.io/v2alpha1
+    kind: CiliumPodIPPool
+    metadata:
+      name: analytics
+    spec:
+      ipv4:
+        cidrs: ["10.50.0.0/16"]
+        maskSize: 27
+    EOF
+    kubectl annotate namespace analytics ipam.cilium.io/ip-pool=analytics
+    kubectl -n analytics rollout restart deployment
+    kubectl -n analytics get pods -o wide
+    ```
+
+    The annotation applies to new Pods, so restart the existing workloads. Check the new addresses with `-o wide`.
+
+- id: ch50-q13
+  type: task
+  exams: [CKNE]
+  prompt: "Pods of the Deployment `jobs` in namespace `batch` (pool `batch`, CIDR `10.60.0.0/26`) stay in `ContainerCreating` with an IPAM error. Fix it without touching the Deployment."
+  solution: |
+    ```bash
+    kubectl -n batch describe pod <a-waiting-pod> | grep -A2 FailedCreatePodSandBox
+    kubectl patch ciliumpodippool batch --type=merge \
+      -p '{"spec":{"ipv4":{"cidrs":["10.60.0.0/26","10.60.1.0/24"]}}}'
+    kubectl -n batch get deployment jobs
+    ```
+
+    The events show `all CIDR ranges are exhausted`. Keep the existing range in the list and add one; the waiting Pods start once their nodes claim blocks from it.
