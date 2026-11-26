@@ -44,7 +44,7 @@
     - "It applies them to new Pods only"
     - "It deletes the HPA"
   answer: B
-  explanation: "`Off` computes and publishes recommendations without applying them. `Initial` applies them only when Pods are created, and `Auto` evicts Pods so they restart with the new requests."
+  explanation: "`Off` computes and publishes recommendations without applying them. `Initial` applies them only when Pods are created, and `Recreate` (the default; the deprecated `Auto` does the same) evicts Pods so they restart with the new requests."
 
 - id: ch25-q05
   type: mcq

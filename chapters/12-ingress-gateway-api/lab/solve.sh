@@ -110,3 +110,38 @@ routes() {
   [[ "$(k exec client -- wget -q -T 5 -O - --header "Host: web.example.test" "http://traefik.${CONTROLLER_NS}.svc.cluster.local" 2>/dev/null)" == "hello from web" ]]
 }
 wait_for "web.example.test answered through Traefik" 180 routes
+
+# Task 7: the Gateway API provider on the same release, then a Gateway and a route
+helm upgrade "$CONTROLLER_RELEASE" traefik/traefik --version "$TRAEFIK_CHART_VERSION" \
+  --namespace "$CONTROLLER_NS" --reuse-values \
+  --set providers.kubernetesGateway.enabled=true --set gateway.enabled=false --wait --timeout 5m >/dev/null
+k apply -f - >/dev/null <<'YAML'
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: web-gw
+spec:
+  gatewayClassName: traefik
+  listeners:
+    - name: web
+      protocol: HTTP
+      port: 8000
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: web-route
+spec:
+  parentRefs:
+    - name: web-gw
+  hostnames:
+    - gw.example.test
+  rules:
+    - backendRefs:
+        - name: web
+          port: 80
+YAML
+gateway_routes() {
+  [[ "$(k exec client -- wget -q -T 5 -O - --header "Host: gw.example.test" "http://traefik.${CONTROLLER_NS}.svc.cluster.local" 2>/dev/null)" == "hello from web" ]]
+}
+wait_for "gw.example.test answered through the Gateway" 180 gateway_routes

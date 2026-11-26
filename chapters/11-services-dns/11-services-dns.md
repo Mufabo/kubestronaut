@@ -11,7 +11,7 @@
 After this chapter you can:
 
 - Explain why Pods need a stable name in front of them, and why their IPs cannot serve that role
-- Create a ClusterIP, NodePort, ExternalName, and headless Service, and say what each one does
+- Create a ClusterIP, NodePort, LoadBalancer, ExternalName, and headless Service, and say what each one does
 - Explain how a Service finds its Pods through its label selector, and how endpoints track ready Pods
 - Diagnose a Service with no endpoints, and fix it by correcting the selector
 - Resolve Service names from inside a Pod, and explain the search path that makes short names work
@@ -77,9 +77,14 @@ The type decides where a Service can be reached from:
 - **NodePort** also opens the same port on every node, in the range 30000 to
   32767 by default. A client outside the cluster can reach the Service through
   any node's IP and that port.
-- **LoadBalancer** asks the cloud provider for an external load balancer, and
-  then behaves like NodePort underneath. On a local kind cluster there is no
-  provider, so its external IP stays `<pending>`.
+- **LoadBalancer** asks for an external address, and behaves like NodePort
+  underneath. Kubernetes itself does not hand out the address: a cloud provider's
+  controller does, or on bare metal an add-on such as MetalLB, which gives out
+  addresses from a pool you configure. It writes the address to the Service's
+  `status.loadBalancer.ingress`, and `kubectl get service` shows it as the
+  `EXTERNAL-IP`. Where nothing hands out addresses, as on a plain kind cluster,
+  the external IP stays `<pending>`. This chapter's lab installs MetalLB for
+  Task 6.
 - **ExternalName** adds no proxying at all. The cluster DNS answers a lookup of
   the Service's name with a CNAME to the `externalName` you set. It is a way to
   give an external dependency a name inside the cluster.
@@ -304,7 +309,12 @@ command, or run `make use-namespace CH=11` once. The setup creates two
 Deployments, `web` and `api`, each with two Pods, and a Service named `api` with
 a wrong selector. It also creates the `dns-client` Pod for lookups. Tasks 1 to 4
 are independent of each other. Task 3 can be checked only after the web Pods are
-running, which they are from the start. Full solutions are in
+running, which they are from the start.
+
+For Task 6, the setup also installs MetalLB (version 0.16.2) with an address
+pool at the top of the kind Docker network, such as `172.18.255.200` to
+`172.18.255.250`, and starts a container `ch11-outside` on that network, outside
+the cluster, to send requests from. Teardown removes both. Full solutions are in
 [`lab/solutions.md`](lab/solutions.md).
 
 ### Task 1: A ClusterIP Service for `web`
@@ -358,6 +368,17 @@ two `api` Pods.
 
 Change the Service in place. Deleting and recreating it works too, but it should
 end with the same name and the correct selector.
+
+### Task 6: A LoadBalancer Service for `web`
+
+Create a Service with the following specification, and reach it from outside
+the cluster.
+
+- Name: `web-lb`
+- Type: `LoadBalancer`
+- Port `8080`, forwarding to target port `80`
+- Selector: `app=web`
+- It has an external IP, and from the container `ch11-outside`, a request to `http://<EXTERNAL-IP>:8080/` returns the nginx welcome page
 
 ## Exam tips
 

@@ -71,6 +71,20 @@ t6() {
   [[ "$(k exec client -- wget -q -T 5 -O - --header "Host: web.example.test" "http://traefik.${CONTROLLER_NS}.svc.cluster.local" 2>/dev/null)" == "hello from web" ]]
 }
 
+# Task 7: Traefik's Gateway API provider claims the class traefik, programs the
+# reader's Gateway, and the route carries traffic.
+condition_true() {  # <kind/name> <condition> [namespace flag...]
+  local obj=$1 cond=$2; shift 2
+  [[ "$(kubectl "$@" get "$obj" -o jsonpath="{.status.conditions[?(@.type==\"${cond}\")].status}" 2>/dev/null)" == True ]]
+}
+t7() {
+  condition_true gatewayclass/traefik Accepted &&
+  [[ "$(jp gateway/web-gw '{.spec.gatewayClassName} {.spec.listeners[*].name} {.spec.listeners[0].protocol} {.spec.listeners[0].port}')" == "traefik web HTTP 8000" ]] &&
+  condition_true gateway/web-gw Programmed -n "$LAB_NS" &&
+  [[ "$(jp httproute/web-route '{.spec.parentRefs[0].name} {.spec.hostnames[*]} {.spec.rules[0].backendRefs[0].name} {.spec.rules[0].backendRefs[0].port}')" == "web-gw gw.example.test web 80" ]] &&
+  [[ "$(k exec client -- wget -q -T 5 -O - --header "Host: gw.example.test" "http://traefik.${CONTROLLER_NS}.svc.cluster.local" 2>/dev/null)" == "hello from web" ]]
+}
+
 check 1 "Ingress shop: class nginx, host shop.example.test, path / (Prefix) to Service shop port 80" \
   "the path is / with pathType Prefix; 'kubectl create ingress' gives Exact unless the path ends in *" t1
 check 2 "Secret docs-tls is kubernetes.io/tls; Ingress docs serves docs.example.test/docs over it" \
@@ -84,5 +98,7 @@ check 5 "HTTPRoute shop-route attached to Gateway edge: shop.example.test, PathP
 
 check 6 "Helm release traefik (chart traefik-${TRAEFIK_CHART_VERSION}) in ${CONTROLLER_NS}, ClusterIP Service, not the default class; Ingress web routes web.example.test to web, and client gets hello from web" \
   "helm install traefik traefik/traefik --version ${TRAEFIK_CHART_VERSION} -n ${CONTROLLER_NS} --create-namespace; the chart's keys are service.spec.type and ingressClass.isDefaultClass" t6
+check 7 "GatewayClass traefik accepted; Gateway web-gw (class traefik, HTTP listener web on 8000) programmed; HTTPRoute web-route sends gw.example.test to web, and client gets hello from web" \
+  "helm upgrade --reuse-values --set providers.kubernetesGateway.enabled=true; the listener port must be the port of a Traefik entry point (web is 8000)" t7
 
 finish_checks

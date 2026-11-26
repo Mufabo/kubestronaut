@@ -56,9 +56,29 @@ kubectl get endpointslices -l kubernetes.io/service-name=api
 The patch changes the value of the existing `app` key. Deleting and recreating
 the Service also works.
 
+## Task 6: `web-lb`, a LoadBalancer Service
+
+```bash
+kubectl -n ch11-svc expose deployment web --name=web-lb --type=LoadBalancer --port=8080 --target-port=80
+kubectl -n ch11-svc get service web-lb
+```
+
+The `EXTERNAL-IP` column shows an address from MetalLB's pool, such as
+`172.18.255.200`, within a few seconds; `<pending>` would mean nothing hands out
+addresses. Then send a request from outside the cluster, through that address:
+
+```bash
+ip="$(kubectl -n ch11-svc get service web-lb -o jsonpath='{.status.loadBalancer.ingress[0].ip}')"
+docker exec ch11-outside curl -s "http://${ip}:8080/" | grep title
+```
+
+The answer is the nginx page, `<title>Welcome to nginx!</title>`. The Service also
+has a node port, like every LoadBalancer Service: the external address is added
+on top of NodePort, not instead of it.
+
 ## Why these checks accept any correct method
 
 Each check reads the outcome: the Service's type and ports, the EndpointSlices
-(the Pod IPs that are ready), and the answers `nslookup` gives from the
-`dns-client` Pod. You can create the Services with YAML, `expose`, or
+(the Pod IPs that are ready), the answers `nslookup` gives from the
+`dns-client` Pod, and the answer the external IP gives from outside the cluster. You can create the Services with YAML, `expose`, or
 `kubectl create service`. The checks do not care.

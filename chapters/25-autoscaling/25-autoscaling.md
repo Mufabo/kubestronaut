@@ -14,7 +14,7 @@ After this chapter you can:
 - Write an `autoscaling/v2` HorizontalPodAutoscaler with a CPU target, minimum and maximum replicas, and a scale-down window
 - Explain what metrics-server provides, and what `kubectl top` and the HPA read from it
 - Distinguish the three autoscaling directions: horizontal (more Pods), vertical (bigger Pods), and cluster (more nodes)
-- Recognize a VPA's recommendation and update modes, and say when a cluster autoscaler adds or removes nodes
+- Create a VPA in `Off` mode, read its recommendation, and choose an update mode; say when a cluster autoscaler adds or removes nodes
 - Find the served API version for an autoscaling kind with `kubectl api-resources`
 
 ## Concepts
@@ -89,12 +89,21 @@ should be valid.
 
 ### The VPA
 
-The VPA watches a Pod's usage over time and recommends requests that fit it. It runs
-in three modes:
+The VPA watches a Pod's usage over time and recommends requests that fit it. It is
+not part of Kubernetes itself: it is installed from the `kubernetes/autoscaler`
+project as three components (the **recommender**, which computes recommendations,
+the **updater**, which applies them to running Pods, and an **admission controller**,
+which sets them on new Pods) and a `VerticalPodAutoscaler` custom resource
+(`autoscaling.k8s.io/v1`). A VPA object names its workload in `targetRef`, and its
+`updatePolicy.updateMode` says what happens to the recommendation:
 
-- `Off` only writes recommendations into the VPA object, and changes nothing.
+- `Off` only writes recommendations into the VPA object's status, and changes nothing. It needs only the recommender.
 - `Initial` sets the requests when a Pod is created, and never changes a running Pod.
-- `Auto` evicts Pods that drift from their recommendation, so that they restart with new requests.
+- `Recreate`, the default, also evicts running Pods that drift from their recommendation, so that they restart with new requests.
+- `InPlaceOrRecreate` resizes running Pods in place (Chapter 10) and evicts them only when that fails.
+
+The older mode `Auto` still works, but it is deprecated and does the same as
+`Recreate`. Write the mode you mean.
 
 A VPA and an HPA on the same CPU metric fight each other: one changes the requests,
 the other changes the replica count. Use the VPA in `Off` mode alongside an HPA, or
@@ -227,8 +236,13 @@ make verify CH=25    # check every task at once
 Everything happens in the Namespace `ch25-scale`: use `-n ch25-scale` on every command,
 or run `make use-namespace CH=25` once. The setup creates a Deployment `api`, one
 replica, a CPU request of `100m`, and a busy loop. Task 1 creates the HPA, and Tasks 2
-to 4 depend on it. Task 5 does not. Scaling takes a minute or two, so Task 2 waits
+to 4 depend on it. Tasks 5 and 6 do not. Scaling takes a minute or two, so Task 2 waits
 for it. The answers go to two files under `/tmp`, which teardown removes.
+
+For Task 6, the setup also installs the VPA recommender (version 1.8.1, in
+`kube-system`, without the updater and the admission controller) and a second busy
+Deployment, `worker`, that no HPA scales. Teardown removes the recommender and the
+VPA CRDs again.
 
 Full solutions are in [`lab/solutions.md`](lab/solutions.md).
 
@@ -270,6 +284,17 @@ example `autoscaling/v2`, into `/tmp/ch25-hpa-api.txt`.
 
 - File `/tmp/ch25-hpa-api.txt` holds the served version, such as `autoscaling/v2`
 
+### Task 6: A VPA that only recommends
+
+Create a VerticalPodAutoscaler named `worker` in `ch25-scale` that measures the
+Deployment `worker` and recommends requests for it, without changing its Pods.
+Then wait until the recommendation appears, which takes a minute or two.
+
+- Uses the `autoscaling.k8s.io/v1` API
+- Targets the Deployment `worker`
+- Update mode: `Off`
+- Its status holds a CPU target for the container `worker`
+
 ## Exam tips
 
 > **Exam tip:** `kubectl autoscale deployment NAME --cpu=50% --min=1 --max=4` writes the HPA in one command. The `--cpu-percent` flag is deprecated, so use `--cpu` with a percentage.
@@ -282,7 +307,7 @@ example `autoscaling/v2`, into `/tmp/ch25-hpa-api.txt`.
 
 - Creating a CPU-based HPA for Pods with no CPU request. The utilization cannot be computed, and the HPA reports `unknown`.
 - Setting a target above what the Pods can ever use, so the HPA never scales up.
-- Running a VPA in `Auto` mode alongside an HPA on the same CPU metric. They change the same workload from two sides.
+- Running a VPA in `Recreate` or `InPlaceOrRecreate` mode alongside an HPA on the same CPU metric. They change the same workload from two sides.
 - Expecting `kubectl top` to work on a cluster without metrics-server. It fails with `Metrics API not available`.
 - Using a `minReplicas` of 0 without the feature that allows it. The HPA refuses it on the default configuration.
 - Expecting the cluster autoscaler to add nodes for Pods that fail for another reason. It acts only on Pods the scheduler cannot place for lack of room.
@@ -357,7 +382,7 @@ example `autoscaling/v2`, into `/tmp/ch25-hpa-api.txt`.
 
 **3. B.** metrics-server collects CPU and memory from each kubelet and serves them through the metrics.k8s.io API. Both `kubectl top` and the HPA read that API.
 
-**4. B.** `Off` computes and publishes recommendations without applying them. `Initial` applies them only when Pods are created, and `Auto` evicts Pods so they restart with the new requests.
+**4. B.** `Off` computes and publishes recommendations without applying them. `Initial` applies them only when Pods are created, and `Recreate` (the default; the deprecated `Auto` does the same) evicts Pods so they restart with the new requests.
 
 **5. B.** The cluster autoscaler reacts to Pods the scheduler cannot place for lack of capacity, and it asks the cloud's node group to add a node. It also removes underused nodes whose Pods can be moved.
 

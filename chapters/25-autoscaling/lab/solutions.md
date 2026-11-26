@@ -65,8 +65,36 @@ kubectl api-resources --api-group=autoscaling --no-headers | awk '$NF=="Horizont
 
 The output names `autoscaling/v2`, the version this cluster serves.
 
+## Task 6: a VPA that only recommends
+
+There is no `kubectl create` command for a VPA, so write it as YAML:
+
+```bash
+kubectl -n ch25-scale apply -f - <<'EOF'
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  name: worker
+spec:
+  targetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: worker
+  updatePolicy:
+    updateMode: "Off"
+EOF
+kubectl -n ch25-scale get vpa worker
+```
+
+Quote `"Off"`: unquoted, YAML reads `Off` as the boolean `false`, and the API server
+rejects it. Repeat `kubectl get vpa worker` until the `CPU` and `MEM` columns show
+values; the recommender needs a minute or two of metrics before it publishes them.
+`kubectl describe vpa worker` shows the full recommendation: a `Target`, and the
+`Lower Bound` and `Upper Bound` around it.
+
 ## Why these checks accept any correct method
 
 The checks read the HPA's stored spec, the Deployment's ready replicas, the metric
-name in the HPA's status, and the served API version, plus the files you write. You
-can create the HPA with YAML or `kubectl autoscale`, and the checks do not care which.
+name in the HPA's status, the served API version, and the VPA's spec and status,
+plus the files you write. You can create the HPA with YAML or `kubectl autoscale`,
+and the checks do not care which.

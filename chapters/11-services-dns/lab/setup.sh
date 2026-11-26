@@ -5,9 +5,12 @@ here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${here}/../../../tools/lib.sh"
 # shellcheck source=/dev/null
 source "${here}/lab.env"
+# shellcheck source=/dev/null
+source "${here}/common.sh"
 
 require_lab_cluster
 lab_teardown_ns "$LAB_NS"
+docker rm -f "$LAB_OUTSIDE" >/dev/null 2>&1 || true
 lab_create_ns "$LAB_NS"
 
 k() { kubectl -n "$LAB_NS" "$@"; }
@@ -34,4 +37,11 @@ k rollout status deployment/web --timeout=180s >/dev/null
 k rollout status deployment/api --timeout=180s >/dev/null
 k wait --for=condition=Ready pod/dns-client --timeout=180s >/dev/null
 
+# Task 6: MetalLB hands LoadBalancer Services an address on the kind network,
+# and a container on that network plays a client outside the cluster.
+install_metallb
+docker run -d --name "$LAB_OUTSIDE" --label kubestronaut.io/lab=outside --network kind \
+  "$NETSHOOT_IMAGE" sleep infinity >/dev/null
+
 info "Lab ready. Namespace: ${LAB_NS} (use -n ${LAB_NS}, or run: make use-namespace CH=11)"
+info "Test from outside the cluster with: docker exec ${LAB_OUTSIDE} curl ..."

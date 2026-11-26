@@ -10,6 +10,8 @@ remove_controller() {
   fi
   kubectl delete namespace "$CONTROLLER_NS" --ignore-not-found --wait=true --timeout=180s >/dev/null
   kubectl delete ingressclass traefik --ignore-not-found >/dev/null
+  # Task 7: the chart's GatewayClass, if the release did not take it along
+  kubectl delete gatewayclass traefik --ignore-not-found >/dev/null 2>&1 || true
   crds="$(kubectl get crd -o name 2>/dev/null | grep -E '\.traefik\.io$' || true)"
   if [[ -n "$crds" ]]; then
     # shellcheck disable=SC2086  # one CRD name per word

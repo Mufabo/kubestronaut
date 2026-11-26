@@ -37,6 +37,13 @@ t5() {
   [[ -n "$want" ]] && file_is "$LAB_ANSWER_HPA_API" "$want"
 }
 
+t6() {
+  [[ "$(jp vpa/worker '{.spec.targetRef.kind}/{.spec.targetRef.name}')" == Deployment/worker ]] &&
+  [[ "$(jp vpa/worker '{.spec.updatePolicy.updateMode}')" == Off ]] &&
+  # the recommender has measured the container and published a CPU target for it
+  [[ -n "$(jp vpa/worker '{.status.recommendation.containerRecommendations[?(@.containerName=="worker")].target.cpu}')" ]]
+}
+
 check 1 "HPA api targets Deployment api, 1 to 4 replicas, cpu averageUtilization 50" \
   "autoscaling/v2 spec: scaleTargetRef, minReplicas, maxReplicas, metrics[0].resource" t1
 check 2 "Deployment api scaled to at least 2 ready replicas under its CPU load" \
@@ -47,5 +54,7 @@ check 4 "HPA api waits 60 seconds before scaling down (behavior.scaleDown.stabil
   "behavior is a field of the HPA spec, under scaleDown" t4
 check 5 "${LAB_ANSWER_HPA_API} holds the API version that serves HorizontalPodAutoscalers" \
   "kubectl api-resources --api-group=autoscaling shows the served version" t5
+check 6 "VPA worker targets Deployment worker in Off mode, and recommends a CPU request for its container" \
+  "apiVersion autoscaling.k8s.io/v1, spec.targetRef and spec.updatePolicy.updateMode; the recommendation takes a minute or two" t6
 
 finish_checks

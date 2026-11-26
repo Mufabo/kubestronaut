@@ -7,8 +7,12 @@ here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${here}/../../../tools/lib.sh"
 # shellcheck source=/dev/null
 source "${here}/lab.env"
+# shellcheck source=/dev/null
+source "${here}/common.sh"
 
 require_lab_cluster
 lab_teardown_ns "$LAB_NS"
+docker rm -f "$LAB_OUTSIDE" >/dev/null 2>&1 || true
+remove_metallb
 lab_restore_kubectx "${here}/.state/kubectx"
 info "Lab removed."

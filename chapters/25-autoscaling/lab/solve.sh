@@ -47,3 +47,22 @@ k get hpa api -o jsonpath='{.status.currentMetrics[0].resource.name}' > "$LAB_AN
 
 # Task 5
 kubectl api-resources --api-group=autoscaling --no-headers | awk '$NF=="HorizontalPodAutoscaler"{print $3}' > "$LAB_ANSWER_HPA_API"
+
+# Task 6: a VPA that only recommends, then wait for the recommendation
+k apply -f - >/dev/null <<'YAML'
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  name: worker
+spec:
+  targetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: worker
+  updatePolicy:
+    updateMode: "Off"
+YAML
+has_recommendation() {
+  [[ -n "$(k get vpa worker -o jsonpath='{.status.recommendation.containerRecommendations[0].target.cpu}' 2>/dev/null)" ]]
+}
+wait_for "the VPA recommendation for worker" 300 has_recommendation

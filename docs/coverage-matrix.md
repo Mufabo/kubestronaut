@@ -89,13 +89,13 @@ Storage Q12–Q13 (10%), Troubleshooting Q14–Q18 (30%).
 | Troubleshooting | Troubleshoot services and networking | 11, 21, 26 | 11/T5; 26/T2–T5; P3 Q5, Q14 | ch11-q02, q11; ch26-q02–q06 | drafted |
 | Workloads and Scheduling | Understand application deployments and how to perform rolling update and rollbacks | 05 | 05/T1-T6; P1 Q15-Q17 | ch05-q04..q08, q10..q14 | drafted |
 | Workloads and Scheduling | Use ConfigMaps and Secrets to configure applications | 03, 07 | 03/b2 C1, C2; 07/T1–T5; P1 Q11 | ch07-q01–q03, q08–q11 | drafted |
-| Workloads and Scheduling | Configure workload autoscaling | 25 | 25/T1–T5; P3 Q13 | ch25-q01–q03, q06, q07, q08, q09, q10, q11 | drafted (VPA and cluster autoscaler described, not installed) |
+| Workloads and Scheduling | Configure workload autoscaling | 25 | 25/T1–T6; P3 Q13 | ch25-q01–q03, q06, q07, q08, q09, q10, q11 | drafted (the VPA recommender installed and a VPA in Off mode used, 25/T6; the cluster autoscaler described only, since kind has no node groups) |
 | Workloads and Scheduling | Understand the primitives used to create robust, self-healing, application deployments | 04, 05, 10 | 04/T5; 05/T1, T2, T5; P1 Q18 | ch04-q04, q05; ch05-q01..q03, q06, q07 | drafted |
 | Workloads and Scheduling | Configure Pod admission and scheduling (limits, node affinity, etc.) | 04, 06, 10, 17 | 04/T4; 06/T5; 17/T1–T2; P1 Q5; P3 Q1 | ch04-q07, q09; ch06-q12; ch17-q02–q05 | drafted |
 | Servicing and Networking | Understand connectivity between Pods | 11, 21 | 21/T1–T2; P3 Q8 | ch21-q01, q02 | drafted |
 | Servicing and Networking | Define and enforce Network Policies | 21, 36 | 21/T3–T4; 36/T1–T3; P3 Q7 | ch21-q03–q06, q08, q09; ch36-q01–q05, q10, q11 | drafted |
-| Servicing and Networking | Use ClusterIP, NodePort, LoadBalancer service types and endpoints | 03, 11 | 03/b2 C5; 11/T1–T2; P1 Q11 | ch11-q01–q03, q08; LoadBalancer described only | drafted |
-| Servicing and Networking | Use the Gateway API to manage Ingress traffic | 12 | 12/T4–T5 | ch12-q05, q07, q10, q11 | drafted (checked against the API server; no controller runs) |
+| Servicing and Networking | Use ClusterIP, NodePort, LoadBalancer service types and endpoints | 03, 11 | 03/b2 C5; 11/T1–T2, T6; P1 Q11 | ch11-q01–q03, q08 | drafted (11/T6: a LoadBalancer Service gets an address from MetalLB and answers from outside the cluster) |
+| Servicing and Networking | Use the Gateway API to manage Ingress traffic | 12 | 12/T4–T5, T7 | ch12-q05, q07, q10, q11 | drafted (T4–T5 checked against the API server; 12/T7 turns on Traefik's Gateway API provider and routes requests through a Gateway and an HTTPRoute) |
 | Servicing and Networking | Know how to use Ingress controllers and Ingress resources | 12 | 12/T1–T3, T6 | ch12-q02–q04, q08, q12, q13 | drafted (Traefik installed with Helm; requests sent through it) |
 | Servicing and Networking | Understand and use CoreDNS | 11, 21 | 11/T3–T4; 21/T2 | ch11-q05–q07; ch21-q07, q11 | drafted |
 | Cluster Architecture, Installation and Configuration | Manage role based access control (RBAC) | 03, 23 | 03/b3; 23/T1–T2, T5; P3 Q10, Q11 | ch03-q05, q14; ch23-q02–q04, q06, q07 | drafted |

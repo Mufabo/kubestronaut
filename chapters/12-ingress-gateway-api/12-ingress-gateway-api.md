@@ -17,6 +17,7 @@ After this chapter you can:
 - Create a TLS Secret from a certificate and key, and reference it from an Ingress or a Gateway
 - Read the status conditions that a controller writes, and recognize when no controller is running
 - Install an Ingress controller with Helm at a pinned chart version, and send requests through it
+- Turn on a controller's Gateway API support, and route traffic through a Gateway and an HTTPRoute
 
 ## Concepts
 
@@ -174,9 +175,11 @@ conditions that matter are:
 - `Programmed`: the controller has configured its data plane with it.
 
 A GatewayClass has an `Accepted` condition too. When no controller claims the
-class, the condition stays `Unknown`. That is the state you will see in this
-chapter's lab, because the cluster runs no Gateway controller. Being `Unknown`
-does not mean the YAML is wrong. It means nothing has looked at the object yet.
+class, the condition stays `Unknown`. That is the state you will see in Tasks 4
+and 5 of this chapter's lab, whose class names a controller that does not run.
+Being `Unknown` does not mean the YAML is wrong. It means nothing has looked at
+the object yet. Task 7 then turns on a real Gateway controller, and its Gateway
+becomes `Programmed`.
 
 ## Guided walkthrough
 
@@ -464,8 +467,10 @@ creates the GatewayClass `ch12-edge-class`. Tasks 1 to 5 check the objects the
 API server stores: no controller runs for them, and the Services `shop`, `docs`,
 and `api` have no Pods. Task 6 is different: you install a real controller, and
 the check sends requests through it. For that, the setup also creates a Deployment
-and Service `web` that answer `hello from web`, and a Pod `client`. Task 6 needs
-`helm` (Chapter 14) and access to `https://traefik.github.io/charts`.
+and Service `web` that answer `hello from web`, and a Pod `client`. Task 7
+builds on Task 6: the same Traefik release also implements the Gateway API, and
+you route through it with a Gateway of your own. Tasks 6 and 7 need `helm`
+(Chapter 14) and access to `https://traefik.github.io/charts`.
 
 Full solutions are in [`lab/solutions.md`](lab/solutions.md).
 
@@ -532,6 +537,20 @@ through it to the Service `web`.
 - The controller's Service is of type `ClusterIP`, and its IngressClass `traefik` is not the cluster default
 - Ingress `web` in `ch12-edge`: class `traefik`, host `web.example.test`, path `/` with path type `Prefix`, backend Service `web`, port `80`
 - From the Pod `client`, a request to `http://traefik.ch12-traefik.svc.cluster.local` with the header `Host: web.example.test` returns `hello from web`
+
+### Task 7: Route through a Gateway
+
+Turn on Traefik's Gateway API provider in the release from Task 6, then send
+`gw.example.test` to the Service `web` through a Gateway and an HTTPRoute. With
+the provider on, the chart creates a GatewayClass `traefik`. Traefik serves a
+Gateway listener on the entry point with the same port; its HTTP entry point,
+`web`, listens on port `8000`, and the controller's Service forwards port `80`
+to it.
+
+- Helm release `traefik` in `ch12-traefik` keeps the settings from Task 6, and the GatewayClass `traefik` is `Accepted`
+- Gateway `web-gw` in `ch12-edge`: GatewayClass `traefik`, one listener named `web`, protocol `HTTP`, port `8000`, and the Gateway is `Programmed`
+- HTTPRoute `web-route` in `ch12-edge`: attached to `web-gw`, hostname `gw.example.test`, backend Service `web`, port `80`
+- From the Pod `client`, a request to `http://traefik.ch12-traefik.svc.cluster.local` with the header `Host: gw.example.test` returns `hello from web`
 
 ## Exam tips
 

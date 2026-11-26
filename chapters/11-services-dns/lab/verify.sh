@@ -71,6 +71,18 @@ t5() {
   serves api api
 }
 
+t6() {
+  local ip out
+  [[ "$(jp svc/web-lb '{.spec.type}')" == LoadBalancer ]] &&
+  [[ "$(jp svc/web-lb '{.spec.ports[0].port}/{.spec.ports[0].targetPort}')" == 8080/80 ]] &&
+  [[ "$(jp svc/web-lb '{.spec.selector.app}')" == web ]] || return 1
+  ip="$(jp svc/web-lb '{.status.loadBalancer.ingress[0].ip}')"
+  [[ -n "$ip" ]] || return 1
+  # from a container on the kind network, outside the cluster
+  out="$(docker exec "$LAB_OUTSIDE" curl -s --max-time 3 "http://${ip}:8080/" 2>/dev/null)"
+  grep -q "Welcome to nginx" <<<"$out"
+}
+
 check 1 "Service web (ClusterIP, port 80 to 80, selector app=web) routes to every ready web Pod" \
   "kubectl -n ${LAB_NS} get endpointslices -l kubernetes.io/service-name=web shows the Pod IPs" t1
 check 2 "Service web-np is a NodePort on 30080 that routes to the web Pods" \
@@ -81,5 +93,7 @@ check 4 "Service legacy is an ExternalName Service for db.example.internal, and 
   "use the ExternalName type with --external-name; a lookup gives a canonical name" t4
 check 5 "Service api selects the api Pods again, and routes to every ready one" \
   "the selector must match the labels on the Pods exactly" t5
+check 6 "Service web-lb (LoadBalancer, port 8080 to 80, selector app=web) has an external IP that answers from outside the cluster" \
+  "kubectl expose deployment web --name=web-lb --type=LoadBalancer --port=8080 --target-port=80; test with docker exec ${LAB_OUTSIDE} curl http://<EXTERNAL-IP>:8080" t6
 
 finish_checks

@@ -154,9 +154,65 @@ service.type=ClusterIP` is accepted and ignored, so the Service stays
 unless you turn that off, which would make Traefik serve the Ingress `api` from
 Task 3 too, because it names no class.
 
+## Task 7: the Gateway API through Traefik
+
+Turn the provider on in the same release. `--reuse-values` keeps the two settings
+from Task 6; without it, `helm upgrade` falls back to the chart's defaults and
+the Service becomes a `LoadBalancer` again. `gateway.enabled=false` skips the
+chart's own example Gateway, because you write one yourself:
+
+```bash
+helm upgrade traefik traefik/traefik --version 41.7.1 -n ch12-traefik --reuse-values \
+  --set providers.kubernetesGateway.enabled=true --set gateway.enabled=false
+kubectl -n ch12-traefik rollout status deployment/traefik
+kubectl get gatewayclass traefik
+```
+
+The GatewayClass shows `ACCEPTED True` once Traefik has claimed it. Then the
+Gateway and the route:
+
+```bash
+kubectl -n ch12-edge apply -f - <<'EOF'
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: web-gw
+spec:
+  gatewayClassName: traefik
+  listeners:
+    - name: web
+      protocol: HTTP
+      port: 8000
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: web-route
+spec:
+  parentRefs:
+    - name: web-gw
+  hostnames:
+    - gw.example.test
+  rules:
+    - backendRefs:
+        - name: web
+          port: 80
+EOF
+kubectl -n ch12-edge get gateway web-gw
+kubectl -n ch12-edge exec client -- wget -qO- --header "Host: gw.example.test" http://traefik.ch12-traefik.svc.cluster.local
+```
+
+The Gateway shows `PROGRAMMED True`, and the request prints `hello from web`. A
+rule with no `matches` matches every path. The listener port is the trap: Traefik
+programs a listener on the entry point with the same port, and its HTTP entry
+point listens on `8000`, not `80`. With `port: 80` the Gateway stays
+`PROGRAMMED False`, and `kubectl describe gateway web-gw` says why.
+
 ## Why these checks accept any correct method
 
-Each check reads the object the API server stores: the Ingress's class, host,
+Tasks 1 to 5 read the object the API server stores: the Ingress's class, host,
 path, path type and backend; the TLS Secret's type; and the Gateway's and
-HTTPRoute's fields. The checks do not run traffic, because the lab has no
-controller. You can create the objects with YAML or with `kubectl create ingress`.
+HTTPRoute's fields. Those checks do not run traffic, because no controller
+handles their classes. Tasks 6 and 7 read the release, the Service, the classes,
+and the status the controller writes, and then send a request through it. You
+can create the objects with YAML or with `kubectl create ingress`.
