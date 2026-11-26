@@ -163,10 +163,10 @@
 - id: ch12-q12
   type: mcq
   exams: [CKA, CKAD]
-  question: "You install an Ingress controller whose chart makes its IngressClass the cluster default. What happens to an existing Ingress that has no `ingressClassName`?"
+  question: "You install an Ingress controller whose chart makes its IngressClass the cluster default. What happens to an Ingress that is created afterwards without `ingressClassName`?"
   choices:
     - "Nothing; Ingresses without a class are never served"
-    - "The new controller starts serving it, because the default class applies to Ingresses that name none"
+    - "The new controller serves it, because the default class applies to Ingresses that name none"
     - "The API server rejects the Ingress until a class is set"
     - "It is served by every controller in the cluster"
   answer: B

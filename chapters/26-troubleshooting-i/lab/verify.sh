@@ -39,8 +39,10 @@ t3() {
 
 t4() {
   # the policy admits the client's role on port 8080, and the client reaches the app Pod
-  [[ "$(jp networkpolicy/lock '{.spec.ingress[0].from[0].podSelector.matchLabels.role}')" == client ]] || return 1
-  local ip
+  # role=client is a peer of some ingress rule, wherever the reader put it
+  local ip roles
+  roles="$(jp networkpolicy/lock '{.spec.ingress[*].from[*].podSelector.matchLabels.role}')"
+  [[ " ${roles} " == *" client "* ]] || return 1
   ip="$(pod_ips app=app | head -1)"
   [[ -n "$ip" ]] && k exec client -- sh -c "curl -s -m 5 http://${ip}:8080/" 2>/dev/null | grep -q app-ok
 }

@@ -470,7 +470,7 @@ Create a Pod with the following specification. It needs `app-config` and
 
 - Name: `web`
 - Image: `nginx:1.27` (a single container)
-- Every key of `app-config` is an environment variable in the container
+- Every key of `app-config` is an environment variable in the container, imported with `envFrom` (not one `env` entry per key)
 - The environment variable `DB_PASSWORD` is read from the `password` key of `db-credentials`, not written as a literal value
 - Status: `Running`
 

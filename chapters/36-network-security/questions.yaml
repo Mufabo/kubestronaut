@@ -37,14 +37,14 @@
 - id: ch36-q04
   type: mcq
   exams: [CKS]
-  question: "To let Pods labeled app=frontend call Pods labeled app=api on port 8080, which set of rules is required?"
+  question: "A Namespace has a default-deny NetworkPolicy for both ingress and egress. To let Pods labeled app=frontend call Pods labeled app=api on port 8080, which set of rules is required?"
   choices:
     - "Only an ingress rule on the app=api Pods"
     - "Only an egress rule on the app=frontend Pods"
     - "An egress rule on the app=frontend Pods and an ingress rule on the app=api Pods"
     - "A ClusterRole that grants the frontend Pods access to the api Pods"
   answer: C
-  explanation: "Both halves of a flow need a policy. The sender needs egress allowed, and the receiver needs ingress allowed. A missing half drops the traffic."
+  explanation: "Under a default deny in both directions, every Pod is isolated for ingress and for egress, so both halves of the flow need an allow rule: egress on the sender and ingress on the receiver. A missing half drops the traffic. Without a default deny, only the direction in which a Pod is isolated needs a rule."
 
 - id: ch36-q05
   type: mcq
@@ -100,11 +100,11 @@
   question: "By default, how are Secrets stored in etcd?"
   choices:
     - "Encrypted with the node's private key"
-    - "Base64-encoded, which is not encryption"
+    - "Unencrypted, so anyone who can read the etcd data can read them"
     - "Hashed, so they cannot be read back"
     - "Encrypted with the API server's TLS certificate"
   answer: B
-  explanation: "Without an EncryptionConfiguration, Secret values are only base64-encoded in etcd. Anyone who can read the etcd data can decode them, so encryption at rest must be enabled explicitly."
+  explanation: "Without an EncryptionConfiguration, Secrets are written to etcd unencrypted. Base64 is only how the API shows the values; it is an encoding, not protection. Anyone who can read the etcd data or a backup of it can read them, so encryption at rest must be enabled explicitly."
 
 - id: ch36-q10
   type: mcq

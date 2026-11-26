@@ -85,11 +85,15 @@ the API server.
 
 ```bash
 cd /opt/ch30
-curl -fsSLO https://dl.k8s.io/release/v1.37.0/bin/linux/amd64/kubectl.sha512
-for f in kubectl-*; do echo "$(cat kubectl.sha512)  $f" | sha512sum --check; done
-sudo rm kubectl.sha512 <the two files that FAILED>
+want="$(curl -fsSL https://dl.k8s.io/release/v1.37.0/bin/linux/amd64/kubectl.sha512)"
+for f in kubectl-*; do echo "$want  $f" | sha512sum --check; done
+sudo rm <the two files that FAILED>
 ls /opt/ch30
 ```
+
+The checksum goes into a variable, not a file: `/opt/ch30` belongs to root, so a
+download into it would need `sudo`, and the directory must end up holding only
+the genuine `kubectl`.
 
 One file fails because one byte was added, the other because it is the previous
 release's `kubectl`: same name, a different binary. Only the checksum tells them apart.

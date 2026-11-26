@@ -128,7 +128,8 @@ answer is a CNAME.
 ### kube-proxy
 
 The Service IP is virtual: no interface holds it. The `kube-proxy` on each node
-programs the node's packet filter (iptables or IPVS) so that traffic to the
+programs the node's packet filter (iptables or nftables; Chapter 21 covers the
+modes) so that traffic to the
 Service IP is rewritten to one of the Pods. Because this happens in the kernel,
 it does not need a process in the path of each connection. You rarely need to
 configure kube-proxy directly for the exams, but knowing that it is the component
@@ -137,10 +138,11 @@ that turns a Service into forwarding rules explains the behaviour you see.
 ## Guided walkthrough
 
 The walkthrough works in the Namespace `ch11-svc`. The outputs below are trimmed:
-generated fields, names, and IPs differ on your cluster. The walkthrough names
-its objects `shop` so that they do not clash with the lab. The lab later in this
+generated fields, names, and IPs differ on your cluster. The lab later in this
 chapter uses that Namespace too, so run `make lab CH=11` before you start, or run
-the commands in any Namespace you choose.
+the commands in any Namespace you choose. The walkthrough creates a Service
+`legacy` and takes node port `30080`, which the lab's tasks need as well, so run
+`make reset CH=11` when you finish the walkthrough and before you start the lab.
 
 ### Expose a Deployment as a Service
 

@@ -147,15 +147,15 @@ Significant changes go through a **KEP** (Kubernetes Enhancement Proposal). A KE
 
 ### Release cadence and the deprecation policy
 
-Kubernetes ships **three minor releases per year**. Each minor release receives patch releases for a limited period, so operators must upgrade regularly to stay supported. Chapter 33 covers upgrades in practice.
+Kubernetes ships **three minor releases per year**. Each minor release receives patch releases for a limited period, so operators must upgrade regularly to stay supported. Chapter 19 covers upgrades in practice.
 
 The **deprecation policy** tells users how long an API stays available after it is deprecated. In outline:
 
-- A GA (stable) API version that is deprecated remains served for at least **12 months or 3 releases, whichever is longer**.
-- A beta API version remains served for a shorter period, as set by the policy.
+- A GA (stable) API version may be marked as deprecated, but **it is not removed within a major version of Kubernetes**. In practice a `v1` API stays.
+- A beta API version is deprecated no more than 9 months or 3 minor releases after it is introduced, and is no longer served **9 months or 3 minor releases after its deprecation** (whichever is longer in both cases).
 - An alpha API can change or disappear without notice, which is why it is off by default.
 
-The policy protects cluster users from surprise. It is also the reason you check a manifest's `apiVersion` against the cluster before you upgrade. Chapter 26 shows what a deprecated API looks like when it breaks.
+The policy protects cluster users from surprise. It is also the reason you check a manifest's `apiVersion` against the cluster before you upgrade. Chapter 15 shows how to find and replace a deprecated API.
 
 ## 6. Putting it together
 
@@ -174,7 +174,7 @@ You need a browser. Work through these and note the answers.
 
 1. Open the CNCF landscape and find one service mesh project and one serverless or event-driven project. For each, record its **category**, its **maturity level**, and the one problem it says it solves.
 2. Read the Istio documentation page on ambient mode. Write down which functions run in the node-level component and which need a waypoint proxy. Then describe one workload that would not need a waypoint.
-3. Read the Kubernetes deprecation policy on kubernetes.io. For a GA API version that is deprecated in release 1.35, work out the earliest release in which it may be removed, using the rule "12 months or 3 releases, whichever is longer".
+3. Read the Kubernetes deprecation policy on kubernetes.io. For a beta API version that is deprecated in release 1.35, work out the earliest release in which it may stop being served, using the rule "9 months or 3 minor releases, whichever is longer". Then say what the policy promises for a GA API version.
 4. Find the Kubernetes SIG that owns networking and read its charter. Name two areas of the project it owns, and one open KEP it is currently reviewing. Record that KEP's stage.
 5. Write one paragraph describing the persona you would hire first at a company with ten developers and one shared cluster. Justify the choice in terms of the responsibilities in this chapter.
 
@@ -184,7 +184,7 @@ There are no automated checks for this exercise. Compare your answers with a stu
 
 > **Exam tip:** KCNA questions on this chapter are about vocabulary and recognition. Know the sidecar and ambient models, what Knative and KEDA are for, and which persona owns which responsibility.
 >
-> **Exam tip:** Remember the release cadence (three minor releases per year) and the GA deprecation rule (12 months or 3 releases, whichever is longer). Both appear as plain facts in multiple-choice questions.
+> **Exam tip:** Remember the release cadence (three minor releases per year) and the deprecation rules: a GA API version is not removed within a major version, and a deprecated beta version is served for 9 more months or 3 more minor releases, whichever is longer.
 >
 > **Exam tip:** Separate the governance terms. SIGs own areas long term, working groups are temporary, KEPs are design proposals, and the Steering Committee governs the project. Questions often swap them.
 
@@ -299,12 +299,12 @@ There are no automated checks for this exercise. Compare your answers with a stu
 - **C.** Three
 - **D.** Four
 
-**15.** `KCNA` Under the Kubernetes deprecation policy, how long must a deprecated GA API version remain served?
+**15.** `KCNA` Under the Kubernetes deprecation policy, how long does a deprecated GA API version remain served?
 
 - **A.** Three months
 - **B.** One release
-- **C.** At least 12 months or 3 releases, whichever is longer
-- **D.** Until the next major version of Kubernetes
+- **C.** For 9 months or 3 minor releases, whichever is longer
+- **D.** At least until the next major version of Kubernetes
 
 <details>
 <summary>Answers</summary>
@@ -337,7 +337,7 @@ There are no automated checks for this exercise. Compare your answers with a stu
 
 **14. C.** Kubernetes ships three minor releases per year. Each minor release receives patch releases for a limited time, so operators must upgrade regularly.
 
-**15. C.** A deprecated GA API version remains served for at least 12 months or 3 releases, whichever is longer. Alpha APIs carry no such guarantee, which is why they are off by default.
+**15. D.** A GA API version may be marked as deprecated, but the policy does not allow removing it within a major version of Kubernetes. The 9 months or 3 minor releases is the rule for a deprecated beta version. Alpha APIs carry no such guarantee, which is why they are off by default.
 
 </details>
 

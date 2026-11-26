@@ -196,6 +196,8 @@ spec:
   template:
     metadata: {labels: {app: cart}}
     spec:
+      # On the probe's node, so that question 7's fault on kbook-worker2 cannot fail question 6.
+      nodeSelector: {kubernetes.io/hostname: kbook-worker}
       terminationGracePeriodSeconds: 0
       containers:
         - name: cart

@@ -41,7 +41,9 @@ State Recv-Q Send-Q Local Address:Port Peer Address:PortProcess
 
 Only the header is left. `systemctl stop` alone would pass until the next boot,
 but the check also wants the unit disabled; `kill` would not help at all, because
-the unit restarts its process (`Restart=always`). `systemctl mask` passes as well.
+the unit restarts its process (`Restart=always`). `systemctl mask` is not an option here: it links the unit's name in
+`/etc/systemd/system` to `/dev/null`, and this unit's own file is already there,
+so `mask` refuses.
 
 ## Task 2: Take sudo away from ops
 

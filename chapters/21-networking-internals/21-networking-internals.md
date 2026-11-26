@@ -89,9 +89,12 @@ kube-proxy has modes, set in its ConfigMap in `kube-system`:
 
 - `iptables` (the default in many clusters) writes chains of rules, one per
   Service and one per endpoint, and picks a Pod at random for each new connection.
-- `ipvs` uses the kernel's IP virtual server, which scales better with many
-  Services and offers more load-balancing algorithms.
-- `nftables` uses the newer packet filter framework, in the same role.
+- `nftables` uses the newer packet filter framework, in the same role. It has been
+  stable since v1.33, scales better than `iptables` with many Services, and is
+  the mode the project recommends for new Linux clusters.
+- `ipvs` uses the kernel's IP virtual server. It was added for large clusters,
+  but it is deprecated since v1.35 and will be removed; clusters that use it
+  should move to `nftables`. You may still meet it on older clusters.
 
 Find the mode of a running cluster in the ConfigMap:
 

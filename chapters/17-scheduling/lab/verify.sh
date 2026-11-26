@@ -21,9 +21,15 @@ t1() {
 }
 
 t2() {
+  # Any toleration that matches maintenance=true:NoSchedule: operator Equal with the
+  # value, or Exists; the effect named, or left empty (which matches every effect).
+  local effect op value
+  effect="$(jp pod/tolerant '{.spec.tolerations[?(@.key=="maintenance")].effect}')"
+  op="$(jp pod/tolerant '{.spec.tolerations[?(@.key=="maintenance")].operator}')"
+  value="$(jp pod/tolerant '{.spec.tolerations[?(@.key=="maintenance")].value}')"
   [[ "$(jp pod/tolerant '{.spec.nodeName}')" == "$WORKER_B" ]] &&
-  [[ "$(jp pod/tolerant '{.spec.tolerations[?(@.key=="maintenance")].effect}')" == NoSchedule ]] &&
-  [[ "$(jp pod/tolerant '{.spec.tolerations[?(@.key=="maintenance")].value}')" == true ]] &&
+  [[ "$effect" == NoSchedule || -z "$effect" ]] &&
+  [[ "$op" == Exists || "$value" == true ]] &&
   [[ "$(jp pod/tolerant '{.status.phase}')" == Running ]]
 }
 

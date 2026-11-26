@@ -614,10 +614,10 @@ through it to the Service `web`.
 
 **11. (Task)** `CKAD` In namespace `prod`, create an HTTPRoute named `web-route` attached to the Gateway `public`. It matches hostname `web.prod.example.test` and path prefix `/app`, and sends the traffic to the Service `web` on port `80`. Show the route's parent and backend.
 
-**12.** `CKA` `CKAD` You install an Ingress controller whose chart makes its IngressClass the cluster default. What happens to an existing Ingress that has no `ingressClassName`?
+**12.** `CKA` `CKAD` You install an Ingress controller whose chart makes its IngressClass the cluster default. What happens to an Ingress that is created afterwards without `ingressClassName`?
 
 - **A.** Nothing; Ingresses without a class are never served
-- **B.** The new controller starts serving it, because the default class applies to Ingresses that name none
+- **B.** The new controller serves it, because the default class applies to Ingresses that name none
 - **C.** The API server rejects the Ingress until a class is set
 - **D.** It is served by every controller in the cluster
 

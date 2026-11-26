@@ -29,6 +29,13 @@ revision_values_have() {
   out="$(h get values "$1" --revision "$2" 2>/dev/null)" || return 1
   grep -Fq -- "$3" <<<"$out"
 }
+# revision_values_match <release> <revision> <regex>: the same, with an extended regular expression.
+# A tag set with --set is stored quoted, one from a values file may not be.
+revision_values_match() {
+  local out
+  out="$(h get values "$1" --revision "$2" 2>/dev/null)" || return 1
+  grep -Eq -- "$3" <<<"$out"
+}
 
 # Tasks 1 and 2 check what their revisions recorded, not the current revision:
 # later tasks (the rollback) add revisions on top of them.
@@ -39,7 +46,7 @@ t1() {
 
 t2() {
   history_has shop "Upgrade complete" &&
-  revision_values_have shop 2 'tag: "1.27"' &&
+  revision_values_match shop 2 'tag: "?1\.27"?[[:space:]]*$' &&
   revision_values_have shop 2 "replicaCount: 2"
 }
 

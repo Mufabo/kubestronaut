@@ -30,13 +30,15 @@ t2() {
 }
 
 t3() {
-  local vol
+  local vol mode
   running ch33-apps api || return 1
   [[ "$(jp ch33-apps pod/api '{.spec.containers[0].image}')" == busybox:1.36 ]] || return 1
   vol="$(jp ch33-apps pod/api '{.spec.volumes[?(@.secret.secretName=="db-pass")].name}')"
   [[ -n "$vol" && "$vol" != *" "* ]] || return 1
   [[ "$(jp ch33-apps pod/api "{.spec.containers[0].volumeMounts[?(@.name==\"${vol}\")].mountPath}")" == /etc/db ]] || return 1
-  [[ "$(kubectl -n ch33-apps exec api -- stat -L -c %a /etc/db/password 2>/dev/null)" == 400 ]] || return 1
+  # 0400 as written; the kubelet widens it to 0440 when the Pod sets fsGroup
+  mode="$(kubectl -n ch33-apps exec api -- stat -L -c %a /etc/db/password 2>/dev/null)"
+  [[ "$mode" == 400 || "$mode" == 440 ]] || return 1
   [[ -z "$(jp ch33-apps pod/api '{.spec.containers[*].env[*].valueFrom.secretKeyRef.name}{.spec.containers[*].envFrom[*].secretRef.name}')" ]] || return 1
   [[ -z "$(jp ch33-apps pod/api '{.spec.volumes[*].projected.sources[*].serviceAccountToken.path}')" ]]
 }

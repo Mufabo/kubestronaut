@@ -51,12 +51,12 @@
   exams: [CKAD]
   question: "A Pod with containers `app` and `log-shipper` runs in namespace `prod`. Which command shows the logs of `log-shipper` only?"
   choices:
-    - "`kubectl -n prod logs POD log-shipper`"
+    - "`kubectl -n prod logs log-shipper`"
     - "`kubectl -n prod logs POD -c log-shipper`"
     - "`kubectl -n prod logs POD --container=app`"
     - "`kubectl -n prod describe POD log-shipper`"
   answer: B
-  explanation: "`-c` (or `--container`) selects the container. Without it, `kubectl` uses the first container in the Pod, which may not be the one you want. Passing the container name as a positional argument is not valid for `logs`."
+  explanation: "`-c` (or `--container`) selects the container. Without it, `kubectl` uses the first container in the Pod, which may not be the one you want. `logs log-shipper` looks for a Pod of that name, and `describe` does not print logs."
 
 - id: ch09-q06
   type: mcq

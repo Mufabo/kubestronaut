@@ -124,12 +124,11 @@ kubectl -n ch20-etcd get configmaps
 kubectl get nodes
 ```
 
-```text
-NAME               DATA   AGE
-current            1      4m11s
-kube-root-ca.crt   1      4m13s
-The connection to the server 192.168.56.10:6443 was refused - did you specify the right host or port?
-```
+Until the API server is up, `kubectl` prints `The connection to the server
+192.168.56.10:6443 was refused`; repeat the `/readyz` request until it prints
+`ok`. The list of ConfigMaps then shows `legacy` and `kube-root-ca.crt`, and no
+`current`, and all three nodes are `Ready` (the workers can take a few seconds
+to report again).
 
 ### Why the API server has to restart
 

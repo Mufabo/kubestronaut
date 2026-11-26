@@ -20,7 +20,8 @@ pod_api() {
 t1() {
   can list pods -n "$LAB_NS" && can get pods -n "$LAB_NS" &&
   ! can delete pods -n "$LAB_NS" &&
-  [[ "$(jp role/pod-reader '{.rules[0].verbs}')" == '["get","list"]' ]] &&
+  # exactly get and list, in any order
+  [[ "$(jp role/pod-reader '{.rules[0].verbs[*]}' | tr ' ' '\n' | sort | tr '\n' ' ')" == "get list " ]] &&
   [[ "$(jp rolebinding/reporter-reads-pods '{.subjects[0].name}')" == reporter ]]
 }
 

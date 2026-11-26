@@ -28,7 +28,7 @@ mkdir -p "$LAB_CERT_DIR"
 openssl req -x509 -newkey rsa:2048 -nodes -days 1 -subj "/CN=api.ch36.example" \
   -keyout "$LAB_KEY" -out "$LAB_CERT" >/dev/null 2>&1
 
-info "Lab ready. Namespace: ${LAB_NS}. Services: frontend, api, db, stranger. Certificate: ${LAB_CERT}"
+info "Lab ready. Namespace: ${LAB_NS}. Pods: frontend, api, db, stranger. Services: api, db. Certificate: ${LAB_CERT}"
 }
 
 part_verify() {
@@ -51,7 +51,8 @@ resolves() { [[ "$(k exec "$1" -- nslookup "$2" 2>&1)" == *"Name:"* ]]; }
 
 t1() {
   [[ "$(jp networkpolicy/default-deny '{.spec.podSelector}')" == '{}' ]] &&
-  [[ "$(jp networkpolicy/default-deny '{.spec.policyTypes}')" == '["Ingress","Egress"]' ]] &&
+  # both policy types, in either order
+  [[ "$(jp networkpolicy/default-deny '{.spec.policyTypes[*]}' | tr ' ' '\n' | sort | tr '\n' ' ')" == "Egress Ingress " ]] &&
   [[ "$(jp networkpolicy/allow-dns '{.spec.policyTypes}')" == '["Egress"]' ]] &&
   [[ "$(jp networkpolicy/allow-dns '{.spec.egress[0].ports[*].port}')" == "53 53" ]] &&
   blocked stranger http://api:8080/ &&

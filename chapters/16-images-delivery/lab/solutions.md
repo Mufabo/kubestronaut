@@ -89,10 +89,10 @@ check reads its specification, which is correct.
 ## Task 6: switch `shop` from blue to green
 
 ```bash
-kubectl get pods -l app=shop -L version
-kubectl patch service shop -p '{"spec":{"selector":{"version":"green"}}}'
-kubectl get endpointslices -l kubernetes.io/service-name=shop -o wide
-kubectl exec client -- wget -qO- http://shop
+kubectl -n ch16-delivery get pods -l app=shop -L version
+kubectl -n ch16-delivery patch service shop -p '{"spec":{"selector":{"version":"green"}}}'
+kubectl -n ch16-delivery get endpointslices -l kubernetes.io/service-name=shop -o wide
+kubectl -n ch16-delivery exec client -- wget -qO- http://shop
 ```
 
 The patch merges into the selector, so `app: shop` stays and only `version`

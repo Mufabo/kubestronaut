@@ -608,7 +608,7 @@ Something on `node1` listens on TCP port 8081. Nobody needs it. Find the systemd
 service that runs it, stop it, and make sure it does not start again at boot.
 
 - File on `cp1`: `/tmp/ch32-service.txt`, the unit's name with its suffix (for example `name.service`), nothing else
-- The unit is not active, and is disabled (or masked)
+- The unit is not active, and is disabled
 - Nothing listens on TCP port 8081 on `node1`
 
 ### Task 2: Take sudo away from ops

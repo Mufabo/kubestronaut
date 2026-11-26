@@ -423,11 +423,12 @@ NAME       STATUS   VOLUME                                     CAPACITY   ACCESS
 retained   Bound    pvc-cd7a51f9-914a-46cd-a7d6-702ab61aa194   50Mi       RWO            demo-retain    <unset>                 8s
 ```
 
-Now delete the namespace, which deletes the claim and the Pod, and look at the
-PVs that remain:
+Now delete the walkthrough's Pods and claims, and look at the PVs that remain.
+Do not delete the Namespace itself: the rest of the walkthrough and the lab use
+it.
 
 ```bash
-kubectl delete namespace ch13-storage --wait=true
+kubectl -n ch13-storage delete pods,pvc --all --wait=true
 kubectl get pv
 ```
 
@@ -635,7 +636,8 @@ make verify CH=13    # check every task at once
 Everything happens in the Namespace `ch13-storage`: use `-n ch13-storage` on
 every command, or run `make use-namespace CH=13` once. The Namespace starts
 empty. The lab creates one cluster-scoped PersistentVolume (`ch13-manual-pv`)
-and one StorageClass (`ch13-retain`), and teardown removes both.
+and one StorageClass (`ch13-retain`); teardown removes both, and the volume that
+Task 5 provisions from that class.
 
 Full solutions are in [`lab/solutions.md`](lab/solutions.md).
 

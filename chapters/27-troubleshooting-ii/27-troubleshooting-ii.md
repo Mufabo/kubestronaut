@@ -30,7 +30,8 @@ Every kubelet reports its node's **conditions** to the API server: `Ready`,
 plus `MemoryPressure`, `DiskPressure`, and `PIDPressure`, which turn `True`
 when the node runs short. It also renews a Lease in `kube-node-lease` as a
 heartbeat. The node controller in the controller manager watches those
-heartbeats; when they stop for 40 seconds, it sets every condition to
+heartbeats; when they stop for 50 seconds (`--node-monitor-grace-period`,
+40 seconds before v1.32), it sets every condition to
 `Unknown` with the message `Kubelet stopped posting node status.` and adds two
 taints:
 
@@ -55,6 +56,9 @@ The kubelet is not a Pod. It is a systemd service, configured in layers:
 | `/etc/default/kubelet` | Your extra flags (`KUBELET_EXTRA_ARGS`) |
 | `/var/lib/kubelet/config.yaml` | The KubeletConfiguration: cgroup driver, static Pod path, runtime endpoint |
 | `/etc/kubernetes/kubelet.conf` | The kubelet's kubeconfig: the API server's address, and its client certificate |
+
+The first two paths are written the way `systemctl` prints them. On Ubuntu,
+`/lib` is a link to `/usr/lib`, so both files live under `/usr/lib/systemd/system`.
 
 `systemctl status kubelet` says whether it runs, `systemctl cat kubelet` shows
 the unit with its drop-ins, and `journalctl -u kubelet` holds its log. After
@@ -308,8 +312,8 @@ node1   NotReady   <none>          31m   v1.37.0
 node2   Ready      <none>          31m   v1.37.0
 ```
 
-It took about 50 seconds: the 40-second grace period, plus the controller's
-polling. The conditions and taints say why:
+It took about 50 seconds: the 50-second grace period, give or take the
+controller's 5-second polling and the kubelet's last report. The conditions and taints say why:
 
 ```bash
 kubectl describe node node1 | sed -n "/^Conditions:/,/^Addresses:/p"

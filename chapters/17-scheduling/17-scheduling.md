@@ -327,7 +327,7 @@ Create a Pod with the following specification.
 
 - Name: `pinned`
 - Image: `busybox:1.36`, running `sleep 3600`
-- It runs on the node labelled `disk=ssd`
+- It runs on the node labelled `disk=ssd`, chosen with a `nodeSelector`
 - Status: `Running`
 
 ### Task 2: Run a Pod on the maintenance node

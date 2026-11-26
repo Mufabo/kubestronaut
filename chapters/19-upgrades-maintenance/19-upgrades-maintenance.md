@@ -422,7 +422,7 @@ weakening the protection `web` has.
 
 **11. (Task)** `CKA` Take the worker `node1` out of service for maintenance: no Pods except DaemonSet Pods may remain on it, and no new Pods may be scheduled there. Some Pods on it use `emptyDir` volumes.
 
-**12. (Task)** `CKA` On the worker `node1`, which the control plane at v1.37.0 has already been upgraded for, upgrade the node's kubelet configuration and its kubelet to `1.37.0`, and keep the packages held. The apt source already points at the v1.35 repository, and the node is drained.
+**12. (Task)** `CKA` On the worker `node1`, which the control plane at v1.37.0 has already been upgraded for, upgrade the node's kubelet configuration and its kubelet to `1.37.0`, and keep the packages held. The apt source already points at the v1.37 repository, and the node is drained.
 
 **13. (Task)** `CKA` In namespace `shop`, create a PodDisruptionBudget named `api` that keeps at most one Pod labelled `app=api` unavailable during voluntary disruptions, and show how many disruptions it currently allows.
 

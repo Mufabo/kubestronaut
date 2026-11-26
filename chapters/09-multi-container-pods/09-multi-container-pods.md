@@ -651,7 +651,7 @@ plane node.
 
 **5.** `CKAD` A Pod with containers `app` and `log-shipper` runs in namespace `prod`. Which command shows the logs of `log-shipper` only?
 
-- **A.** `kubectl -n prod logs POD log-shipper`
+- **A.** `kubectl -n prod logs log-shipper`
 - **B.** `kubectl -n prod logs POD -c log-shipper`
 - **C.** `kubectl -n prod logs POD --container=app`
 - **D.** `kubectl -n prod describe POD log-shipper`
@@ -698,7 +698,7 @@ plane node.
 
 **4. B.** All containers of a Pod share one network namespace, so they reach each other on `localhost` and on the Pod's ports. They do not share a filesystem, and no Service is created for them. Sharing files requires a volume, which is a different mechanism.
 
-**5. B.** `-c` (or `--container`) selects the container. Without it, `kubectl` uses the first container in the Pod, which may not be the one you want. Passing the container name as a positional argument is not valid for `logs`.
+**5. B.** `-c` (or `--container`) selects the container. Without it, `kubectl` uses the first container in the Pod, which may not be the one you want. `logs log-shipper` looks for a Pod of that name, and `describe` does not print logs.
 
 **6. B.** With a shared process namespace, every container in the Pod sees the same processes, and the pause container is process 1. The containers do not share their root filesystems, and the environment and Secrets are not shared by this setting.
 

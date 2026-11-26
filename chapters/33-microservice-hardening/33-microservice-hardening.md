@@ -408,7 +408,7 @@ Make its Pods pass, without changing the Namespace.
 In `ch33-apps`, create a Pod `api` (image `busybox:1.36`, command `sleep infinity`)
 that uses the existing Secret `db-pass` as a file and has no API credentials.
 
-- The Secret `db-pass` mounted at `/etc/db`, with file mode `0400`
+- The Secret `db-pass` mounted at `/etc/db`, with file mode `0400` (`0440` if the Pod sets `fsGroup`, which the kubelet adds so that the group can read the file)
 - No environment variable comes from a Secret
 - No ServiceAccount token is mounted
 - The Pod is Running (the Namespace enforces `restricted`)
@@ -533,7 +533,7 @@ The workers have gVisor's `runsc` runtime. Make it available to Pods, and run on
 - **C.** The runtime configured in the container runtime on the nodes, such as runsc for gVisor
 - **D.** The admission plugin that checks the Pods
 
-**13. (Task)** `CKS` In a Namespace that enforces restricted, run a Pod that reads the Secret app-key from a file in mode 0400, has no ServiceAccount token, and runs as user 1000.
+**13. (Task)** `CKS` In a Namespace that enforces restricted, run a Pod that runs as user 1000, can read the Secret app-key from a file that no other user can read, and has no ServiceAccount token.
 
 <details>
 <summary>Answers</summary>
@@ -574,6 +574,7 @@ spec:
   securityContext:
     runAsNonRoot: true
     runAsUser: 1000
+    fsGroup: 1000
     seccompProfile:
       type: RuntimeDefault
   volumes:
@@ -595,7 +596,7 @@ spec:
           readOnly: true
 ```
 
-The four restricted settings let the Pod in; the volume's defaultMode sets the file mode, and automountServiceAccountToken removes the token. Mode 0400 leaves the file readable by root only; add fsGroup and mode 0440 if user 1000 must read it.
+The four restricted settings let the Pod in; the volume's defaultMode sets the file mode, and automountServiceAccountToken removes the token. The file belongs to root, so mode 0400 alone would leave user 1000 unable to read it. fsGroup makes the kubelet give the file group 1000 and add group read (the mode becomes 0440), so the Pod's user can read it and others cannot.
 
 </details>
 

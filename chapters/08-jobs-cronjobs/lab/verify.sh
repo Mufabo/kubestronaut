@@ -42,7 +42,9 @@ t4() {
   [[ "$(jp cronjob/nightly-report '{.spec.schedule}')" == "30 2 * * *" ]] &&
   [[ "$(jp cronjob/nightly-report '{.spec.concurrencyPolicy}')" == Forbid ]] &&
   [[ "$(jp cronjob/nightly-report '{.spec.successfulJobsHistoryLimit}')" == 2 ]] &&
-  [[ "$(jp cronjob/nightly-report '{.spec.jobTemplate.spec.template.spec.containers[0].image}')" == busybox:1.36 ]]
+  [[ "$(jp cronjob/nightly-report '{.spec.jobTemplate.spec.template.spec.containers[0].image}')" == busybox:1.36 ]] &&
+  # the command, however it is split between command and args
+  [[ "$(jp cronjob/nightly-report '{.spec.jobTemplate.spec.template.spec.containers[0].command}{.spec.jobTemplate.spec.template.spec.containers[0].args}')" == *"echo nightly report"* ]]
 }
 
 t5() {
@@ -59,9 +61,9 @@ check 2 "Job batch: 6 completions, 2 in parallel, busybox:1.36, all 6 succeeded"
   "the field names are .spec.completions and .spec.parallelism" t2
 check 3 "Job fragile gives up with reason BackoffLimitExceeded after backoffLimit 2" \
   "the Job fails only after its retries; wait about 30 seconds, then check the Failed condition" t3
-check 4 "CronJob nightly-report: schedule 30 2 * * *, Forbid, keeps 2 successful Jobs, busybox:1.36" \
+check 4 "CronJob nightly-report: schedule 30 2 * * *, Forbid, keeps 2 successful Jobs, busybox:1.36, prints 'nightly report'" \
   "concurrencyPolicy and successfulJobsHistoryLimit are CronJob fields, not Job fields" t4
-check 5 "Job manual-run is created from CronJob nightly-report and completes" \
+check 5 "Job manual-run is created from CronJob nightly-report, completes, and prints 'nightly report'" \
   "kubectl create job manual-run --from=cronjob/nightly-report" t5
 
 finish_checks

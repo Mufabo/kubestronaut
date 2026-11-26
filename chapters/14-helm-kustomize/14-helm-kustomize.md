@@ -336,8 +336,11 @@ Install the chart at `lab/.state/charts/shop` as a release named `shop`, with
 Upgrade the release `shop` so that `image.tag` is `1.27`, and every other value
 stays as it was.
 
-- The new revision uses the image tag `1.27`
-- The new revision keeps `replicaCount: 2`
+- The new revision, revision 2, uses the image tag `1.27`
+- Revision 2 keeps `replicaCount: 2`
+
+The check reads revision 2, so if an upgrade goes wrong, run `make reset CH=14` and
+start again from Task 1.
 
 ### Task 3: Roll back the release
 

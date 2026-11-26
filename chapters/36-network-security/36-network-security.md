@@ -42,8 +42,9 @@ flowchart LR
 ```
 
 The diagram shows a flow that needs two rules. An egress rule on the sender lets the
-packet out, and an ingress rule on the receiver lets it in. If either policy is
-missing, the packet is dropped, even if the other is in place.
+packet out, and an ingress rule on the receiver lets it in. Under a default deny
+for both directions, if either policy is missing, the packet is dropped, even if the
+other is in place.
 
 ### The default deny, and the DNS exception
 
@@ -203,8 +204,8 @@ Three more protections belong to the cluster itself, and they are outside Networ
 - **API server and etcd TLS.** The API server serves HTTPS, and it talks to etcd over TLS
   with client certificates. kubeadm creates these certificates, and Chapter 30 shows how
   to check them.
-- **Secrets at rest.** By default, Secrets are stored in etcd base64-encoded, which is not
-  encryption. An `EncryptionConfiguration` passed to the API server encrypts them before
+- **Secrets at rest.** By default, Secrets are stored in etcd unencrypted (base64, which you
+  see in the API, is an encoding and not encryption). An `EncryptionConfiguration` passed to the API server encrypts them before
   they are written. Chapter 33 covers Secrets management.
 - **Kubelet and control plane connections** use TLS with certificates that Chapter 27 covers
   when they expire.
@@ -424,16 +425,18 @@ Full solutions are in [`lab/solutions.md`](lab/solutions.md).
 
 ### Part policy: NetworkPolicies and a TLS Secret
 
-Everything happens in the Namespace `ch36-shop`, where the setup starts four Pods, each
-with a Service: `frontend` (label `app=frontend`), `api` (`app=api`, port 8080), `db`
-(`app=db`, port 5432), and `stranger` (`app=other`, with no Service of its own). Each
+Everything happens in the Namespace `ch36-shop`, where the setup starts four Pods:
+`frontend` (label `app=frontend`), `api` (`app=api`, port 8080), `db` (`app=db`, port 5432),
+and `stranger` (`app=other`). `api` and `db` each have a Service of the same name; the
+other two are clients only. Each
 server is a small HTTP server that answers `ok`. Nothing is restricted yet, so every
 Pod can reach every other.
 
 The setup also writes a self-signed certificate and key to `/tmp/ch36/api.crt` and
 `/tmp/ch36/api.key` for Task 4. The checks test traffic from the Pods with `kubectl exec`,
-so you can see the result of each policy at once. Tasks 2 and 3 do not depend on Task 1, but
-the checks expect the policies in the names given.
+so you can see the result of each policy at once. Tasks 2 and 3 build on Task 1: their
+checks call the Services by name, which needs `allow-dns`, and they expect a blocked
+request to time out. The checks expect the policies in the names given.
 
 #### Task 1: Deny everything, and allow DNS
 
@@ -566,7 +569,7 @@ Allow calls to the `api` only from workloads that run as the ServiceAccount `cal
 - **C.** A rule that allows port 443 to the API server
 - **D.** A rule that allows all traffic from the node IP
 
-**4.** `CKS` To let Pods labeled app=frontend call Pods labeled app=api on port 8080, which set of rules is required?
+**4.** `CKS` A Namespace has a default-deny NetworkPolicy for both ingress and egress. To let Pods labeled app=frontend call Pods labeled app=api on port 8080, which set of rules is required?
 
 - **A.** Only an ingress rule on the app=api Pods
 - **B.** Only an egress rule on the app=frontend Pods
@@ -604,7 +607,7 @@ Allow calls to the `api` only from workloads that run as the ServiceAccount `cal
 **9.** `CKS` By default, how are Secrets stored in etcd?
 
 - **A.** Encrypted with the node's private key
-- **B.** Base64-encoded, which is not encryption
+- **B.** Unencrypted, so anyone who can read the etcd data can read them
 - **C.** Hashed, so they cannot be read back
 - **D.** Encrypted with the API server's TLS certificate
 
@@ -649,7 +652,7 @@ Allow calls to the `api` only from workloads that run as the ServiceAccount `cal
 
 **3. A.** DNS queries are egress traffic to the cluster DNS Pods in kube-system on port 53. Without an allow rule, the default deny blocks them and names stop resolving.
 
-**4. C.** Both halves of a flow need a policy. The sender needs egress allowed, and the receiver needs ingress allowed. A missing half drops the traffic.
+**4. C.** Under a default deny in both directions, every Pod is isolated for ingress and for egress, so both halves of the flow need an allow rule: egress on the sender and ingress on the receiver. A missing half drops the traffic. Without a default deny, only the direction in which a Pod is isolated needs a rule.
 
 **5. A.** Selectors in one list item are combined with AND. Separate list items are combined with OR, so the same two selectors split into two items would allow much more.
 
@@ -659,7 +662,7 @@ Allow calls to the `api` only from workloads that run as the ServiceAccount `cal
 
 **8. C.** A TLS Secret has the type kubernetes.io/tls and the keys tls.crt and tls.key. Ingress and Gateway resources reference it to terminate TLS.
 
-**9. B.** Without an EncryptionConfiguration, Secret values are only base64-encoded in etcd. Anyone who can read the etcd data can decode them, so encryption at rest must be enabled explicitly.
+**9. B.** Without an EncryptionConfiguration, Secrets are written to etcd unencrypted. Base64 is only how the API shows the values; it is an encoding, not protection. Anyone who can read the etcd data or a backup of it can read them, so encryption at rest must be enabled explicitly.
 
 **10. B.** NetworkPolicy objects are stored, but only a CNI that enforces them acts on them. The default kindnet CNI does not, so the policy has no effect. Calico and Cilium do enforce it.
 

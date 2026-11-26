@@ -134,7 +134,7 @@
 - id: ch19-q12
   type: task
   exams: [CKA]
-  prompt: "On the worker `node1`, which the control plane at v1.37.0 has already been upgraded for, upgrade the node's kubelet configuration and its kubelet to `1.37.0`, and keep the packages held. The apt source already points at the v1.35 repository, and the node is drained."
+  prompt: "On the worker `node1`, which the control plane at v1.37.0 has already been upgraded for, upgrade the node's kubelet configuration and its kubelet to `1.37.0`, and keep the packages held. The apt source already points at the v1.37 repository, and the node is drained."
   solution: |
     ```bash
     ssh node1

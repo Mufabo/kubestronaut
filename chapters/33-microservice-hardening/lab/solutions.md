@@ -100,8 +100,11 @@ kubectl -n ch33-apps exec api -- ls /var/run/secrets/kubernetes.io      # No suc
 
 `defaultMode: 0400` is octal in YAML; in JSON, write the decimal `256`. The files
 in a Secret volume are symlinks, so `stat -L` follows them. Mode `0400` makes the
-file readable only by its owner, root; to let user 1000 read it, add `fsGroup` and
-use mode `0440`. The task asks only for the mode.
+file readable only by its owner, root, so the non-root user this Pod runs as
+cannot read it: `cat /etc/db/password` fails with `Permission denied`. An
+application that must read the Secret needs `fsGroup` in the Pod's
+`securityContext` (for example `fsGroup: 1000`); the kubelet then gives the file
+that group and adds group read, so `stat` shows `440`. The check accepts both.
 
 ## Task 4: Encrypt Secrets at rest
 

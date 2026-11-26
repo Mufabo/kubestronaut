@@ -508,7 +508,7 @@ Make the whole cluster use the restored data.
 
 **7. B.** etcd is a static Pod. The kubelet watches the manifests directory and recreates the Pod when a file changes, which takes up to a minute or so. kubectl cannot change static Pods.
 
-**8. B.** Secrets are stored in etcd, base64-encoded but not encrypted unless encryption at rest is configured. Anyone with the snapshot can read them. `etcdctl snapshot save` creates the file readable by its owner only.
+**8. B.** Secrets are stored in etcd unencrypted unless encryption at rest is configured. Anyone with the snapshot can read them. `etcdctl snapshot save` creates the file readable by its owner only.
 
 **9. B.** A restore creates a new cluster. Every member is restored from the same file with `--name`, `--initial-cluster`, and `--initial-advertise-peer-urls`, so the members agree on the data and on each other.
 

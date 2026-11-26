@@ -8,7 +8,10 @@ source "${here}/lab.env"
 # shellcheck source=/dev/null
 source "${here}/common.sh"
 require_snapshot "$LAB_SNAPSHOT"
-require_lab_cluster
+# In the documented order the API server is stopped while Task 3 is done, and
+# check 3 needs only the etcd manifest, the restore directory, and etcdctl. So
+# `make check` on Task 3 alone must not require a reachable API server.
+[[ "${LAB_ONLY_TASK:-}" == 3 ]] || require_lab_cluster
 
 # The revision recorded in a snapshot file, or nothing if it is not a valid snapshot.
 snapshot_revision() {

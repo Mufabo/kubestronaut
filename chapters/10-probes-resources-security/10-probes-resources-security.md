@@ -97,6 +97,50 @@ A request without a limit is allowed, and so is a limit without a request: when
 only a limit is set, Kubernetes uses it as the request too. A limit that is
 lower than the request is rejected by the API server.
 
+### Changing resources in place
+
+Most of a Pod's spec cannot change once it exists, but its CPU and memory can:
+**in-place Pod resize** has been stable since v1.35. The change goes through
+the Pod's `resize` subresource, not a normal edit. For a Pod `demo-resize` whose
+container `app` requests `100m` CPU with a limit of `200m`:
+
+```bash
+kubectl patch pod demo-resize --subresource resize --patch \
+  '{"spec":{"containers":[{"name":"app","resources":{"requests":{"cpu":"150m"},"limits":{"cpu":"300m"}}}]}}'
+```
+
+```text
+pod/demo-resize patched
+```
+
+The kubelet then applies the new values to the running container. By default
+it does so without a restart; a container's `resizePolicy` can ask for
+`RestartContainer` instead, per resource. What the container really has is in
+`status.containerStatuses[*].resources`:
+
+```bash
+kubectl get pod demo-resize -o jsonpath='{.status.containerStatuses[0].resources}{"\n"}{.status.containerStatuses[0].restartCount}{"\n"}'
+```
+
+```text
+{"limits":{"cpu":"300m","memory":"128Mi"},"requests":{"cpu":"150m","memory":"64Mi"}}
+0
+```
+
+The new CPU values are in place, and the restart count is still 0. A resize
+the node cannot fit yet shows up as a `PodResizePending` condition instead.
+A normal `kubectl patch` or `kubectl edit` of the same fields is refused,
+because they are immutable outside the `resize` subresource. And a resize
+may not change the Pod's QoS class (next section). Raising the requests to
+equal the limits would make this Pod Guaranteed, so the API server rejects it:
+
+```text
+The Pod "demo-resize" is invalid: spec: Invalid value: "Burstable": Pod QOS Class may not change as a result of resizing
+```
+
+A resize changes one Pod. For a Deployment, change the template instead (for
+example with `kubectl set resources`), which rolls out new Pods.
+
 ### QoS classes
 
 From the requests and limits, Kubernetes gives every Pod a **QoS class**. The
@@ -499,7 +543,9 @@ make verify CH=10    # check every task at once
 
 Everything happens in the Namespace `ch10-health`: use `-n ch10-health` on every
 command, or run `make use-namespace CH=10` once. The Namespace starts empty, and
-each task creates its own objects. The tasks can be done in any order.
+each task creates its own objects. The tasks can be done in any order. If you ran
+the walkthrough in this Namespace, run `make reset CH=10` first: its `demo-*`
+Pods count against the Pod quota of Task 6.
 
 Full solutions are in [`lab/solutions.md`](lab/solutions.md).
 

@@ -92,7 +92,7 @@
     - "It can be used to log in to the API server"
     - "It is executable"
   answer: B
-  explanation: "Secrets are stored in etcd, base64-encoded but not encrypted unless encryption at rest is configured. Anyone with the snapshot can read them. `etcdctl snapshot save` creates the file readable by its owner only."
+  explanation: "Secrets are stored in etcd unencrypted unless encryption at rest is configured. Anyone with the snapshot can read them. `etcdctl snapshot save` creates the file readable by its owner only."
 
 - id: ch20-q09
   type: mcq

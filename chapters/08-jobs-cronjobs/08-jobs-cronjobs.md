@@ -368,7 +368,9 @@ make verify CH=8     # check every task at once
 ```
 
 Everything happens in the Namespace `ch08-jobs`: use `-n ch08-jobs` on every
-command, or run `make use-namespace CH=8` once. The Namespace starts empty.
+command, or run `make use-namespace CH=8` once. The Namespace starts empty. If
+you ran the walkthrough in this Namespace, run `make reset CH=8` first: its
+objects have the same names as the lab's.
 Task 5 needs the CronJob from Task 4, so do Task 4 first. Task 3 takes about 30
 seconds to finish, because its retries are spaced out, so start it early and do
 the other tasks while it runs. Full solutions are in
@@ -413,6 +415,7 @@ Create a CronJob with the following specification.
 - Name: `nightly-report`
 - Schedule: `30 2 * * *`
 - Image: `busybox:1.36`
+- Command: `sh -c 'echo nightly report'`
 - Concurrency policy: `Forbid`
 - Successful Jobs to keep: `2`
 
@@ -420,7 +423,7 @@ Create a CronJob with the following specification.
 
 Create a Job named `manual-run` from the CronJob `nightly-report`, and wait until
 it completes. The Job must be owned by the CronJob, which is what `kubectl create
-job --from` does.
+job --from` does, and its log is the one line `nightly report`.
 
 ## Exam tips
 
