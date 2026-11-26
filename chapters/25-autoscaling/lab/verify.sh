@@ -44,6 +44,14 @@ t6() {
   [[ -n "$(jp vpa/worker '{.status.recommendation.containerRecommendations[?(@.containerName=="worker")].target.cpu}')" ]]
 }
 
+t7() {
+  local top
+  top="$(kubectl top pods -n "$LAB_NS" -l tier=batch --sort-by=cpu --no-headers 2>/dev/null)" || return 1
+  # the metrics agree that batch-2 leads, and the file names it
+  [[ "$(awk 'NR==1{print $1}' <<<"$top")" == batch-2 ]] &&
+  file_is "$LAB_ANSWER_TOP_POD" batch-2
+}
+
 check 1 "HPA api targets Deployment api, 1 to 4 replicas, cpu averageUtilization 50" \
   "autoscaling/v2 spec: scaleTargetRef, minReplicas, maxReplicas, metrics[0].resource" t1
 check 2 "Deployment api scaled to at least 2 ready replicas under its CPU load" \
@@ -56,5 +64,7 @@ check 5 "${LAB_ANSWER_HPA_API} holds the API version that serves HorizontalPodAu
   "kubectl api-resources --api-group=autoscaling shows the served version" t5
 check 6 "VPA worker targets Deployment worker in Off mode, and recommends a CPU request for its container" \
   "apiVersion autoscaling.k8s.io/v1, spec.targetRef and spec.updatePolicy.updateMode; the recommendation takes a minute or two" t6
+check 7 "${LAB_ANSWER_TOP_POD} holds the name of the tier=batch Pod that uses the most CPU" \
+  "kubectl top pods -l tier=batch --sort-by=cpu lists the busiest first; metrics appear about a minute after a Pod starts" t7
 
 finish_checks

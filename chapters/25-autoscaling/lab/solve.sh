@@ -66,3 +66,10 @@ has_recommendation() {
   [[ -n "$(k get vpa worker -o jsonpath='{.status.recommendation.containerRecommendations[0].target.cpu}' 2>/dev/null)" ]]
 }
 wait_for "the VPA recommendation for worker" 300 has_recommendation
+
+# Task 7: wait until every batch Pod has metrics, then take the first line
+batch_metrics() {
+  [[ "$(kubectl top pods -n "$LAB_NS" -l tier=batch --no-headers 2>/dev/null | wc -l)" -eq 3 ]]
+}
+wait_for "metrics for the batch Pods" 180 batch_metrics
+kubectl top pods -n "$LAB_NS" -l tier=batch --sort-by=cpu --no-headers | awk 'NR==1{print $1}' > "$LAB_ANSWER_TOP_POD"

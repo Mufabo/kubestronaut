@@ -13,6 +13,7 @@ After this chapter you can:
 - Explain why the HPA needs resource requests, and how it computes a desired replica count from observed utilization
 - Write an `autoscaling/v2` HorizontalPodAutoscaler with a CPU target, minimum and maximum replicas, and a scale-down window
 - Explain what metrics-server provides, and what `kubectl top` and the HPA read from it
+- Find the Pods and nodes that use the most CPU or memory with `kubectl top` and `--sort-by`
 - Distinguish the three autoscaling directions: horizontal (more Pods), vertical (bigger Pods), and cluster (more nodes)
 - Create a VPA in `Off` mode, read its recommendation, and choose an update mode; say when a cluster autoscaler adds or removes nodes
 - Find the served API version for an autoscaling kind with `kubectl api-resources`
@@ -236,13 +237,14 @@ make verify CH=25    # check every task at once
 Everything happens in the Namespace `ch25-scale`: use `-n ch25-scale` on every command,
 or run `make use-namespace CH=25` once. The setup creates a Deployment `api`, one
 replica, a CPU request of `100m`, and a busy loop. Task 1 creates the HPA, and Tasks 2
-to 4 depend on it. Tasks 5 and 6 do not. Scaling takes a minute or two, so Task 2 waits
-for it. The answers go to two files under `/tmp`, which teardown removes.
+to 4 depend on it. Tasks 5 to 7 do not. Scaling takes a minute or two, so Task 2 waits
+for it. The answers go to three files under `/tmp`, which teardown removes.
 
 For Task 6, the setup also installs the VPA recommender (version 1.8.1, in
 `kube-system`, without the updater and the admission controller) and a second busy
 Deployment, `worker`, that no HPA scales. Teardown removes the recommender and the
-VPA CRDs again.
+VPA CRDs again. For Task 7, it starts three Pods labelled `tier=batch`, `batch-1` to
+`batch-3`, that use different amounts of CPU.
 
 Full solutions are in [`lab/solutions.md`](lab/solutions.md).
 
@@ -294,6 +296,15 @@ Then wait until the recommendation appears, which takes a minute or two.
 - Targets the Deployment `worker`
 - Update mode: `Off`
 - Its status holds a CPU target for the container `worker`
+
+### Task 7: Find the busiest Pod
+
+Of the Pods labelled `tier=batch` in `ch25-scale`, find the one that uses the most
+CPU, as metrics-server reports it, and write its name into `/tmp/ch25-top-pod.txt`.
+Metrics for a Pod appear about a minute after it starts.
+
+- File `/tmp/ch25-top-pod.txt` holds only the Pod's name, such as `batch-1`
+- It is the `tier=batch` Pod with the highest CPU use in `kubectl top`
 
 ## Exam tips
 

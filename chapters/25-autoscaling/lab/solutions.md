@@ -92,6 +92,31 @@ values; the recommender needs a minute or two of metrics before it publishes the
 `kubectl describe vpa worker` shows the full recommendation: a `Target`, and the
 `Lower Bound` and `Upper Bound` around it.
 
+## Task 7: the busiest Pod
+
+```bash
+kubectl -n ch25-scale top pods -l tier=batch --sort-by=cpu
+```
+
+```text
+NAME      CPU(cores)   MEMORY(bytes)
+batch-2   201m         0Mi
+batch-3   51m          0Mi
+batch-1   0m           0Mi
+```
+
+`--sort-by=cpu` puts the busiest Pod first, and `-l` limits the list to the label.
+Write only the name, without the header or the numbers:
+
+```bash
+kubectl -n ch25-scale top pods -l tier=batch --sort-by=cpu --no-headers | head -1 | awk '{print $1}' > /tmp/ch25-top-pod.txt
+```
+
+If `kubectl top` lists fewer Pods than there are, or says metrics are not
+available for a Pod, wait a minute: metrics-server reports a Pod only after it has
+scraped it. The same command works for nodes
+(`kubectl top nodes --sort-by=memory`), and `--containers` splits a Pod's use per container.
+
 ## Why these checks accept any correct method
 
 The checks read the HPA's stored spec, the Deployment's ready replicas, the metric

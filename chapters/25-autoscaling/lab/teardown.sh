@@ -13,6 +13,6 @@ source "${here}/common.sh"
 require_lab_cluster
 lab_teardown_ns "$LAB_NS"
 remove_vpa
-rm -f "$LAB_ANSWER_METRIC" "$LAB_ANSWER_HPA_API"
+rm -f "$LAB_ANSWER_METRIC" "$LAB_ANSWER_HPA_API" "$LAB_ANSWER_TOP_POD"
 lab_restore_kubectx "${here}/.state/kubectx"
 info "Lab removed."

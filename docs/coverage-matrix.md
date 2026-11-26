@@ -84,12 +84,12 @@ Storage Q12–Q13 (10%), Troubleshooting Q14–Q18 (30%).
 | Storage | Manage persistent volumes and persistent volume claims | 13 | 13/T1–T3; P3 Q9 | ch13-q02, q08, q11 | drafted |
 | Troubleshooting | Troubleshoot clusters and nodes | 02, 27 | 02/T1, 02/T3; 27/T1–T2; P3 Q15 | ch02-q03, q07; ch27-q01–q03, q10 | drafted |
 | Troubleshooting | Troubleshoot cluster components | 02, 27 | 02/T2, 02/T3; 27/T3–T5; P1 Q14; P3 Q2, Q16 | ch02-q01..q05, q07; ch27-q04–q09, q11, q12 | drafted |
-| Troubleshooting | Monitor cluster and application resource usage | 10, 15, 25 | 25/T3 | ch15-q05, q06; ch25-q03, q11 | drafted |
+| Troubleshooting | Monitor cluster and application resource usage | 10, 15, 25 | 25/T3, T7 | ch15-q05, q06; ch25-q03, q11 | drafted |
 | Troubleshooting | Manage and evaluate container output streams | 04, 15, 26 | 04/T3; 15/T1; 26/T1 | ch04-q11, ch15-q01, q02, q04; ch26-q01 | drafted |
 | Troubleshooting | Troubleshoot services and networking | 11, 21, 26 | 11/T5; 26/T2–T5; P3 Q5, Q14 | ch11-q02, q11; ch26-q02–q06 | drafted |
 | Workloads and Scheduling | Understand application deployments and how to perform rolling update and rollbacks | 05 | 05/T1-T6; P1 Q15-Q17 | ch05-q04..q08, q10..q14 | drafted |
 | Workloads and Scheduling | Use ConfigMaps and Secrets to configure applications | 03, 07 | 03/b2 C1, C2; 07/T1–T5; P1 Q11 | ch07-q01–q03, q08–q11 | drafted |
-| Workloads and Scheduling | Configure workload autoscaling | 25 | 25/T1–T6; P3 Q13 | ch25-q01–q03, q06, q07, q08, q09, q10, q11 | drafted (the VPA recommender installed and a VPA in Off mode used, 25/T6; the cluster autoscaler described only, since kind has no node groups) |
+| Workloads and Scheduling | Configure workload autoscaling | 25 | 25/T1–T7; P3 Q13 | ch25-q01–q03, q06, q07, q08, q09, q10, q11 | drafted (the VPA recommender installed and a VPA in Off mode used, 25/T6; the cluster autoscaler described only, since kind has no node groups) |
 | Workloads and Scheduling | Understand the primitives used to create robust, self-healing, application deployments | 04, 05, 10 | 04/T5; 05/T1, T2, T5; P1 Q18 | ch04-q04, q05; ch05-q01..q03, q06, q07 | drafted |
 | Workloads and Scheduling | Configure Pod admission and scheduling (limits, node affinity, etc.) | 04, 06, 10, 17 | 04/T4; 06/T5; 17/T1–T2; P1 Q5; P3 Q1 | ch04-q07, q09; ch06-q12; ch17-q02–q05 | drafted |
 | Servicing and Networking | Understand connectivity between Pods | 11, 21 | 21/T1–T2; P3 Q8 | ch21-q01, q02 | drafted |
