@@ -116,7 +116,7 @@
     - "NetworkPolicies only apply to Pods that have a Service"
     - "The policy must be applied to the kube-system Namespace"
   answer: B
-  explanation: "NetworkPolicy objects are stored, but only a CNI that enforces them acts on them. The default kindnet CNI does not, so the policy has no effect. Calico and Cilium do enforce it."
+  explanation: "NetworkPolicy objects are stored, but only a CNI that enforces them acts on them. Flannel, for example, does not, so on such a cluster the policy has no effect. Calico and Cilium do enforce it."
 
 - id: ch36-q11
   type: task

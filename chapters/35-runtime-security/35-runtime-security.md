@@ -383,7 +383,7 @@ also names the RoleBinding that allowed it:
 
 The next step is clear: who else can act as `cleaner`, and does it need `delete`
 on Secrets? Useful filters: `"verb":"delete"`, `"code":403` (someone probing for
-permissions they lack), a user name, a source IP, or `"resource":"pods/exec"`.
+permissions they lack), a user name, a source IP, or `"subresource":"exec"`.
 
 > **Exam tip:** Audit questions come in two kinds: write or change the policy (order matters; first match wins), or answer from the log (`grep` for the resource, verb, and name, then read `user.username`, `impersonatedUser`, `sourceIPs`, and `responseStatus.code`). The API server reads the policy file only when it starts: after changing the policy alone, restart it, for example by moving its manifest out of `/etc/kubernetes/manifests` and back.
 

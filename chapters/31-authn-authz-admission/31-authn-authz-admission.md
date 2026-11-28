@@ -41,9 +41,11 @@ authorization, and only then is the object written to etcd.
 
 The status codes tell you which stage refused the request. `401 Unauthorized` means
 the identity was missing or invalid. `403 Forbidden` means the identity is known, and
-the request was refused by authorization or by an admission controller. An admission
-refusal is a `403` too, so read the message: a policy's name in the message points
-at admission.
+the request was refused by authorization or by an admission controller. Pod Security
+and the other built-in admission plugins answer `403` too, so read the message: a
+policy's name in the message points at admission. Not every admission refusal is a
+`403`: a ValidatingAdmissionPolicy answers `422 Invalid` unless its validation sets
+another reason, and a webhook chooses its own code (`400` if it sets none).
 
 ### Authentication: who is asking
 
@@ -332,7 +334,7 @@ delete them, and nothing in `ch31-restricted`. Then check how admission treats i
 
 ## Exam tips
 
-> **Exam tip:** Read the status and the message together. `401` means the identity failed; `403` means RBAC or admission refused it. The message names the admission policy or the Pod Security level when admission is the cause.
+> **Exam tip:** Read the status and the message together. `401` means the identity failed; `403` means RBAC or a built-in admission plugin refused it (a ValidatingAdmissionPolicy answers `422`). The message names the admission policy or the Pod Security level when admission is the cause.
 >
 > **Exam tip:** Test admission with `kubectl apply --dry-run=server -f file.yaml`. It runs authentication, authorization, and admission, and stores nothing, which makes it the fastest way to see whether a policy would refuse an object.
 >

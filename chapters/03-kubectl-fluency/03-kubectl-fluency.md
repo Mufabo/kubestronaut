@@ -13,7 +13,7 @@ After this chapter you can:
 1. Install and verify Docker, kind, `kubectl`, and `make`, create the lab cluster, and diagnose a cluster that will not start
 2. Read and edit a kubeconfig: create, switch, and delete contexts, set a default namespace, and use several kubeconfig files at once
 3. Extract exactly the data you need with `-o` formats, selectors, JSONPath, and `custom-columns`, and post-process output with `jq` and `yq`
-4. Discover the API offline with `api-resources`, `explain`, and `get --raw`
+4. Discover the API from the cluster itself with `api-resources`, `explain`, and `get --raw`
 5. Create objects imperatively and generate manifests with `--dry-run=client -o yaml`
 6. Choose correctly between `create`, `apply`, `replace`, `edit`, and `patch`, and preview a change with `diff`
 7. Modify live Pods with `label`, `annotate`, `set image`, and `delete`, wait for readiness with `wait`, and know which commands (`scale`, `set env`, `set resources`, `rollout`) need a controller and are practised from Chapter 05
@@ -106,7 +106,7 @@ Example output (ages and versions will differ):
 
 To start over: `make cluster-recreate`. To remove the cluster entirely: `make cluster-delete`.
 
-**Hardware.** Tier 1 labs (this chapter) need about 4 GB of RAM free for Docker. The Tier 2 environment used from Chapter 18 on is three VirtualBox VMs that need about 5 GB more (pause the kind cluster with `make cluster-pause` while you use them), plus VirtualBox and Vagrant on your machine; `envs/vagrant/README.md` explains the setup. The book offers a hosted option for readers who do not have that.
+**Hardware.** Tier 1 labs (this chapter) need about 4 GB of RAM free for Docker. The Tier 2 environment used from Chapter 18 on is three VirtualBox VMs that need about 5 GB more (pause the kind cluster with `make cluster-pause` while you use them), plus VirtualBox and Vagrant on your machine; `envs/vagrant/README.md` explains the setup.
 
 ## 2. kubeconfig and contexts
 
@@ -615,7 +615,7 @@ kubectl wait --for=delete pod/web --timeout=60s
 
 ### Commands that need a controller
 
-`kubectl scale`, `kubectl set env`, `kubectl set resources`, and `kubectl rollout` work on controllers such as Deployments, not on bare Pods. You practise them from Chapter 05. For now, know that `kubectl scale --replicas=3 deployment/web` is how you change a Deployment's replica count, and that none of these can modify a plain Pod's environment or resources (you edit the YAML and recreate the Pod).
+`kubectl scale`, `kubectl set env`, `kubectl set resources`, and `kubectl rollout` work on controllers such as Deployments, not on bare Pods. You practise them from Chapter 05. For now, know that `kubectl scale --replicas=3 deployment/web` is how you change a Deployment's replica count, and that none of these can modify a plain Pod. A Pod's environment cannot change at all (you edit the YAML and recreate the Pod); its CPU and memory can, through the `resize` subresource that Chapter 10 shows.
 
 ## 8. Permissions: `kubectl auth can-i`
 

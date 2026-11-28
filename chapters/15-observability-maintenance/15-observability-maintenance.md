@@ -110,8 +110,8 @@ kubectl top nodes
 ```
 
 On a cluster without metrics-server, `kubectl top` fails with `error: Metrics API
-not available`. The lab cluster for this book does not run metrics-server, so
-this chapter does not depend on `kubectl top` for its checks.
+not available`. The lab cluster for this book runs metrics-server, so `kubectl
+top` works there, but this chapter's checks do not depend on it.
 
 **Application metrics** are different. They are numbers the application exposes
 itself, such as request counts and latency histograms, usually on an HTTP
@@ -233,20 +233,25 @@ The status is `Error`, the exit code is 2, and the log names the missing file.
 The events confirm that the kubelet is backing off the restarts. Exit code 2
 came from the application, so the fix is in the configuration, not in the cluster.
 
-### Try `kubectl top` and see the metrics gap
+### Try `kubectl top`
 
-On the lab cluster, which does not run metrics-server:
+The lab cluster runs metrics-server, so the Metrics API answers:
 
 ```bash
 kubectl -n ch15-observe top pods
 ```
 
 ```text
-error: Metrics API not available
+NAME                        CPU(cores)   MEMORY(bytes)
+checkout-5bcb99bbff-bn44s   1m           4Mi
+checkout-5bcb99bbff-nnd5t   4m           5Mi
 ```
 
-On a cluster with metrics-server installed, the same command prints CPU and memory
-per Pod. The error here is expected: the Metrics API is not registered.
+Your Pod names and numbers differ. Only running containers are listed, so the
+crashing Pods are missing, and a Pod started in the last few seconds is too:
+metrics-server has not collected from it yet. On a cluster without
+metrics-server, the same command prints `error: Metrics API not available`,
+because nothing serves the `metrics.k8s.io` API.
 
 ### Find the version a cluster serves
 

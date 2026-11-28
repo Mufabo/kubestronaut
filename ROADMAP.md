@@ -15,7 +15,7 @@ A hands-on textbook covering everything needed for the six certifications that m
 
 ## 1. Guiding principles
 
-1. **Teach by topic, tag by exam.** The five exams overlap heavily. Chapters are organized by subject; each chapter declares which exams it serves.
+1. **Teach by topic, tag by exam.** The six exams overlap heavily. Chapters are organized by subject; each chapter declares which exams it serves.
 2. **Every lab is disposable.** A reader can break anything and be back at the starting state in under a minute.
 3. **Every lab is verifiable.** Each task has an automated check, so readers get instant PASS/FAIL feedback.
 4. **Every lab is tested in CI.** If the reference solution does not pass `verify.sh` in CI, the chapter does not merge.
@@ -335,9 +335,9 @@ Estimates assume one author working part-time; adjust for your pace and any co-a
 - [ ] Chapters 29 to 36; pin and test Trivy, Falco, kube-bench, Kyverno/Gatekeeper versions
 - **Exit criterion:** every CKS and KCSA bullet in the coverage matrix is mapped and tested.
 
-### Phase 4: Part V and mock exams (~4 weeks)
+### Phase 4: Part XI and mock exams (~4 weeks)
 
-*Status (2026-10-23): 37 is drafted and tested; 38 and 39 are drafted (concept chapters, no lab). The KCNA practice exam (`mock-exams/kcna`, 60 questions, `make quiz`) is done, and so are the full CKAD simulator (`mock-exams/ckad`, 20 questions over every CKAD domain) and the full CKA simulator (`mock-exams/cka`, 18 questions over every CKA domain, on the Tier 2 VMs). Second sets followed on 2026-10-30: `kcna2` (60 more questions), `ckad2` (20), and `cka2` (18, on the VMs), each with no question repeated from the first set. The full CKS simulator (`mock-exams/cks`, 15 questions over every CKS domain, on the Tier 2 VMs) followed on 2026-11-13. The KCSA practice exam (`mock-exams/kcsa`, 60 questions over the six KCSA domains, `make quiz`) followed on 2026-11-14, so every exam now has a practice set.*
+*Status (2026-10-23): 72 is drafted and tested; 73 and 74 are drafted (concept chapters, no lab). The KCNA practice exam (`mock-exams/kcna`, 60 questions, `make quiz`) is done, and so are the full CKAD simulator (`mock-exams/ckad`, 20 questions over every CKAD domain) and the full CKA simulator (`mock-exams/cka`, 18 questions over every CKA domain, on the Tier 2 VMs). Second sets followed on 2026-10-30: `kcna2` (60 more questions), `ckad2` (20), and `cka2` (18, on the VMs), each with no question repeated from the first set. The full CKS simulator (`mock-exams/cks`, 15 questions over every CKS domain, on the Tier 2 VMs) followed on 2026-11-13. The KCSA practice exam (`mock-exams/kcsa`, 60 questions over the six KCSA domains, `make quiz`) followed on 2026-11-14, so every exam now has a practice set.*
 
 - [x] Chapters 72 to 74
 - [ ] Five mock exams; time-test each yourself and record how long it took

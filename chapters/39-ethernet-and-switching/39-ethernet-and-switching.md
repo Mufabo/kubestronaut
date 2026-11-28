@@ -348,7 +348,7 @@ Small pings work, but what about the largest possible packet? `ping -s 1472`
 sends 1472 bytes of data. Add the 8-byte ICMP header and the 20-byte IP header
 and the packet is exactly 1500 bytes, the full MTU. `-M do` sets the "don't
 fragment" flag, which forbids splitting the packet into smaller pieces on the
-way (Chapter 41 explains fragmentation):
+way (Chapter 45 explains fragmentation):
 
 ```bash
 on h1 ping -c 2 -W 1 -M do -s 1472 10.0.3.2

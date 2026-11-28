@@ -25,7 +25,7 @@
 - id: ch22-q03
   type: mcq
   exams: [CKA]
-  question: "Which object registers a CSI driver with the cluster, describing whether it supports expansion and attachment?"
+  question: "Which object registers a CSI driver with the cluster, describing whether its volumes need an attach step and what it needs from the kubelet?"
   choices:
     - "A StorageClass"
     - "A CSIDriver object"

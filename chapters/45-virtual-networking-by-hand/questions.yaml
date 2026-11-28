@@ -100,11 +100,11 @@
   question: "Why does a VXLAN device on a 1500-byte network have an MTU of 1450?"
   choices:
     - "VXLAN compresses packets by 50 bytes"
-    - "Encapsulation adds about 50 bytes of headers (outer Ethernet, IP, UDP, VXLAN), so the inner frame must be 50 bytes smaller to fit"
+    - "Encapsulation adds 50 bytes of headers inside the underlay's MTU (outer IP, UDP, VXLAN, inner Ethernet), so the inner packet must be 50 bytes smaller to fit"
     - "It is a random default"
     - "Because the VNI is 50"
   answer: B
-  explanation: "14 (outer Ethernet) + 20 (outer IP) + 8 (UDP) + 8 (VXLAN) = 50 bytes of overhead. Pod interfaces must use the smaller MTU, or full-size packets do not fit."
+  explanation: "20 (outer IP) + 8 (UDP) + 8 (VXLAN) + 14 (inner Ethernet) = 50 bytes of overhead. The outer Ethernet header does not count, because an MTU is measured without it. Pod interfaces must use the smaller MTU, or full-size packets do not fit."
 
 - id: ch45-q10
   type: mcq
@@ -128,7 +128,7 @@
     - "8472 and 179"
     - "6443 and 10250"
   answer: B
-  explanation: "VXLAN's standard port is 4789; Geneve's is 6081. (Older Flannel and Cilium setups sometimes use 8472 for VXLAN; 179 is BGP, a TCP port.) Firewalls between nodes must allow the overlay's port."
+  explanation: "VXLAN's standard port is 4789; Geneve's is 6081. (Flannel and Cilium use 8472 for VXLAN by default, the Linux kernel's own default; 179 is BGP, a TCP port.) Firewalls between nodes must allow the overlay's port."
 
 - id: ch45-q12
   type: mcq

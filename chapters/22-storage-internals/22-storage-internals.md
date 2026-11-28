@@ -53,8 +53,8 @@ volume is attached to the node where the Pod runs, and the node driver mounts it
 A driver registers itself with two kinds of object you can list:
 
 - A **CSIDriver** object, one per driver, that describes what the driver supports:
-  whether it can attach volumes, whether it needs the pod's service account
-  token, and whether it supports volume expansion.
+  whether its volumes need an attach step, whether it needs the pod's service
+  account token, and which volume modes it offers.
 - A **CSINode** object per node, that lists the drivers running on that node and
   how many volumes each can attach.
 
@@ -118,7 +118,8 @@ A claim can ask for more storage later by raising its `resources.requests.storag
 That only works when two things are true:
 
 - The StorageClass has `allowVolumeExpansion: true`. The default is false.
-- The driver supports expansion. The CSIDriver object says so for CSI drivers.
+- The driver supports expansion. A CSI driver reports that itself, through the CSI
+  interface; no field of the CSIDriver object shows it, so check the driver's documentation.
 
 When both hold, the controller grows the volume, and the node resizes the
 filesystem, sometimes only when the Pod restarts. A claim that asks for more space
@@ -363,7 +364,7 @@ Write the number of CSIDriver objects in the cluster into `/tmp/ch22-csi.txt`.
 - **C.** The kubelet, through its CRI
 - **D.** CoreDNS, which resolves the volume name
 
-**3.** `CKA` Which object registers a CSI driver with the cluster, describing whether it supports expansion and attachment?
+**3.** `CKA` Which object registers a CSI driver with the cluster, describing whether its volumes need an attach step and what it needs from the kubelet?
 
 - **A.** A StorageClass
 - **B.** A CSIDriver object

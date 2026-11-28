@@ -196,7 +196,7 @@ Short profiles of projects you will meet again in this book. For each: the probl
 
 **CoreDNS.** A flexible, plugin-based DNS server. In a cluster it answers queries so that a Service name resolves to an address. Chapters 11, 21.
 
-**Prometheus.** A metrics system that scrapes numeric time series from targets over HTTP, stores them, and evaluates alert rules, queried with PromQL. It is the de facto metrics standard in Kubernetes. Chapters 15, 35.
+**Prometheus.** A metrics system that scrapes numeric time series from targets over HTTP, stores them, and evaluates alert rules, queried with PromQL. It is the de facto metrics standard in Kubernetes. Chapter 15.
 
 **Envoy.** A high-performance proxy, the data plane for many service meshes and gateways. Chapters 12, 28, 36.
 

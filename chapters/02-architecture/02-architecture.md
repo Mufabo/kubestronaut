@@ -82,7 +82,7 @@ A production control plane is typically **highly available**: three (or another 
 Add-ons are ordinary Kubernetes workloads that provide cluster features:
 
 - **Cluster DNS (CoreDNS):** gives Services DNS names. Effectively required.
-- **A CNI plugin:** provides Pod networking. A cluster has no working Pod network without one (kind installs its own simple one).
+- **A CNI plugin:** provides Pod networking. A cluster has no working Pod network without one (kind installs its own simple one, kindnet; this book's cluster uses Calico instead).
 - **Others:** metrics-server, the dashboard, ingress controllers, and so on.
 
 ### The declarative model and reconciliation
@@ -260,13 +260,15 @@ kubectl -n kube-system get pods -o wide
 
 ```text
 NAME                                          READY   STATUS    NODE
+calico-kube-controllers-...                   1/1     Running   kbook-worker
+calico-node-...                               1/1     Running   ...
 coredns-...                                   1/1     Running   kbook-worker
 etcd-kbook-control-plane                      1/1     Running   kbook-control-plane
-kindnet-...                                   1/1     Running   ...
 kube-apiserver-kbook-control-plane            1/1     Running   kbook-control-plane
 kube-controller-manager-kbook-control-plane   1/1     Running   kbook-control-plane
 kube-proxy-...                                1/1     Running   ...
 kube-scheduler-kbook-control-plane            1/1     Running   kbook-control-plane
+metrics-server-...                            1/1     Running   kbook-worker2
 ```
 
 All the components from the diagram are here as Pods. Look at the names: the four control plane Pods end with the node name. That is the signature of a **mirror Pod**.
@@ -403,7 +405,7 @@ you would write it in a manifest's `apiVersion`.
 >
 > **Exam tip:** On CKA tasks about a broken control plane, the first step is usually to check the static Pod manifests in `/etc/kubernetes/manifests` and the kubelet's logs, because the API server itself may be down and `kubectl` unusable.
 >
-> **Exam tip:** `kubectl api-resources` and `kubectl explain` work offline from the cluster. Use them to find the correct `apiVersion` and field names quickly instead of searching documentation.
+> **Exam tip:** `kubectl api-resources` and `kubectl explain` get their answers from the API server, so they need no internet access. Use them to find the correct `apiVersion` and field names quickly instead of searching documentation.
 >
 > **Exam tip:** Only the API server talks to etcd. If an answer choice has the scheduler or kubelet reading etcd directly, it is wrong.
 

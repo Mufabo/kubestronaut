@@ -73,7 +73,7 @@ chapter that introduces it. Part VI onward adds Kubernetes networking terms as i
 ## E
 
 - **eBPF**: small programs loaded into the Linux kernel and attached to interfaces or other hooks; Cilium's data plane. (49)
-- **Egress gateway**: a chosen exit point where outgoing traffic is SNATed to a known address. (05; Chapter 60)
+- **Egress gateway**: a chosen exit point where outgoing traffic is SNATed to a known address. (41; Chapter 60)
 - **Encapsulation**: each layer wrapping the data of the layer above in its own header. (38)
 - **Encapsulation overhead**: the bytes an overlay adds to every packet; 50 for VXLAN over IPv4, 20 for IP-in-IP. (49)
 - **Endpoint** (Cilium): a Pod (or other workload) that a Cilium agent manages on its node, with an ID and a security identity. (52)

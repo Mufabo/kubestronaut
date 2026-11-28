@@ -80,7 +80,7 @@
     - "securityContext.seccompProfile with type: AppArmor"
     - "runtimeClassName: k8s-deny-write"
   answer: B
-  explanation: "The appArmorProfile field (generally available since v1.30) sits in the Pod's or the container's securityContext; the container's setting wins. Its types are RuntimeDefault, Localhost (with localhostProfile, the name of a profile loaded on the node), and Unconfined. The older annotation container.apparmor.security.beta.kubernetes.io/CONTAINER is deprecated."
+  explanation: "The appArmorProfile field (generally available since v1.31) sits in the Pod's or the container's securityContext; the container's setting wins. Its types are RuntimeDefault, Localhost (with localhostProfile, the name of a profile loaded on the node), and Unconfined. The older annotation container.apparmor.security.beta.kubernetes.io/CONTAINER is deprecated."
 
 - id: ch32-q08
   type: mcq

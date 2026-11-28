@@ -151,8 +151,8 @@ Ingress rule says.
 Two traps. The chart's Service type is `service.spec.type`; `--set
 service.type=ClusterIP` is accepted and ignored, so the Service stays
 `LoadBalancer`. And the chart marks its IngressClass as the cluster default
-unless you turn that off, which would make Traefik serve the Ingress `api` from
-Task 3 too, because it names no class.
+unless you turn that off, which would make Traefik serve every Ingress that
+names no class too.
 
 ## Task 7: the Gateway API through Traefik
 

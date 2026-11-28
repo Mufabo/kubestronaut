@@ -192,8 +192,10 @@ sequenceDiagram
 
 ### The price of an overlay: MTU
 
-Those extra headers take 50 bytes. If the underlay's MTU is 1500, the frame
-inside can only be 1450 bytes. Linux sets a VXLAN device's MTU to 1450 for you,
+The underlay's MTU counts everything after the outer Ethernet header: the outer
+IP header (20 bytes), UDP (8), VXLAN (8), and the inner Ethernet header (14).
+That is 50 bytes. If the underlay's MTU is 1500, the packet inside can only be
+1450 bytes. Linux sets a VXLAN device's MTU to 1450 for you,
 but the Pods do not know about it. A Pod with MTU 1500 sends a 1500-byte
 packet, the node cannot fit it into the tunnel, and one of two things happens:
 
@@ -581,7 +583,7 @@ Full-size packets from `pod1a` to `pod3a` do not fit through the tunnel. Configu
 **9.** `CKNE` Why does a VXLAN device on a 1500-byte network have an MTU of 1450?
 
 - **A.** VXLAN compresses packets by 50 bytes
-- **B.** Encapsulation adds about 50 bytes of headers (outer Ethernet, IP, UDP, VXLAN), so the inner frame must be 50 bytes smaller to fit
+- **B.** Encapsulation adds 50 bytes of headers inside the underlay's MTU (outer IP, UDP, VXLAN, inner Ethernet), so the inner packet must be 50 bytes smaller to fit
 - **C.** It is a random default
 - **D.** Because the VNI is 50
 
@@ -625,11 +627,11 @@ Full-size packets from `pod1a` to `pod3a` do not fit through the tunnel. Configu
 
 **8. B.** The outer packet is UDP to port 4789 between node addresses; tcpdump decodes the encapsulated inner packet on the next line. The VNI identifies the overlay.
 
-**9. B.** 14 (outer Ethernet) + 20 (outer IP) + 8 (UDP) + 8 (VXLAN) = 50 bytes of overhead. Pod interfaces must use the smaller MTU, or full-size packets do not fit.
+**9. B.** 20 (outer IP) + 8 (UDP) + 8 (VXLAN) + 14 (inner Ethernet) = 50 bytes of overhead. The outer Ethernet header does not count, because an MTU is measured without it. Pod interfaces must use the smaller MTU, or full-size packets do not fit.
 
 **10. B.** Path MTU discovery relies on ICMP. With ICMP blocked, senders never learn the smaller size. Setting the Pod MTU below the tunnel's MTU avoids the problem.
 
-**11. B.** VXLAN's standard port is 4789; Geneve's is 6081. (Older Flannel and Cilium setups sometimes use 8472 for VXLAN; 179 is BGP, a TCP port.) Firewalls between nodes must allow the overlay's port.
+**11. B.** VXLAN's standard port is 4789; Geneve's is 6081. (Flannel and Cilium use 8472 for VXLAN by default, the Linux kernel's own default; 179 is BGP, a TCP port.) Firewalls between nodes must allow the overlay's port.
 
 **12. B.** The number after @if is the peer's interface index. Inside the Pod, the interface with index 7 (usually eth0) is the other end.
 

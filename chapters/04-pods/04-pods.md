@@ -42,7 +42,7 @@ has its own resource requests and limits.
 ```mermaid
 flowchart LR
   subgraph Node
-    subgraph Pod["Pod (one IP: 10.244.1.7)"]
+    subgraph Pod["Pod (one IP: 192.168.1.7)"]
       A["container: web<br/>:80"]
       B["container: helper"]
       V[("shared volume")]
@@ -339,7 +339,7 @@ Create a Pod that prints `hello` once and then finishes.
 > you do not have.
 >
 > **Exam tip:** `kubectl explain pod.spec.containers.resources --recursive` shows
-> field names and structure offline from the API server, faster than searching
+> field names and structure straight from the API server, faster than searching
 > documentation.
 >
 > **Exam tip:** After any change, confirm the result with `kubectl get` or

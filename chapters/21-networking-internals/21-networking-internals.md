@@ -53,8 +53,8 @@ The DNS arrows are CoreDNS's.
 ### The CNI plugin
 
 The CNI plugin is installed as a DaemonSet, and it writes a configuration file
-into `/etc/cni/net.d` on each node. The kubelet reads that file when it creates a
-Pod's sandbox, and the plugin does the rest. Each node gets a range of Pod
+into `/etc/cni/net.d` on each node. The container runtime reads that file when the
+kubelet asks it for a Pod's sandbox, and it calls the plugin, which does the rest. Each node gets a range of Pod
 addresses, its **pod CIDR**, which the control plane assigns when the node joins.
 You can read it on any node:
 
@@ -74,8 +74,8 @@ decides two things that matter in the exam:
   resources, but the Kubernetes objects in this chapter work the same way on
   every enforcing plugin.
 
-The lab cluster of this book uses Calico, because kindnet, the default plugin
-of kind, does not enforce NetworkPolicy. Calico's pinned version is in
+The lab cluster of this book uses Calico in place of kindnet, the default plugin
+of kind (kindnet has enforced NetworkPolicy only since kind v0.24). Calico's pinned version is in
 `versions.env`.
 
 ### kube-proxy and Service forwarding

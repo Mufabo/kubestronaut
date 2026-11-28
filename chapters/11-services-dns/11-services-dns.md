@@ -38,8 +38,8 @@ A Service does three things:
 ```mermaid
 flowchart LR
   C[Client Pod] -->|web:80| S[Service web<br/>ClusterIP 10.96.x.x]
-  S -->|selector app=web| P1[Pod web-1<br/>10.244.1.5]
-  S -->|selector app=web| P2[Pod web-2<br/>10.244.2.7]
+  S -->|selector app=web| P1[Pod web-1<br/>192.168.1.5]
+  S -->|selector app=web| P2[Pod web-2<br/>192.168.2.7]
 ```
 
 The client connects to the Service's name and port. The Service sends the
@@ -382,7 +382,7 @@ the cluster.
 
 ## Exam tips
 
-> **Exam tip:** `kubectl expose deployment NAME --port=80 --target-port=8080` is the fastest way to a Service. It copies the Deployment's labels into the selector, which saves typing and avoids the usual mismatch.
+> **Exam tip:** `kubectl expose deployment NAME --port=80 --target-port=8080` is the fastest way to a Service. It copies the Deployment's selector into the Service, which saves typing and avoids the usual mismatch.
 >
 > **Exam tip:** For a headless Service, `kubectl expose ... --cluster-ip=None` is the imperative form. For an ExternalName Service, `kubectl create service externalname NAME --external-name=HOST` does it in one command.
 >

@@ -173,7 +173,7 @@ routing there is no overhead, and the Pod gets the full 1500.
 
 When the MTU is wrong, the symptoms are confusing: ping works, a small `curl`
 works, but large responses hang. Small packets fit; only the big ones are
-dropped, and if the ICMP "too big" message that path MTU discovery (Chapter 41)
+dropped, and if the ICMP "too big" message that path MTU discovery (Chapter 45)
 depends on is filtered somewhere, nobody is told. Whenever "small works, large
 hangs", suspect the MTU. Cilium detects the MTU of the node's interface by
 itself; you set it by hand (the Helm value `MTU`) when the detection is wrong,

@@ -500,7 +500,7 @@ profile kbook-demo-deny-tmp flags=(attach_disconnected) {
 ```
 
 The name after `profile` is what Pods refer to, not the file name. A Pod asks for
-it with **`securityContext.appArmorProfile`** (generally available since v1.30;
+it with **`securityContext.appArmorProfile`** (generally available since v1.31;
 the older annotation `container.apparmor.security.beta.kubernetes.io/<container>`
 is deprecated), at the Pod level or for one container:
 
@@ -767,7 +767,7 @@ profile to its spec.
 
 **6. C.** The scheduler knows nothing about AppArmor profiles. The kubelet and the runtime refuse to start a container whose profile is not loaded, rather than run it unprotected. Load the profile on every node that may run the Pod (a DaemonSet or configuration management does this in practice), or restrict the Pod to the nodes that have it.
 
-**7. B.** The appArmorProfile field (generally available since v1.30) sits in the Pod's or the container's securityContext; the container's setting wins. Its types are RuntimeDefault, Localhost (with localhostProfile, the name of a profile loaded on the node), and Unconfined. The older annotation container.apparmor.security.beta.kubernetes.io/CONTAINER is deprecated.
+**7. B.** The appArmorProfile field (generally available since v1.31) sits in the Pod's or the container's securityContext; the container's setting wins. Its types are RuntimeDefault, Localhost (with localhostProfile, the name of a profile loaded on the node), and Unconfined. The older annotation container.apparmor.security.beta.kubernetes.io/CONTAINER is deprecated.
 
 **8. D.** Every package, service, and kernel module on a node is something an attacker who reaches the node can use or attack. A minimal node keeps only what the kubelet, the container runtime, and the CNI plugin need; debugging tools come in when needed (for example kubectl debug node/...), not by default.
 

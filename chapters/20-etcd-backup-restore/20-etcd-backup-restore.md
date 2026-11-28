@@ -4,7 +4,7 @@
 > **Difficulty:** Intermediate
 > **Time:** ~35 min reading, ~35 min lab
 > **Lab tier:** 2 (VirtualBox VMs, `envs/vagrant`, snapshot `cluster`)
-> **Prerequisites:** Chapter 02 (architecture), Chapter 18 (kubeadm), Chapter 19 (static Pods on the control plane)
+> **Prerequisites:** Chapter 02 (architecture), Chapter 18 (kubeadm, static Pods on the control plane)
 
 ## Learning objectives
 
@@ -560,4 +560,4 @@ Kubernetes stores objects under `/registry/<resource>/<namespace>/<name>`. `--ke
 - Kubernetes documentation: *Operating etcd clusters for Kubernetes* (backing up and restoring an etcd cluster), *Encrypting Confidential Data at Rest*
 - etcd documentation: *Disaster recovery*, `etcdctl` and `etcdutl` references
 - Velero, for backing up API objects and volume data together
-- Chapter 27 next in Part III: troubleshooting nodes, the kubelet, the control plane, and certificates
+- Chapter 27, later in Part III: troubleshooting nodes, the kubelet, the control plane, and certificates

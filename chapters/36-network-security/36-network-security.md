@@ -664,7 +664,7 @@ Allow calls to the `api` only from workloads that run as the ServiceAccount `cal
 
 **9. B.** Without an EncryptionConfiguration, Secrets are written to etcd unencrypted. Base64 is only how the API shows the values; it is an encoding, not protection. Anyone who can read the etcd data or a backup of it can read them, so encryption at rest must be enabled explicitly.
 
-**10. B.** NetworkPolicy objects are stored, but only a CNI that enforces them acts on them. The default kindnet CNI does not, so the policy has no effect. Calico and Cilium do enforce it.
+**10. B.** NetworkPolicy objects are stored, but only a CNI that enforces them acts on them. Flannel, for example, does not, so on such a cluster the policy has no effect. Calico and Cilium do enforce it.
 
 **11.**
 
