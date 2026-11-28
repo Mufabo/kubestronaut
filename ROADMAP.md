@@ -93,8 +93,8 @@ Each lab runs in its own namespace (Tier 1) or snapshot (Tier 2) so that chapter
 | --- | --- | --- |
 | `calico` | Calico (NetworkPolicy), metrics-server; the default | Parts I to IV, their mocks |
 | `nocni` | no CNI; nodes stay `NotReady` until the reader installs one | Ch. 48 to 50 |
-| `cilium` | Cilium with kube-proxy, Hubble on | default for Parts VI and VII |
-| `cilium-kpr` | Cilium kube-proxy replacement, Hubble, egress gateway, Gateway API, LB-IPAM with L2 announcements; WireGuard available, off | Ch. 54, 57, 59 to 60, 65 to 66, 69, 71 |
+| `cilium` | Cilium with kube-proxy, Hubble on | default for Parts VI and VII; Ch. 54 changes it per setup |
+| `cilium-kpr` | Cilium kube-proxy replacement, Hubble, egress gateway, Gateway API, LB-IPAM with L2 announcements; WireGuard available, off | Ch. 57, 59 to 60, 65 to 66, 69, 71 |
 | `istio` (planned) | `cilium` + Istio (sidecar and ambient) + Gateway API + cert-manager + Prometheus/Jaeger | Ch. 61, 63, 67 to 68, 70 |
 | `multi` (planned) | two clusters with non-overlapping Pod CIDRs and Cilium ClusterMesh | Ch. 62 |
 | `bgp` (planned) | `cilium-kpr` + an FRR router container acting as the upstream | Ch. 59 |
@@ -227,7 +227,7 @@ The CKNE assumes networking knowledge that the rest of the book does not teach. 
 | # | Chapter | Exams | Tier |
 | --- | --- | --- | --- |
 | 53 | L4 Services: ClusterIP, NodePort, LoadBalancer (cloud-provider-kind / LB-IPAM), headless, ExternalName, session affinity, dual-stack (drafted) | N | 1 `cilium` |
-| 54 | kube-proxy and its alternatives: iptables, IPVS, and nftables modes, reading the rules, Cilium eBPF kube-proxy replacement, migrating between them | N | 1 `calico`, `cilium-kpr` |
+| 54 | kube-proxy and its alternatives: iptables, IPVS, and nftables modes, reading the rules, Cilium eBPF kube-proxy replacement, migrating between them (drafted) | N | 1 `cilium` |
 | 55 | Pod endpoint availability: Endpoints and EndpointSlices, readiness probes, `publishNotReadyAddresses`, `externalTrafficPolicy`/`internalTrafficPolicy`, topology-aware routing, graceful termination | N | 1 `cilium` |
 | 56 | CoreDNS: architecture, the Corefile, plugins (`forward`, `rewrite`, `hosts`, `stub domains`, `cache`), custom domains, pod `dnsConfig`/`dnsPolicy`, NodeLocal DNSCache | N | 1 `cilium` |
 | 57 | Gateway API: GatewayClass, Gateway, HTTPRoute, GRPCRoute, header/path matching, traffic splitting, redirects, ReferenceGrant; Cilium and Istio implementations; migrating from Ingress | N | 1 `cilium-kpr`, `istio` |
@@ -397,4 +397,4 @@ Estimates assume one author working part-time; adjust for your pace and any co-a
 4. ~~Finish Part IV~~ Done 2026-11-13 (29, 30, and 33 drafted 2026-10-24; 32 on 2026-11-09; 35 on 2026-11-13). The "Minimize base image footprint" gap was closed in 34 on 2026-11-14.
 5. Backlog (2026-11-14): build the Tier 3 devcontainer, so readers without the hardware for Tier 2 have a path. Deferred until outside readers ask for it.
 6. Find the first outside reader, starting with the pilot chapter (04).
-7. CKNE (merged 2026-11-20): Chapters 49 and 50 drafted 2026-11-20/21; Chapters 51 and 52 drafted 2026-11-21; Part VI and its simulator `part6` done 2026-11-21; the `cilium-kpr` profile done 2026-11-21; next Chapters 54 to 58; find a beginner reader for Part V.
+7. CKNE (merged 2026-11-20): Chapters 49 and 50 drafted 2026-11-20/21; Chapters 51 and 52 drafted 2026-11-21; Part VI and its simulator `part6` done 2026-11-21; the `cilium-kpr` profile done 2026-11-21; Chapter 54 drafted 2026-11-28; next Chapters 55 to 58; find a beginner reader for Part V.

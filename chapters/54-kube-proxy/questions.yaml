@@ -1,0 +1,188 @@
+- id: ch54-q01
+  type: mcq
+  exams: [CKNE]
+  question: "In iptables or nftables mode, what does the kube-proxy process do with a packet sent to a ClusterIP?"
+  choices:
+    - "It accepts the connection and opens a second one to a Pod"
+    - "Nothing: the packet never reaches it; kube-proxy only writes the rules that the kernel applies"
+    - "It looks up the endpoint in the API server for every packet"
+    - "It encapsulates the packet and sends it to the node that runs the Pod"
+  answer: B
+  explanation: "kube-proxy is a controller: it watches Services and EndpointSlices and writes netfilter rules (or nftables tables). The kernel translates every packet. The name comes from its long-removed first mode, which really proxied connections. If kube-proxy stops, the rules keep working; they just stop following changes."
+
+- id: ch54-q02
+  type: mcq
+  exams: [CKNE]
+  question: "The ConfigMap `kube-proxy` says `mode: nftables`. How do you confirm which mode kube-proxy on node `kbook-worker` really runs in?"
+  choices:
+    - "`kubectl get nodes -o wide`"
+    - "On the node: `curl -s localhost:10249/proxyMode`"
+    - "`kubectl -n kube-system get configmap kube-proxy -o yaml` again"
+    - "`iptables -L` on the node: if it is empty, the mode is nftables"
+  answer: B
+  explanation: "kube-proxy reports the mode it uses on its metrics port, which listens on 127.0.0.1:10249 by default, so ask on the node. The ConfigMap only says what the Pods read when they last started; an edit without a restart changes nothing. Its log also says `Using nftables Proxier`. An empty iptables listing proves nothing: iptables-nft and kubelet chains are there in every mode."
+
+- id: ch54-q03
+  type: mcq
+  exams: [CKNE]
+  question: "In iptables mode, a Service has three endpoints. Which probabilities does the `KUBE-SVC` chain use, in order?"
+  choices:
+    - "0.33, 0.33, 0.33"
+    - "0.33, then 0.5, then the last rule matches always"
+    - "1, 1, 1: the kernel picks one at random"
+    - "0.5, 0.25, 0.25"
+  answer: B
+  explanation: "The rules are read in order. The first matches a third of new connections; of the two thirds left, the second matches half; the last catches the rest. Each endpoint gets one third. kube-proxy writes `-m statistic --mode random --probability` on every rule but the last."
+
+- id: ch54-q04
+  type: mcq
+  exams: [CKNE]
+  question: "Why does kube-proxy's nftables mode cope with many Services better than its iptables mode?"
+  choices:
+    - "nftables runs in user space, so it does not slow the kernel down"
+    - "It finds a Service with one lookup in a verdict map (address, protocol, port to chain) instead of walking a list of rules, and changes only what belongs to a changed Service"
+    - "It sends only the first packet of each connection through the rules"
+    - "It caches DNS answers for Services"
+  answer: B
+  explanation: "In iptables mode, `KUBE-SERVICES` is a list read from the top, one rule per Service port. In nftables mode, the map `service-ips` is looked up once, however many Services there are. Both modes send only a connection's first packet through the rules (conntrack handles the rest), so that is not the difference."
+
+- id: ch54-q05
+  type: mcq
+  exams: [CKNE]
+  question: "What is the status of kube-proxy's `ipvs` mode in Kubernetes v1.37?"
+  choices:
+    - "Removed; kube-proxy refuses to start with `mode: ipvs`"
+    - "The recommended mode for large clusters"
+    - "Deprecated: it still works, kube-proxy logs an error-level deprecation message, and it is planned to be off by default from v1.40 and removed in v1.43"
+    - "Generally available since v1.33"
+  answer: C
+  explanation: "IPVS mode was deprecated in v1.35. The recommended replacement is nftables mode (generally available since v1.33, kernel 5.13 or later), which does the same job with less machinery. A cluster still on IPVS should move to nftables."
+
+- id: ch54-q06
+  type: mcq
+  exams: [CKNE]
+  question: "You change `mode: iptables` to `mode: nftables` in the ConfigMap `kube-proxy`. Ten minutes later, `nft list tables` on a node still shows no `kube-proxy` table. Why?"
+  choices:
+    - "The node's kernel is too old for nftables mode"
+    - "kube-proxy reads its configuration only when it starts; restart the DaemonSet"
+    - "The ConfigMap must also be applied to every node by hand"
+    - "kube-proxy needs a node reboot to change modes"
+  answer: B
+  explanation: "kube-proxy does not watch its own ConfigMap. `kubectl -n kube-system rollout restart daemonset kube-proxy` starts new Pods that read the new mode; they also remove the old iptables-mode rules. Then check `/proxyMode` on a node. A kernel that is too old would make the new Pods fail, which you would see in their logs."
+
+- id: ch54-q07
+  type: mcq
+  exams: [CKNE]
+  question: "A cluster moved kube-proxy from `ipvs` to `iptables` mode, and every node still has the interface `kube-ipvs0` with all ClusterIPs on it. Why?"
+  choices:
+    - "The switch failed and kube-proxy still runs in IPVS mode"
+    - "kube-proxy removes only the other family's rules at start: iptables and IPVS mode do not clean up after each other; starting in nftables mode would have removed both"
+    - "Cilium creates `kube-ipvs0`"
+    - "The kubelet recreates `kube-ipvs0` on every start"
+  answer: B
+  explanation: "Starting in nftables mode removes iptables- and IPVS-mode leftovers; starting in iptables or IPVS mode removes nftables-mode tables. Between iptables and IPVS nothing is removed, which is why the project recommends rebooting the nodes after such a switch (or moving to nftables instead)."
+
+- id: ch54-q08
+  type: mcq
+  exams: [CKNE]
+  question: "Two clusters each have a Service `web` in namespace `demo` with a TCP port named `http`, and kube-proxy in iptables mode. Which chain names are the same in both clusters?"
+  choices:
+    - "None: kube-proxy picks random names"
+    - "The `KUBE-SVC` chain, a hash of `demo/web:http` and the protocol; the `KUBE-SEP` chains differ, because their hash includes each endpoint's address"
+    - "Both the `KUBE-SVC` and the `KUBE-SEP` chains"
+    - "Only the `KUBE-SEP` chains"
+  answer: B
+  explanation: "kube-proxy names chains after a hash (SHA-256, base32, 16 characters) of the Service port name and protocol, so `KUBE-SVC-XRY76EGRC3BSCIIJ` is `demo/web:http` over TCP everywhere. Endpoint chains also hash the endpoint, so they change when Pods are replaced. nftables mode does the same with an 8-character hash in names like `service-AXK6CI2C-demo/web/tcp/http`."
+
+- id: ch54-q09
+  type: mcq
+  exams: [CKNE]
+  question: "On a cluster with Cilium (`kubeProxyReplacement=false`) and kube-proxy in iptables mode, requests from a Pod to a ClusterIP work, but the Service's `KUBE-SVC` chain counts no packets. Requests from the node itself are counted. Why?"
+  choices:
+    - "The counters only count NodePort traffic"
+    - "Cilium's eBPF program on the host side of the Pod's veth translates Pod-to-ClusterIP connections before netfilter sees them; kube-proxy's rules handle the node's own connections and NodePorts"
+    - "The Pod's traffic is sent through the VXLAN tunnel, which skips netfilter"
+    - "conntrack answers every packet after the first, so nothing is ever counted"
+  answer: B
+  explanation: "Even without the full kube-proxy replacement, Cilium load-balances ClusterIP traffic that leaves Pods. kube-proxy's rules remain for connections that start in the node's own network namespace and for traffic from outside. Test from the right place when you debug either one."
+
+- id: ch54-q10
+  type: mcq
+  exams: [CKNE]
+  question: "Why must `k8sServiceHost` and `k8sServicePort` be set when Cilium replaces kube-proxy?"
+  choices:
+    - "Cilium announces the API server's address with BGP"
+    - "Without kube-proxy, the ClusterIP of the `kubernetes` Service works only once Cilium runs, but the agent needs the API server to start; it must know the API server's real address"
+    - "They set the address on which Cilium serves its own API"
+    - "They are needed only for NodePort Services"
+  answer: B
+  explanation: "Pods normally reach the API server through `10.96.0.1`, which kube-proxy's rules (or Cilium's programs) translate. With kube-proxy removed, that translation depends on Cilium, so Cilium cannot use it to start. The Helm values become the agents' `KUBERNETES_SERVICE_HOST` and `KUBERNETES_SERVICE_PORT`."
+
+- id: ch54-q11
+  type: mcq
+  exams: [CKNE]
+  question: "On a cluster where Cilium replaces kube-proxy, a capture inside a client Pod shows its SYN for `http://web/` going to `10.244.2.227:8080`, not to the ClusterIP. What does that show?"
+  choices:
+    - "DNS returned the Pod's address instead of the ClusterIP"
+    - "The Service is headless"
+    - "Socket-level load balancing: Cilium connected the socket to a backend when the program called connect, so no packet ever carries the ClusterIP"
+    - "kube-proxy still runs and rewrote the packet inside the Pod"
+  answer: C
+  explanation: "With socket LB, the translation happens at the system call, before the first packet exists, so there is no per-packet DNAT and no conntrack translation to reverse. The program still believes it is connected to the Service address. With kube-proxy, or Cilium without the replacement, the same capture shows the ClusterIP and port 80."
+
+- id: ch54-q12
+  type: task
+  exams: [CKNE]
+  prompt: "A cluster runs kube-proxy in iptables mode on kernel 6.x. Move every node to nftables mode and show that it worked."
+  solution: |
+    Change the mode and restart kube-proxy:
+
+    ```bash
+    kubectl -n kube-system edit configmap kube-proxy     # mode: nftables
+    kubectl -n kube-system rollout restart daemonset kube-proxy
+    kubectl -n kube-system rollout status daemonset kube-proxy
+    ```
+
+    Then, on each node:
+
+    ```bash
+    curl -s localhost:10249/proxyMode; echo         # nftables
+    nft list tables | grep kube-proxy               # ip kube-proxy, ip6 kube-proxy
+    iptables-save | grep -c KUBE-SVC                # 0: the old rules are gone
+    ```
+
+    kube-proxy removes its iptables-mode rules itself when it starts in nftables mode. Test a Service from a node (`curl http://<ClusterIP>/`) and a NodePort from outside; remember that NodePorts now answer only on the nodes' primary addresses.
+
+- id: ch54-q13
+  type: task
+  exams: [CKNE]
+  prompt: "kube-proxy runs in nftables mode. On node `kbook-worker`, find which Pod addresses the Service `web` in namespace `demo` (port name `http`) sends connections to, using only the node's rules."
+  solution: |
+    ```bash
+    docker exec -it kbook-worker bash
+    nft list map ip kube-proxy service-ips | grep demo/web
+    nft list chain ip kube-proxy service-AXK6CI2C-demo/web/tcp/http
+    ```
+
+    The map element shows the ClusterIP, protocol, and port, and the chain it jumps to. The chain's `dnat ip to numgen random mod N map { 0 : <address> . <port>, ... }` lists the endpoints. The chain name is in the map, so you do not need to compute the hash.
+
+- id: ch54-q14
+  type: task
+  exams: [CKNE]
+  prompt: "A kind cluster runs Cilium (Helm release `cilium` in `kube-system`) next to kube-proxy in iptables mode. The API server is `kbook-control-plane:6443`. Replace kube-proxy with Cilium, and leave no kube-proxy rules on the nodes."
+  solution: |
+    ```bash
+    helm -n kube-system list            # the chart version, e.g. cilium-1.20.5
+    helm upgrade cilium cilium --repo https://helm.cilium.io --version 1.20.5 --namespace kube-system \
+      --reuse-values --set kubeProxyReplacement=true \
+      --set k8sServiceHost=kbook-control-plane --set k8sServicePort=6443
+    kubectl -n kube-system rollout restart daemonset cilium
+    kubectl -n kube-system exec ds/cilium -c cilium-agent -- cilium-dbg status | grep KubeProxyReplacement
+    kubectl -n kube-system delete daemonset kube-proxy
+    kubectl -n kube-system delete configmap kube-proxy
+    for n in kbook-control-plane kbook-worker kbook-worker2; do
+      docker exec $n sh -c 'iptables-save | grep -v KUBE | iptables-restore; ip6tables-save | grep -v KUBE | ip6tables-restore'
+    done
+    ```
+
+    Turn the replacement on first, so Services never stop working; then remove kube-proxy, wait until its Pods are gone, and clean the nodes. The cleanup also removes the kubelet's own `KUBE-` chains, which it creates again. Deleting the ConfigMap keeps `kubeadm upgrade` from installing kube-proxy again.

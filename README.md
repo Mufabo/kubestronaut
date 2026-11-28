@@ -63,7 +63,7 @@ The CKS requires an active CKA, so this path assumes the CKA path above.
 ### CKNE (performance-based)
 
 The CKNE assumes CKA-level Kubernetes (at least Chapters 02 to 06, 11, 12, and 21).
-Only Chapters 37 to 53 are written so far; see [ROADMAP.md](ROADMAP.md).
+Only Chapters 37 to 54 are written so far; see [ROADMAP.md](ROADMAP.md).
 
 1. Part V, networking from zero: 37 to 47, in the netlab container. If you already know networking, take the `part5` quiz first and read only the chapters whose questions you miss.
 2. Part VI, Core Infrastructure and CNI: 48 to 52; mock exam `part6`

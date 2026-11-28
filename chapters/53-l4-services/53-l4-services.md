@@ -95,9 +95,14 @@ where the client Pod runs, before it ever leaves that node. Nothing listens on
 the ClusterIP, and you cannot ping it: there is a rule only for the Service's
 ports and protocol.
 
-The lab cluster runs Cilium as its CNI plugin, with kube-proxy still doing the
-Service work in iptables mode. Chapter 54 compares kube-proxy's modes, and
-shows Cilium replacing kube-proxy with eBPF programs.
+The lab cluster runs Cilium as its CNI plugin next to kube-proxy in iptables
+mode. kube-proxy's rules exist on every node, and they handle connections
+that start on a node and NodePort traffic. Connections from Pods are
+translated one step earlier, by Cilium's eBPF program on the host side of the
+Pod's veth, with the same result. The packet walk below shows kube-proxy's
+way, which is what you meet on most clusters. Chapter 54 shows the difference
+with packet counters, compares kube-proxy's modes, and replaces kube-proxy
+with Cilium entirely.
 
 ### Packet walk: a Pod calls a ClusterIP Service
 
@@ -321,7 +326,9 @@ with probability 0.5 and otherwise falls through to the second. Each
 `KUBE-SEP` ("service endpoint") chain does the DNAT. The `KUBE-MARK-MASQ` rule
 marks connections from outside the Pod network, such as a process on the node,
 for masquerading, so the reply comes back through this node. The chain names
-are hashes; yours differ.
+are hashes: the `KUBE-SVC` name hashes the Service's namespace, name, port
+name, and protocol, so yours is the same; the `KUBE-SEP` names also hash the
+endpoint's address, so yours differ (Chapter 54).
 
 ### Step 4: NodePort
 

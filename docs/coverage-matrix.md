@@ -290,7 +290,7 @@ tasks are written as `CH/Task N`.
 | Competency | Primary chapter | Lab tasks | Groundwork elsewhere | Status |
 | --- | --- | --- | --- | --- |
 | Configuring L4 Services | 53 | 53/Task 1–6; ch53-q01…q13 | 11 (Services for the CKAD and CKA); 42/Task 1–4; ch38-q04, ch42-q12 | drafted |
-| Understanding kube-proxy and CNI Alternatives | 54 | | 21 (kube-proxy modes, CKA); 46/Task 2–4 (a DNAT load balancer); ch46-q06, ch46-q07, ch46-q12; 53 walkthrough (kube-proxy rules), ch53-q13 | foundation |
+| Understanding kube-proxy and CNI Alternatives | 54 | 54/Part modes Task 1–3, Part replace Task 1–3; ch54-q01…q14 | 21 (kube-proxy modes, CKA); 46/Task 2–4 (a DNAT load balancer); ch46-q06, ch46-q07, ch46-q12; 53 walkthrough (kube-proxy rules), ch53-q13 | drafted |
 | Customizing coreDNS for Services | 56 | | 11, 21 (cluster DNS, the CoreDNS ConfigMap); 43/Task 2–3 (records, search domains) | foundation |
 | Troubleshooting Service Network Traffic | 58 | | 42/Task 3–4, 47/Task 4–5; ch42-q05…q07, ch47-q12 | foundation |
 | Configuring Pod Endpoint Availability | 55 | | 10 (probes), 11 (EndpointSlices) | planned |

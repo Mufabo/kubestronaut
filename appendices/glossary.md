@@ -69,6 +69,7 @@ chapter that introduces it. Part VI onward adds Kubernetes networking terms as i
 - **Dotted-decimal**: writing an IPv4 address as four decimal octets separated by dots. (40)
 - **DROP / REJECT**: firewall targets: discard silently (client times out) / answer with an error (client fails at once). (42, 46)
 - **Dual-stack**: both IPv4 and IPv6 addresses on every Pod and Service. (40)
+- **Dummy interface**: a virtual interface that only holds addresses; kube-proxy's IPVS mode puts every ClusterIP on `kube-ipvs0`. (54)
 
 ## E
 
@@ -125,6 +126,7 @@ chapter that introduces it. Part VI onward adds Kubernetes networking terms as i
 - **IPAM plugin**: a CNI plugin that only chooses addresses (for example `host-local`), called by the main plugin through its `ipam` section. (48)
 - **iptables**: the classic tool for netfilter rules; today usually iptables-nft, which stores them as nftables tables. (41, 46)
 - **IPv4 / IPv6**: 32-bit / 128-bit Internet Protocol addresses. (40)
+- **IPVS** (IP Virtual Server): the Linux kernel's built-in layer 4 load balancer; kube-proxy's `ipvs` mode, deprecated since Kubernetes v1.35. (54)
 - **ipvlan**: a CNI plugin and Linux interface type: a virtual interface on top of a node interface, sharing its MAC address. (51)
 
 ## K
@@ -132,6 +134,7 @@ chapter that introduces it. Part VI onward adds Kubernetes networking terms as i
 - **Kernel**: the core of the operating system; owns the network interfaces and does encapsulation, routing, and filtering. (38)
 - **kind** (Kubernetes in Docker): a tool that runs each Kubernetes node as a Docker container; the book's Tier 1 lab cluster. (48)
 - **kube-proxy**: the node agent that turns Services and EndpointSlices into forwarding rules (iptables, IPVS, or nftables) on every node. (53)
+- **kube-proxy replacement**: Cilium's mode (`kubeProxyReplacement=true`) in which its eBPF programs handle every kind of Service traffic, so kube-proxy can be removed. (54)
 - **`kubectl debug node/<node>`**: starts a Pod in a node's network namespace with an image of your choice (for example netshoot), for node-level troubleshooting. (48)
 - **Kubernetes host-scope IPAM**: Cilium's `ipam.mode=kubernetes`; Pod addresses come from each node's `podCIDR`. (49)
 - **Kubernetes network model**: every Pod has its own IP; every Pod reaches every other Pod by that IP without NAT; node agents reach the Pods on their node. (48)
@@ -208,6 +211,7 @@ chapter that introduces it. Part VI onward adds Kubernetes networking terms as i
 - **Private address**: from the ranges `10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`; not routed on the internet. (40)
 - **Private key / public key**: a key pair; what one encrypts or signs, the other decrypts or verifies. (44)
 - **Protocol**: an agreement on message formats and rules between communicating parties. (38)
+- **Proxy mode** (kube-proxy): how kube-proxy programs a node's forwarding: `iptables`, `nftables`, or `ipvs` on Linux. (54)
 - **`ptp`**: a reference CNI plugin that gives each Pod a veth pair and a host route on the node, with no bridge. (48)
 - **PTR**: DNS record that maps an address to a name (reverse lookup). (43)
 
@@ -235,9 +239,11 @@ chapter that introduces it. Part VI onward adds Kubernetes networking terms as i
 - **Service**: a Kubernetes object that gives a set of Pods, chosen by label selector, one stable virtual address and DNS name, and spreads connections across them. (53)
 - **Service CIDR**: the address range ClusterIPs come from (`10.96.0.0/16` in the lab cluster). (53)
 - **Session affinity** (`sessionAffinity: ClientIP`): sending every connection from one client address to the same endpoint. (53)
+- **Set / map** (nftables): a lookup table kept inside an nftables table: a set holds values (such as addresses), a map holds key-value pairs. (54)
 - **SNAT** (source NAT): rewriting the source address of packets. (41)
 - **SNI** (Server Name Indication): the host name a TLS client sends unencrypted in its ClientHello. (44)
 - **Socket**: the kernel's handle for one end of network communication, identified by address and port. (42)
+- **Socket-level load balancing** (socket LB): choosing a Service's backend when a program connects (or sends a UDP datagram), so its packets carry the backend's address from the first one on; Cilium's kube-proxy replacement does this. (54)
 - **SRV**: DNS record that names the host and port of a service. (43)
 - **Static IPAM**: the `static` IPAM plugin; with the `ips` capability, each Pod names its own address. (51)
 - **Status code** (HTTP): the three-digit result of a request: 2xx success, 3xx redirect, 4xx client error, 5xx server error. (44)
@@ -272,6 +278,7 @@ chapter that introduces it. Part VI onward adds Kubernetes networking terms as i
 ## V
 
 - **veth pair**: two virtual interfaces joined back to back; a virtual cable, often between namespaces. (45)
+- **Verdict map** (nftables): a map whose values are verdicts such as `goto <chain>`; one lookup sends a packet to the right chain. (54)
 - **Virtual host**: one of several sites served at one address, selected by the Host header or SNI. (44)
 - **Virtual IP** (VIP): an address no interface has, which rules (DNAT) send to real backends; a Kubernetes Service's ClusterIP. (46)
 - **VNI** (VXLAN Network Identifier): the number that identifies one VXLAN overlay. (45)
